@@ -4,10 +4,10 @@ load_dotenv()
 
 from flask import Flask
 from and_platform.extensions import db, migrate
-from and_platform.auth.routes import bp as auth_blueprint
-from and_platform.contest.routes import bp as contest_blueprint
-from and_platform.flag.routes import bp as flag_blueprint
-from and_platform.service.routes import bp as service_blueprint
+from and_platform.routes.auth import bp as auth_blueprint
+from and_platform.routes.contest import bp as contest_blueprint
+from and_platform.routes.flag import bp as flag_blueprint
+from and_platform.routes.services import bp as service_blueprint
 
 
 
