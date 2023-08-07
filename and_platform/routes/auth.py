@@ -3,7 +3,7 @@ from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from and_platform.extensions import db
-from and_platform.models import Team
+from and_platform.models.core import Team
 
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
