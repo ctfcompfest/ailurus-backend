@@ -16,12 +16,13 @@ Inside `and_platform`, there are a few folders and files, each folder are the mo
 |
 |--- core (Shared code between modules)
 |
-|--- (module)
+|--- and_platform (Website backend for AnD)
 |    |
-|    |------- models.py (Database models)
-|    |------- routes.py (App routes)
+|    |------- models (Database models)
+|    |------- routes (App routes)
+|    |------- app.py (App definition)
+|    |------- extensions.py (Flask extensions)
 |
-|--- app.py (Entry point)
-|
-|--- extensions.py (Flask extensions)
+|--- checker (Checker code)
+|    |------- main.py (Entrypoint)
 ```
