@@ -1,5 +1,9 @@
-from and_platform.extensions import db
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy as sa
+
+db = SQLAlchemy()
+migrate = Migrate()
 
 
 class Team(db.Model):

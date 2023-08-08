@@ -1,1 +1,3 @@
-from and_platform.app import app
+from and_platform import create_app
+
+app = create_app()
