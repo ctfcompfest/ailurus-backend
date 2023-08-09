@@ -35,6 +35,8 @@ class Teams(db.Model):
     server_host = sa.Column(sa.String)
     secret = sa.Column(sa.String(50), default=secrets.token_urlsafe(32))
 
+    score_per_ticks = sa.relationship("ScorePerTicks", backref="teams")
+
 class Challenges(db.Model):
     __tablename__ = "challenges"
 
