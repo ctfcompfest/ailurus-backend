@@ -4,6 +4,7 @@ load_dotenv()
 
 from flask import Flask
 from and_platform.models import db, migrate
+from and_platform.api import api_blueprint
 from and_platform.api.auth import bp as auth_blueprint
 from and_platform.api.contest import bp as contest_blueprint
 from and_platform.api.flag import bp as flag_blueprint
@@ -35,6 +36,7 @@ def create_app():
     migrate.init_app(app, db)
 
     # Blueprints
+    app.register_blueprint(api_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(contest_blueprint)
     app.register_blueprint(flag_blueprint)
