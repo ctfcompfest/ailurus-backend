@@ -25,6 +25,7 @@ def manage(args: List[str]):
     # TODO: Other commands
 
 def load_adce_config():
+    # If config already exists in database, it will not follow .env
     for key, value in os.environ.items():
         realkey = key[5:]
         if not key.startswith("ADCE_") or get_config(realkey) != None: continue

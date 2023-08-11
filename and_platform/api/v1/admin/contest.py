@@ -11,7 +11,6 @@ class ContestConfig(views.MethodView):
         return jsonify(status="success", data=response)
 
     def put(self):
-        print(request.headers.get("x-adce-secret"))
         req = request.get_json()
         req_configkey = list(req["configs"].keys())
 
