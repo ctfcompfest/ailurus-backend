@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
-from and_platform.models import db, Team
+from and_platform.models import db, Teams
 
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -14,7 +14,7 @@ def login():
     password = request.form.get("password")
 
     team = db.session.execute(
-        select(Team).filter(Team.name == name)
+        select(Teams).filter(Teams.name == name)
     ).scalar_one_or_none()
     if not team:
         return jsonify(False)
