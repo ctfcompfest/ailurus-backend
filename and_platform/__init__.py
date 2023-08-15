@@ -27,14 +27,11 @@ def manage(args: List[str]):
 
 def load_adce_config():
     # If config already exists in database, it will not follow .env
-    try:
-        for key, value in os.environ.items():
-            realkey = key[5:]
-            if not key.startswith("ADCE_") or get_config(realkey) != None: continue
-            set_config(realkey, value)
-    except sqlalchemy.exc.ProgrammingError:
-        # To detect that the relation has not been created yet
-        pass
+    for key, value in os.environ.items():
+        realkey = key[5:]
+        if not key.startswith("ADCE_") or get_config(realkey) != None: continue
+        set_config(realkey, value)
+    
 
 def create_app():
     app = Flask(
@@ -50,7 +47,11 @@ def create_app():
         db.init_app(app)
         migrate.init_app(app, db)
         
-        load_adce_config()
+        try:
+            load_adce_config()
+        except sqlalchemy.exc.ProgrammingError:
+            # To detect that the relation has not been created yet
+            pass
 
         # Blueprints
         app.register_blueprint(api_blueprint)
