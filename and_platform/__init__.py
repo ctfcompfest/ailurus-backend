@@ -51,7 +51,7 @@ def create_app():
             load_adce_config()
         except sqlalchemy.exc.ProgrammingError:
             # To detect that the relation has not been created yet
-            pass
+            app.logger.warning("Error calling some function while create_app")
 
         # Blueprints
         app.register_blueprint(api_blueprint)
