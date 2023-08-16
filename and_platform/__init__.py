@@ -24,6 +24,15 @@ def manage(args: List[str]):
 
     # TODO: Other commands
 
+def init_data_dir(app):
+    app.config["TEMPLATE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+    if not app.config.get("DATA_DIR"):
+        app.config["DATA_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "adce_data")
+
+    for d in ["challenges", "services"]:
+        dirpath = os.path.join(app.config["DATA_DIR"], d)
+        os.makedirs(os.path.dirname(dirpath), exist_ok=True)
+
 def load_adce_config():
     # If config already exists in database, it will not follow .env
     for key, value in os.environ.items():
@@ -45,6 +54,7 @@ def create_app():
         db.init_app(app)
         migrate.init_app(app, db)
         
+        init_data_dir(app)
         load_adce_config()
 
         # Blueprints
