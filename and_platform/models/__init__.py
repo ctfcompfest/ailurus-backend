@@ -52,13 +52,16 @@ class Flags(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
-    challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
+    challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"), index=True)
     round = db.Column(db.Integer)
     tick = db.Column(db.Integer)
     value = db.Column(db.Text, index=True)
     
 class Submissions(db.Model):
     __tablename__ = "submissions"
+    __table_args__ = (
+        db.Index("team_id", "flag_id", "verdict"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
@@ -67,6 +70,7 @@ class Submissions(db.Model):
     tick = db.Column(db.Integer)
     value = db.Column(db.Text, index=True)
     verdict = db.Column(db.Boolean)
+    flag_id = db.Column(db.Integer, db.ForeignKey("flags.id"), default=None)
 
 class Solves(db.Model):
     __tablename__ = "solves"

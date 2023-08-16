@@ -14,6 +14,7 @@ from and_platform.core.config import get_config, set_config
 from typing import List
 
 import os
+import sqlalchemy
 
 def manage(args: List[str]):
     if len(args) < 1:
@@ -39,6 +40,7 @@ def load_adce_config():
         realkey = key[5:]
         if not key.startswith("ADCE_") or get_config(realkey) != None: continue
         set_config(realkey, value)
+    
 
 def create_app():
     app = Flask(
@@ -54,8 +56,12 @@ def create_app():
         db.init_app(app)
         migrate.init_app(app, db)
         
-        init_data_dir(app)
-        load_adce_config()
+        try:
+            load_adce_config()
+            init_data_dir()
+        except sqlalchemy.exc.ProgrammingError:
+            # To detect that the relation has not been created yet
+            app.logger.warning("Error calling some function while create_app")
 
         # Blueprints
         app.register_blueprint(api_blueprint)
