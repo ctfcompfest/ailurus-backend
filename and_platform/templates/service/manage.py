@@ -29,7 +29,7 @@ def read_patchrule():
         return yaml.safe_load(patchrule_file)
 
 def update_service_meta(job, **kwargs):
-    with open(os.path.join(BASE_PATH, "meta.yml"), "rw") as meta_file:
+    with open(os.path.join(BASE_PATH, "meta.yml"), "a+") as meta_file:
         meta_data = yaml.safe_load(meta_file)
         meta_data[f"last_{job}"] = datetime.datetime.now().isoformat()
         if len(kwargs) > 0:
@@ -38,15 +38,15 @@ def update_service_meta(job, **kwargs):
         yaml.dump(meta_data, meta_file)
 
 def start_service():
-    subprocess.check_output('docker compose up --build -d', cwd=BASE_PATH)
+    subprocess.check_output('docker compose up --build -d'.split(" "), cwd=BASE_PATH)
     print('[+] service started')
 
 def stop_service():
-    subprocess.check_output('docker compose down --volume --timeout 3', cwd=BASE_PATH)
+    subprocess.check_output('docker compose down --volumes --timeout 3'.split(" "), cwd=BASE_PATH)
     print('[+] service stopped')
 
 def restart_service():
-    subprocess.check_output('docker compose restart --timeout 3', cwd=BASE_PATH)
+    subprocess.check_output('docker compose restart --timeout 3'.split(" "), cwd=BASE_PATH)
     print('[+] service restarted')
     update_service_meta("restart")
 
@@ -105,7 +105,7 @@ def apply_patch_service():
     
     print(f'[*] applying patch')
     for svc in service_list:
-        subprocess.check_output(f'docker compose exec -d {svc} sh /.adce_patch/apply_patch.sh {svc}', cwd=BASE_PATH)
+        subprocess.check_output(f'docker compose exec -d {svc} sh /.adce_patch/apply_patch.sh {svc}'.split(" "), cwd=BASE_PATH)
         print(f'   ... {svc} done')
     print('[+] patch applied')
 
