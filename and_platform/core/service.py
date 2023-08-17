@@ -13,6 +13,7 @@ def _get_service_path(teamid: int, challid: int):
     return os.path.join(get_app_config("DATA_DIR"), "services", f"svc-t{teamid}-c{challid}")
 
 def do_remote_provision(team: Teams, challenge: Challenges, server: Servers):
+    # TODO: need to adjust key type
     keyfile = StringIO(server.auth_key)
     pkey = paramiko.Ed25519Key.from_private_key(keyfile)
     ssh_conn = Connection(host=server.host, user=server.username, port=server.sshport, connect_kwargs={"pkey": pkey})
