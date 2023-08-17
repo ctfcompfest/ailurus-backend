@@ -23,6 +23,16 @@ class Servers(db.Model):
     username = db.Column(db.String(50))
     auth_key = db.Column(db.Text)
 
+    @classmethod
+    def is_exist_with_host(self, host):
+        server = self.query.filter_by(host=host).first()
+        return server is not None
+    
+    @classmethod
+    def is_exist_with_id(self, id):
+        server = self.query.filter_by(id=id).first()
+        return server is not None
+
 class Teams(db.Model):
     __tablename__ = "teams"
 
