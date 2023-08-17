@@ -8,6 +8,7 @@ servers_blueprint = Blueprint("servers_manager", __name__, url_prefix="/servers"
 def get_all_servers():
     servers = Servers.query.all()
     servers = convert_model_to_dict(servers)
+
     return jsonify(status="success", data=servers), 200
 
 @servers_blueprint.route("/<int:server_id>", methods=["GET"])
@@ -17,15 +18,15 @@ def get_by_id(server_id):
     if server is None:
         return jsonify(status="not found", message="server not found"), 404
     server = convert_model_to_dict(server)
+
     return jsonify(status="success", data=server), 200
 
 
 @servers_blueprint.route("/", methods=["POST"])
 def add_server():
     req_body = request.get_json()
-    existing_server = Servers.query.filter_by(host=req_body["host"]).first()
 
-    if existing_server is not None:
+    if Servers.is_exist_with_host(req_body.get("host", "127.0.0.1")):
         return jsonify(status="failed", message="server host must be unique."), 400
     
     new_server = Servers(
@@ -37,11 +38,11 @@ def add_server():
     db.session.add(new_server)
     db.session.commit()
     db.session.refresh(new_server) # update the object with newest commit
-
     new_server = convert_model_to_dict(new_server)
+
     return jsonify(status="success", message="succesfully added new server.", data=new_server), 200
 
-@servers_blueprint.route("/<int:server_id>", methods=["PUT"])
+@servers_blueprint.route("/<int:server_id>", methods=["PATCH"])
 def update_server(server_id):
     req_body = request.get_json()
 
@@ -49,14 +50,12 @@ def update_server(server_id):
     if server is None:
         return jsonify(status="not found", message="server not found"), 404
     
-    
-    if server.host != req_body["host"]:
-        server_with_same_host = Servers.query.filter_by(host=req_body["host"]).first()
-        if server_with_same_host is not None and server_with_same_host.id != server.id:
+    new_host = req_body.get("host", server.host)
+
+    if server.host != new_host:
+        if Servers.is_exist_with_host(new_host):
             return jsonify(status="failed", message="host must be unique"), 400
         
-    
-
     if 'host' in req_body:
         server.host = req_body['host']
     if 'sshport' in req_body:
@@ -76,7 +75,6 @@ def update_server(server_id):
 def delete(server_id):
     
     server = Servers.query.filter_by(id=server_id).first()
-
     if server is None:
         return jsonify(status="not found", message="server not found"), 404
     
