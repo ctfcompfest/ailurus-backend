@@ -1,30 +1,24 @@
 from and_platform.models import db, Challenges, Teams, Servers, Services
 from and_platform.core.config import get_app_config, get_config
-from and_platform.core.ssh import copy_folder
-from fabric import Connection
-from io import StringIO
+from and_platform.core.ssh import copy_folder, create_ssh_from_server
 from shutil import copytree, ignore_patterns
 
 import os
 import yaml
-import paramiko
 
 def _get_service_path(teamid: int, challid: int):
     return os.path.join(get_app_config("DATA_DIR"), "services", f"svc-t{teamid}-c{challid}")
 
 def do_remote_provision(team: Teams, challenge: Challenges, server: Servers):
-    # TODO: need to adjust key type
-    keyfile = StringIO(server.auth_key)
-    pkey = paramiko.Ed25519Key.from_private_key(keyfile)
-    ssh_conn = Connection(host=server.host, user=server.username, port=server.sshport, connect_kwargs={"pkey": pkey})
-    
     local_path = _get_service_path(team.id, challenge.id)
     remote_path = os.path.join(get_config("REMOTE_DIR"), "service")
-    ssh_conn.run(f"sudo mkdir -p {remote_path}")
-    ssh_conn.run(f"sudo chown -R {server.username}:{server.username} {remote_path}")
-    copy_folder(ssh_conn, local_path, remote_path)
+    
+    with create_ssh_from_server(server) as ssh_conn:
+        ssh_conn.sudo(f"mkdir -p {remote_path}")
+        ssh_conn.sudo(f"chown -R {server.username}:{server.username} {remote_path}")
+        copy_folder(ssh_conn, local_path, remote_path)    
 
-def generate_provision_asset(team: Teams, challenge: Challenges, server: Servers, ports: list[int]):
+def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int]):
     DATA_DIR = get_app_config("DATA_DIR")
     CHALLS_DIR = os.path.join(DATA_DIR, "challenges")
     
@@ -54,7 +48,7 @@ def generate_provision_asset(team: Teams, challenge: Challenges, server: Servers
 
 def do_provision(team: Teams, challenge: Challenges, server: Servers):
     ports = [50000 + team.id * 100 + challenge.id]
-    generate_provision_asset(team, challenge, server, ports)
+    generate_provision_asset(team, challenge, ports)
     do_remote_provision(team, challenge, server)
 
     services = list()
