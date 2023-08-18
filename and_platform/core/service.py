@@ -6,12 +6,15 @@ from shutil import copytree, ignore_patterns
 import os
 import yaml
 
-def _get_service_path(teamid: int, challid: int):
+def get_service_path(teamid: int, challid: int):
     return os.path.join(get_app_config("DATA_DIR"), "services", f"svc-t{teamid}-c{challid}")
 
+def get_remote_service_path(teamid: int, challid: int):
+    return os.path.join(get_config("REMOTE_DIR"), "services", f"svc-t{teamid}-c{challid}")
+
 def do_remote_provision(team: Teams, challenge: Challenges, server: Servers):
-    local_path = _get_service_path(team.id, challenge.id)
-    remote_path = os.path.join(get_config("REMOTE_DIR"), "service")
+    local_path = get_service_path(team.id, challenge.id)
+    remote_path = os.path.join(get_config("REMOTE_DIR"), "services")
     
     with create_ssh_from_server(server) as ssh_conn:
         ssh_conn.sudo(f"mkdir -p {remote_path}")
@@ -25,7 +28,7 @@ def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int
     SVC_TEMPLATE_DIR = os.path.join(get_app_config("TEMPLATE_DIR"), "service")
     SOURCE_CHALL_DIR = os.path.join(CHALLS_DIR, str(challenge.id))
 
-    dest_dir = _get_service_path(team.id, challenge.id)
+    dest_dir = get_service_path(team.id, challenge.id)
     copytree(SVC_TEMPLATE_DIR, dest_dir, dirs_exist_ok=True)    
     copytree(SOURCE_CHALL_DIR, dest_dir, ignore=ignore_patterns("test", "challenge.yml", "docker-compose.yml"), dirs_exist_ok=True)
 
@@ -41,6 +44,7 @@ def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int
         yaml.safe_dump(compose_data, compose_file)
         compose_file.seek(0)
         compose_str = compose_file.read()
+        compose_file.seek(0)
         compose_str = compose_str.replace("__FLAG_DIR__", "./flag")
         compose_str = compose_str.replace("__PORT__", str(ports[0]))
         compose_str = compose_str.replace("__TEAM_SECRET__", team.secret)
@@ -61,3 +65,12 @@ def do_provision(team: Teams, challenge: Challenges, server: Servers):
         )
         services.append(tmp_service)
     return services
+
+def do_patch(team_id: int, challenge_id: int, server: Servers):
+    patch_fname = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
+    svc_remote_dir = get_remote_service_path(team_id, challenge_id)
+    
+    with create_ssh_from_server(server) as ssh_conn:
+        ssh_conn.put(patch_fname, os.path.join(svc_remote_dir, "patch"))
+        with ssh_conn.cd(svc_remote_dir):
+            ssh_conn.run("python3 manage.py apply_patch 2>> logs/error >> logs/log")
