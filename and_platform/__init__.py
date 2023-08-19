@@ -49,6 +49,7 @@ def create_app():
         migrate.init_app(app, db)
 
         app.config['JWT_SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
+        app.config['JWT_ALGORITHM'] = 'HS512'
         jwt = JWTManager()
         jwt.init_app(app)
 
