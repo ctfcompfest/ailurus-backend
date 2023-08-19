@@ -18,7 +18,7 @@ def login():
     ).scalar_one_or_none()
     
     if team is not None:
-        access_token = create_access_token(identity=team.id)
+        access_token = create_access_token(identity={'team': {'id': team.id, 'name': team.name}})
         return jsonify(status='success', data=access_token), 200
 
     return jsonify(status='forbidden', message="email or password is wrong."), 403
