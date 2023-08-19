@@ -279,6 +279,25 @@ async = ["asgiref (>=3.2)"]
 dotenv = ["python-dotenv"]
 
 [[package]]
+name = "flask-jwt-extended"
+version = "4.5.2"
+description = "Extended JWT integration with Flask"
+optional = false
+python-versions = ">=3.7,<4"
+files = [
+    {file = "Flask-JWT-Extended-4.5.2.tar.gz", hash = "sha256:ba56245ba43b71c8ae936784b867625dce8b9956faeedec2953222e57942fb0b"},
+    {file = "Flask_JWT_Extended-4.5.2-py2.py3-none-any.whl", hash = "sha256:e0ef23d8c863746bd141046167073699e1a7b03c97169cbba70f05b8d9cd6b9e"},
+]
+
+[package.dependencies]
+Flask = ">=2.0,<3.0"
+PyJWT = ">=2.0,<3.0"
+Werkzeug = ">=0.14"
+
+[package.extras]
+asymmetric-crypto = ["cryptography (>=3.3.1)"]
+
+[[package]]
 name = "flask-migrate"
 version = "4.0.4"
 description = "SQLAlchemy database migrations for Flask applications using Alembic."
@@ -884,4 +903,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "44a1950ac13704aafd42732786d669a3917a56fad081e71e0cc3aecc30651362"
+content-hash = "11d3d795fc16b4e516de2aeecb0da13f30c76695073ff033c258edb3e9e1b9ca"
