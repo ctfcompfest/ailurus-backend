@@ -31,7 +31,7 @@ def read_patchrule():
 def update_service_meta(job, **kwargs):
     with open(os.path.join(BASE_PATH, "meta.yml"), "a+") as meta_file:
         meta_data = yaml.safe_load(meta_file)
-        meta_data[f"last_{job}"] = datetime.datetime.now().isoformat()
+        meta_data[f"last_{job}"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d %H:%M:%S %z")
         if len(kwargs) > 0:
             for k, v in kwargs.items():
                 meta_data[k] = v
@@ -61,6 +61,11 @@ def path_matching(patches, rules, f = lambda x: x):
     for svc, paths in rules.items():
         expand_rule = [Path(f"/{svc}{p}").resolve() for p in paths]
         ptrn_path += expand_rule
+    
+    # If whitelist empty, auto reject. If blacklist empty, auto accept
+    if f(len(ptrn_path) != 0):
+        return True
+    
     for realpath in patches:
         is_valid = False
         for ptrn in ptrn_path:
@@ -101,12 +106,20 @@ def check_patch_service():
     return True
 
 def apply_patch_service():
+    if not check_patch_service():
+        print("[-] patch is rejected.")
+        return None
+
     service_list = read_patchrule()["whitelist"]
     
     print(f'[*] applying patch')
     for svc in service_list:
-        subprocess.check_output(f'docker compose exec -d {svc} sh /.adce_patch/apply_patch.sh {svc}'.split(" "), cwd=BASE_PATH)
-        print(f'   ... {svc} done')
+        try:
+            subprocess.check_output(f'docker compose exec -d {svc} sh /.adce_patch/apply_patch.sh {svc}'.split(" "), cwd=BASE_PATH)
+            print(f'   ... {svc} done')
+        except Exception as e:
+            print("[-] patching failed.")
+            raise e
     print('[+] patch applied')
 
     update_service_meta("patch", applied_patch=get_md5sum(PATCH_TARPATH))
@@ -116,6 +129,10 @@ if __name__ == "__main__":
         print("""usage: python3 manage.py <command>\n\nAvailable command: start, stop, restart, reset, check_patch, apply_patch""")
         exit(1)
     
+    print()
+    print(datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d %H:%M:%S %z"))
+    print("=" * 10)
+
     command = sys.argv[1]
     if command in VALID_CMD:
         globals()[f"{command}_service"]()

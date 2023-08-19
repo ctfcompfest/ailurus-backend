@@ -6,12 +6,12 @@ from shutil import copytree, ignore_patterns
 import os
 import yaml
 
-def _get_service_path(teamid: int, challid: int):
+def get_service_path(teamid: int, challid: int):
     return os.path.join(get_app_config("DATA_DIR"), "services", f"svc-t{teamid}-c{challid}")
 
 def do_remote_provision(team: Teams, challenge: Challenges, server: Servers):
-    local_path = _get_service_path(team.id, challenge.id)
-    remote_path = os.path.join(get_config("REMOTE_DIR"), "service")
+    local_path = get_service_path(team.id, challenge.id)
+    remote_path = os.path.join(get_config("REMOTE_DIR"), "services")
     
     with create_ssh_from_server(server) as ssh_conn:
         ssh_conn.sudo(f"mkdir -p {remote_path}")
@@ -25,7 +25,7 @@ def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int
     SVC_TEMPLATE_DIR = os.path.join(get_app_config("TEMPLATE_DIR"), "service")
     SOURCE_CHALL_DIR = os.path.join(CHALLS_DIR, str(challenge.id))
 
-    dest_dir = _get_service_path(team.id, challenge.id)
+    dest_dir = get_service_path(team.id, challenge.id)
     copytree(SVC_TEMPLATE_DIR, dest_dir, dirs_exist_ok=True)    
     copytree(SOURCE_CHALL_DIR, dest_dir, ignore=ignore_patterns("test", "challenge.yml", "docker-compose.yml"), dirs_exist_ok=True)
 
@@ -41,6 +41,7 @@ def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int
         yaml.safe_dump(compose_data, compose_file)
         compose_file.seek(0)
         compose_str = compose_file.read()
+        compose_file.seek(0)
         compose_str = compose_str.replace("__FLAG_DIR__", "./flag")
         compose_str = compose_str.replace("__PORT__", str(ports[0]))
         compose_str = compose_str.replace("__TEAM_SECRET__", team.secret)
