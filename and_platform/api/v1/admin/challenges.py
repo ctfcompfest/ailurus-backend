@@ -1,12 +1,8 @@
-from pathlib import Path
-from typing import TypedDict
 from and_platform.api.helper import convert_model_to_dict
 from and_platform.core.challenge import get_challenges_directory, load_challenge
 from and_platform.core.config import get_config
-from and_platform.models import Challenges, Services, Teams, db, Configs
-from flask import Blueprint, jsonify, request, current_app
-from sqlalchemy import select
-import yaml
+from and_platform.models import Challenges, db
+from flask import Blueprint, jsonify, request
 
 challenges_blueprint = Blueprint("challenges", __name__, url_prefix="/challenges")
 
