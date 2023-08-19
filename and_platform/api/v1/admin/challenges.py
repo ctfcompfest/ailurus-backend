@@ -1,7 +1,8 @@
+from sqlalchemy import select
 from and_platform.api.helper import convert_model_to_dict
 from and_platform.core.challenge import get_challenges_directory, load_challenge
 from and_platform.core.config import get_config
-from and_platform.models import Challenges, db
+from and_platform.models import Challenges, Servers, db
 from flask import Blueprint, jsonify, request
 
 challenges_blueprint = Blueprint("challenges", __name__, url_prefix="/challenges")
@@ -24,15 +25,17 @@ def populate_challenges():
         chall_data = load_challenge(chall_id)
         chall = Challenges(  # type: ignore
             id=int(chall_id),
-            name=chall_data["title"],
+            name=chall_data["name"],
             description=chall_data["description"],
             num_expose=chall_data["num_expose"],
         )
 
-        if server_mode == "sharing":
-            # TODO: Where does this come from?
-            chall.server_id = -1
-            chall.server_host = ""
+        if server_mode == "sharing" and chall_data.get("server_id"):
+            server = db.session.execute(
+                select(Servers).filter(Servers.id == chall_data["server_id"])
+            ).scalar_one()
+            chall.server_id = server.id
+            chall.server_host = server.host
 
         populated_challs.append(chall)
 

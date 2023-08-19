@@ -1,13 +1,14 @@
 from pathlib import Path
-from typing import TypedDict
+from typing import Optional, TypedDict
 from flask import current_app
 import yaml
 
 
 class ChallengeData(TypedDict):
-    title: str
+    name: str
     description: str
     num_expose: int
+    server_id: Optional[int]
 
 
 def get_challenges_directory():
