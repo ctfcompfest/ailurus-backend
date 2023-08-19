@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask
+from flask_jwt_extended import JWTManager
 from and_platform.models import db, migrate
 from and_platform.api import api_blueprint
 from and_platform.api.auth import bp as auth_blueprint
@@ -46,7 +47,11 @@ def create_app():
         # Extensions
         db.init_app(app)
         migrate.init_app(app, db)
-        
+
+        app.config['JWT_SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
+        jwt = JWTManager()
+        jwt.init_app(app)
+
         try:
             load_adce_config()
         except sqlalchemy.exc.ProgrammingError:
