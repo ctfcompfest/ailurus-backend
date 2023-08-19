@@ -4,7 +4,7 @@ load_dotenv()
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from and_platform.models import db, migrate
+from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
 from and_platform.api.auth import bp as auth_blueprint
 from and_platform.api.contest import bp as contest_blueprint
@@ -17,6 +17,18 @@ from typing import List
 import os
 import sqlalchemy
 
+
+def setup_jwt_app(app: Flask):
+    jwt = JWTManager(app)
+
+    @jwt.user_lookup_loader
+    def user_lookup_callback(_jwt_header, jwt_data):
+        identity = jwt_data["sub"]
+        return db.session.execute(
+            sqlalchemy.select(Teams).filter(Teams.id == identity["team"]["id"])
+        ).scalar()
+
+
 def manage(args: List[str]):
     if len(args) < 1:
         return
@@ -26,13 +38,15 @@ def manage(args: List[str]):
 
     # TODO: Other commands
 
+
 def load_adce_config():
     # If config already exists in database, it will not follow .env
     for key, value in os.environ.items():
         realkey = key[5:]
-        if not key.startswith("ADCE_") or get_config(realkey) != None: continue
+        if not key.startswith("ADCE_") or get_config(realkey) != None:
+            continue
         set_config(realkey, value)
-    
+
 
 def create_app():
     app = Flask(
@@ -48,10 +62,9 @@ def create_app():
         db.init_app(app)
         migrate.init_app(app, db)
 
-        app.config['JWT_SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
-        app.config['JWT_ALGORITHM'] = 'HS512'
-        jwt = JWTManager()
-        jwt.init_app(app)
+        app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
+        app.config["JWT_ALGORITHM"] = "HS512"
+        setup_jwt_app(app)
 
         try:
             load_adce_config()
