@@ -26,18 +26,19 @@ def populate_challenges():
 
         chall_id = path.name[6:]
         chall_data = load_challenge(chall_id)
-        for team in db.session.execute(select(Teams)).scalars():
-            chall = Challenges(  # type: ignore
-                name=chall_data["title"],
-                description=chall_data["description"],
-                num_expose=chall_data["num_expose"],
-            )
+        chall = Challenges(  # type: ignore
+            id=int(chall_id),
+            name=chall_data["title"],
+            description=chall_data["description"],
+            num_expose=chall_data["num_expose"],
+        )
 
-            if server_mode == "sharing":
-                chall.server_id = team.server_id
-                chall.server_host = team.server_host
+        if server_mode == "sharing":
+            # TODO: Where does this come from?
+            chall.server_id = -1
+            chall.server_host = ""
 
-            populated_challs.append(chall)
+        populated_challs.append(chall)
 
     db.session.add_all(populated_challs)
     db.session.commit()
