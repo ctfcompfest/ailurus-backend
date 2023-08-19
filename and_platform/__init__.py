@@ -1,3 +1,4 @@
+import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -64,6 +65,7 @@ def create_app():
 
         app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
         app.config["JWT_ALGORITHM"] = "HS512"
+        app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(hours=12)
         setup_jwt_app(app)
 
         try:
