@@ -17,10 +17,12 @@ def get_challenges_directory():
     path.mkdir(parents=True, exist_ok=True)
     return path
 
+def get_challenges_dir_fromid(challenge_id: str):
+    return get_challenges_directory().joinpath("chall-" + challenge_id)
 
 def load_challenge(challenge_id: str) -> ChallengeData:
-    config_path = get_challenges_directory().joinpath(
-        "chall-" + challenge_id, "challenge.yaml"
+    config_path = get_challenges_dir_fromid(challenge_id).joinpath(
+        "challenge.yaml"
     )
     with open(config_path, "r") as f:
         return yaml.safe_load(f.read())

@@ -1,4 +1,5 @@
-from and_platform.models import db, Challenges, Teams, Servers, Services
+from and_platform.models import Challenges, Teams, Servers, Services
+from and_platform.core.challenge import get_challenges_dir_fromid
 from and_platform.core.config import get_app_config, get_config
 from and_platform.core.ssh import copy_folder, create_ssh_from_server
 from shutil import copytree, ignore_patterns, move
@@ -19,13 +20,10 @@ def do_remote_provision(team: Teams, challenge: Challenges, server: Servers):
         copy_folder(ssh_conn, local_path, remote_path)    
 
 def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int]):
-    DATA_DIR = get_app_config("DATA_DIR")
-    CHALLS_DIR = os.path.join(DATA_DIR, "challenges")
-    
     SVC_TEMPLATE_DIR = os.path.join(get_app_config("TEMPLATE_DIR"), "service")
-    SOURCE_CHALL_DIR = os.path.join(CHALLS_DIR, str(challenge.id))
-
+    SOURCE_CHALL_DIR = get_challenges_dir_fromid(str(challenge.id))
     dest_dir = get_service_path(team.id, challenge.id)
+
     copytree(SVC_TEMPLATE_DIR, dest_dir, dirs_exist_ok=True)    
     copytree(SOURCE_CHALL_DIR, dest_dir, ignore=ignore_patterns("test", "challenge.yml", "docker-compose.yml"), dirs_exist_ok=True)
     move(os.path.join(dest_dir, "patchrule.yml"), os.path.join(dest_dir, "meta", "patchrule.yml"))
