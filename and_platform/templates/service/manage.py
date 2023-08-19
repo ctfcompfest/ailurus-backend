@@ -25,11 +25,11 @@ def get_md5sum(fname):
     return hash_md5.hexdigest()
 
 def read_patchrule():
-    with open(os.path.join(BASE_PATH, "patchrule.yml")) as patchrule_file:
+    with open(os.path.join(BASE_PATH, "meta", "patchrule.yml")) as patchrule_file:
         return yaml.safe_load(patchrule_file)
 
 def update_service_meta(job, **kwargs):
-    with open(os.path.join(BASE_PATH, "meta.yml"), "a+") as meta_file:
+    with open(os.path.join(BASE_PATH, "meta", "meta.yml"), "a+") as meta_file:
         meta_data = yaml.safe_load(meta_file)
         meta_data[f"last_{job}"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d %H:%M:%S %z")
         if len(kwargs) > 0:
