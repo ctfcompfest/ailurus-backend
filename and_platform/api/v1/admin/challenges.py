@@ -94,3 +94,48 @@ def create_new_chall():
     db.sesion.add(chall)
     db.session.commit()
     return jsonify(status="success", data=convert_model_to_dict(chall))
+
+
+@challenges_blueprint.get("/<int:challenge_id>")
+def get_chall(challenge_id: int):
+    chall = db.session.get(Challenges, challenge_id)
+    if not chall:
+        return jsonify(status="not found", message="challenge not found"), 404
+
+    return jsonify(status="success", data=convert_model_to_dict(chall))
+
+
+@challenges_blueprint.post("/<int:challenge_id>")
+def update_chall(challenge_id: int):
+    server_mode = get_config("SERVER_MODE")
+    data: ChallengeData = request.get_json()
+
+    chall = db.session.get(Challenges, challenge_id)
+    if not chall:
+        return jsonify(status="not found", message="challenge not found"), 404
+
+    chall.name = data.get("name", chall.name)
+    chall.description = data.get("description", chall.description)
+    chall.num_expose = data.get("num_expose", chall.num_expose)
+    server_id = data.get("server_id", chall.server_id)
+
+    if server_mode == "sharing":
+        server = db.session.execute(
+            select(Servers).filter(Servers.id == server_id)
+        ).scalar_one()
+        chall.server_id = server.id
+        chall.server_host = server.host
+
+    db.session.commit()
+    return jsonify(status="success", data=convert_model_to_dict(chall))
+
+
+@challenges_blueprint.delete("/<int:challenge_id>")
+def delete_chall(challenge_id: int):
+    chall = db.session.get(Challenges, challenge_id)
+    if not chall:
+        return jsonify(status="not found", message="challenge not found"), 404
+
+    db.session.delete(chall)
+    db.session.commit()
+    return jsonify(status="success", message=f"challenge {challenge_id} deleted")
