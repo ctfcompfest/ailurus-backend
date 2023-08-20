@@ -95,6 +95,7 @@ def create_team():
 
 @teams_blueprint.route("/<int:team_id>", methods=["PUT"])
 def update_team(team_id):
+    server_mode = get_config("SERVER_MODE")
     req_body = request.get_json()
 
     team = Teams.query.filter_by(id=team_id).first()
@@ -116,21 +117,20 @@ def update_team(team_id):
 
     db.session.commit()
     db.session.refresh(team)
-    team = convert_model_to_dict(team)
-
-    server = Servers.query.filter_by(id=team["server_id"]).first()
-    server = convert_model_to_dict(server)
 
     data = {
-        "id": team["id"],
-        "name": team["name"],
-        "server": {"id": server["id"], "host": server["host"]},
+        "id": team.id,
+        "name": team.name,
     }
+
+    if server_mode == "private":
+        server = Servers.query.filter_by(id=team.server_id).first()
+        data["server"] = {"id": server.id, "host": server.host}
 
     return (
         jsonify(
             status="success",
-            message="{} info successfully updated.".format(team["name"]),
+            message="{} info successfully updated.".format(team.name),
             data=data,
         ),
         200,
