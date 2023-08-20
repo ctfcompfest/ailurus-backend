@@ -113,7 +113,7 @@ def get_chall(challenge_id: int):
     return jsonify(status="success", data=convert_model_to_dict(chall))
 
 
-@challenges_blueprint.post("/<int:challenge_id>")
+@challenges_blueprint.put("/<int:challenge_id>")
 def update_chall(challenge_id: int):
     server_mode = get_config("SERVER_MODE")
     data: ChallengeRequest = request.get_json()
