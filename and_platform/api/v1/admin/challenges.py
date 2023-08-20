@@ -1,6 +1,10 @@
 from sqlalchemy import select
 from and_platform.api.helper import convert_model_to_dict
-from and_platform.core.challenge import get_challenges_directory, load_challenge
+from and_platform.core.challenge import (
+    ChallengeData,
+    get_challenges_directory,
+    load_challenge,
+)
 from and_platform.core.config import get_config
 from and_platform.models import Challenges, Servers, db
 from flask import Blueprint, jsonify, request
@@ -45,3 +49,48 @@ def populate_challenges():
         jsonify(status="success", data=convert_model_to_dict(populate_challenges)),
         200,
     )
+
+
+@challenges_blueprint.get("/")
+def get_all_challs():
+    challenges = db.session.execute(select(Challenges)).scalars()
+    return (
+        jsonify(
+            status="success",
+            data=convert_model_to_dict(challenges),
+        ),
+        200,
+    )
+
+
+@challenges_blueprint.post("/")
+def create_new_chall():
+    server_mode = get_config("SERVER_MODE")
+    data: ChallengeData = request.get_json()
+
+    name = data.get("name")
+    description = data.get("description")
+    num_expose = data.get("num_expose")
+    server_id = data.get("server_id")
+
+    if not (name and description and num_expose) or (
+        server_mode == "sharing" and not server_id
+    ):
+        return jsonify(status="failed", message="missing required attributes"), 400
+
+    chall = Challenges(
+        name=name,
+        description=description,
+        num_expose=num_expose,
+    )
+
+    if server_mode == "sharing":
+        server = db.session.execute(
+            select(Servers).filter(Servers.id == server_id)
+        ).scalar_one()
+        chall.server_id = server.id
+        chall.server_host = server.host
+
+    db.sesion.add(chall)
+    db.session.commit()
+    return jsonify(status="success", data=convert_model_to_dict(chall))
