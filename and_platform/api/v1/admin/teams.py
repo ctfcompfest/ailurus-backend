@@ -77,8 +77,8 @@ def create_team():
         db.session.add(new_server)
         db.session.commit()
 
-        new_team.server_id = server_id
-        new_team.server_host = server.host
+        new_team.server_id = new_server.id
+        new_team.server_host = new_server.host
 
         data["server"] = {"id": new_server.id, "host": new_server.host}
 
