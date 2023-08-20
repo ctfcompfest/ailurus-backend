@@ -43,6 +43,7 @@ class Teams(db.Model):
     server_id = db.Column(db.Integer, db.ForeignKey("servers.id"), unique=True)
     server_host = db.Column(db.String)
     secret = db.Column(db.String(50), default=secrets.token_urlsafe(32))
+    server = db.relationship("Servers", foreign_keys="Teams.server_id", lazy=True)
 
 class Challenges(db.Model):
     __tablename__ = "challenges"
@@ -53,6 +54,7 @@ class Challenges(db.Model):
     num_expose = db.Column(db.Integer, default=1)
     server_id = db.Column(db.Integer, db.ForeignKey("servers.id"), unique=True)
     server_host = db.Column(db.String)
+    server = db.relationship("Servers", foreign_keys="Challenges.server_id", lazy=True)
 
 class Flags(db.Model):
     __tablename__ = "flags"
@@ -128,6 +130,10 @@ class Services(db.Model):
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
     order = db.Column(db.Integer)
     address = db.Column(db.String(100), unique=True)
+
+    @classmethod
+    def is_teamservice_exist(cls, team_id, challenge_id):
+        return cls.query.where(cls.team_id == team_id, cls.challenge_id == challenge_id).count() > 0
 
 class CheckerVerdict(enum.Enum):
     QUEUE = -1
