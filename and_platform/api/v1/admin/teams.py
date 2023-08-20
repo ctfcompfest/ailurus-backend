@@ -111,6 +111,7 @@ def update_team(team_id):
         if server is None:
             return jsonify(status="not found", message="server not found"), 404
         team.server_id = req_body["server_id"]
+        team.server_host = server.host
 
     db.session.commit()
     db.session.refresh(team)
