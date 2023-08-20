@@ -46,7 +46,7 @@ def populate_challenges():
     db.session.add_all(populated_challs)
     db.session.commit()
     return (
-        jsonify(status="success", data=convert_model_to_dict(populate_challenges)),
+        jsonify(status="success", data=convert_model_to_dict(populated_challs)),
         200,
     )
 
