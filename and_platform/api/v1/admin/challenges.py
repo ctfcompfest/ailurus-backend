@@ -1,3 +1,4 @@
+import tarfile
 from typing import List
 from sqlalchemy import delete, insert, select
 from and_platform.api.helper import convert_model_to_dict
@@ -159,6 +160,26 @@ def delete_chall(challenge_id: int):
     db.session.delete(chall)
     db.session.commit()
     return jsonify(status="success", message=f"challenge {challenge_id} deleted")
+
+
+@challenges_blueprint.post("/<int:challenge_id>/config")
+def upload_config_files(challenge_id: int):
+    tar_file = request.files.get("configfile")
+    if not tar_file:
+        return jsonify(status="failed", message="please submit your file"), 400
+
+    chall = db.session.get(Challenges, challenge_id)
+    if not chall:
+        return jsonify(status="not found", message="challenge not found"), 404
+
+    challs_dir = get_challenges_directory()
+    chall_dir = challs_dir.joinpath(f"chall-{chall.id}")
+
+    tar = tarfile.open(fileobj=tar_file.stream)
+    tar.extractall(chall_dir)
+    tar.close()
+
+    return jsonify(status="success", message="ok")
 
 
 def set_chall_visibility(chall_id: int, rounds: List[int]):
