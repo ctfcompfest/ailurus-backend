@@ -1,8 +1,9 @@
-from and_platform.models import db, Challenges, ChallengeReleases
+from and_platform.models import Challenges, ChallengeReleases
 from and_platform.api.helper import convert_model_to_dict;
-from flask import Blueprint, jsonify, request;
+from flask import Blueprint, jsonify
+from and_platform.core.config import get_config
 
-from sqlalchemy import select, Row;
+from sqlalchemy import Row;
 
 public_challenge_blueprint = Blueprint("public_challenge_blueprint", __name__, url_prefix="/challenges")
 
@@ -22,8 +23,6 @@ def get_all_challenge():
         }
         visible_challenges.append(data)
 
-    print(visible_challenges)
-
     return jsonify(status="success", data=visible_challenges), 200
 
 @public_challenge_blueprint.route("/<int:challenge_id>", methods=["GET"])
@@ -42,8 +41,9 @@ def get_challenge_by_id(challenge_id):
     return jsonify(status="success", data=data), 200
 
 def get_all_released_challenge_id() -> list:
+    current_round = get_config("CURRENT_ROUND")
     visible_challenges_id = []
-    challenge_releases : Row[ChallengeReleases] = ChallengeReleases.query.all()
+    challenge_releases : Row[ChallengeReleases] = ChallengeReleases.query.filter_by(round=current_round).all()
 
     if not isinstance(challenge_releases, list):
         challenge_releases = [challenge_releases]
