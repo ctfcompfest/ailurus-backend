@@ -43,7 +43,7 @@ def get_challenge_by_id(challenge_id):
 def get_all_released_challenge_id() -> list:
     current_round = get_config("CURRENT_ROUND")
     visible_challenges_id = []
-    challenge_releases : Row[ChallengeReleases] = ChallengeReleases.query.filter_by(round=current_round).all()
+    challenge_releases = ChallengeReleases.query.filter(ChallengeReleases.round <= current_round).all()
 
     if not isinstance(challenge_releases, list):
         challenge_releases = [challenge_releases]
