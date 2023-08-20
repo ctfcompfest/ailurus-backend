@@ -26,7 +26,19 @@ def get_by_id(server_id):
 def add_server():
     req_body = request.get_json()
 
-    new_server = create_new_server(req_body)
+    if Servers.is_exist_with_host(req_body.get("host", "127.0.0.1")):
+        return jsonify(status="failed", message="server host must be unique."), 400
+
+    new_server = Servers(
+        host = req_body["host"],
+        sshport = req_body["sshport"],
+        username = req_body["username"],
+        auth_key = req_body["auth_key"]
+    )
+    db.session.add(new_server)
+    db.session.commit()
+    db.session.refresh(new_server) # update the object with newest commit
+    new_server = convert_model_to_dict(new_server)
 
     return jsonify(status="success", message="succesfully added new server.", data=new_server), 200
 
@@ -70,19 +82,3 @@ def delete(server_id):
     db.session.commit()
 
     return jsonify(status="success", message=f"successfully deleted server with id : {server_id}"), 200
-
-def create_new_server(req_body):
-    if Servers.is_exist_with_host(req_body.get("host", "127.0.0.1")):
-        return jsonify(status="failed", message="server host must be unique."), 400
-    
-    new_server = Servers(
-        host = req_body["host"],
-        sshport = req_body["sshport"],
-        username = req_body["username"],
-        auth_key = req_body["auth_key"]
-    )
-    db.session.add(new_server)
-    db.session.commit()
-    db.session.refresh(new_server) # update the object with newest commit
-    new_server = convert_model_to_dict(new_server)
-    return new_server
