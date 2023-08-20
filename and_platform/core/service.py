@@ -30,22 +30,20 @@ def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int
     
     # Generate compose file
     with open(os.path.join(SOURCE_CHALL_DIR, "docker-compose.yml")) as compose_file:
-        compose_data = yaml.safe_load(compose_file)
+        compose_str = compose_file.read()
+        compose_str = compose_str.replace("__FLAG_DIR__", "./flag")
+        compose_str = compose_str.replace("__PORT__", str(ports[0]))
+        compose_str = compose_str.replace("__TEAM_SECRET__", team.secret)
+    
+    compose_data = yaml.safe_load(compose_str)
     for svc in compose_data['services']:
         svc_volume = compose_data['services'][svc].get("volumes", [])
         svc_volume.append("./patch:/.adce_patch")
         svc_volume.append("./meta:/.adce_meta:ro")
         compose_data['services'][svc]["volumes"] = svc_volume
     
-    with open(os.path.join(dest_dir, "docker-compose.yml"), "w+") as compose_file:
+    with open(os.path.join(dest_dir, "docker-compose.yml"), "w") as compose_file:
         yaml.safe_dump(compose_data, compose_file)
-        compose_file.seek(0)
-        compose_str = compose_file.read()
-        compose_file.seek(0)
-        compose_str = compose_str.replace("__FLAG_DIR__", "./flag")
-        compose_str = compose_str.replace("__PORT__", str(ports[0]))
-        compose_str = compose_str.replace("__TEAM_SECRET__", team.secret)
-        compose_file.write(compose_str)
 
 def do_provision(team: Teams, challenge: Challenges, server: Servers):
     ports = [50000 + team.id * 100 + challenge.id]
