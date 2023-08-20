@@ -3,6 +3,7 @@ from and_platform.core.config import get_config
 from and_platform.models import db, Teams, Servers
 from and_platform.api.helper import convert_model_to_dict
 from flask import Blueprint, jsonify, request
+from werkzeug.security import generate_password_hash
 
 import secrets
 import json
@@ -23,20 +24,19 @@ def create_team():
     new_team = Teams(
         name=req_body["name"],
         email=req_body["email"],
-        password=req_body["password"],
+        password=generate_password_hash(req_body["password"]),
         secret=secret_key,
     )
     db.session.add(new_team)
-    db.session.commit()
-
-    data = {
-        "id": new_team.id,
-        "name": new_team.name,
-        "secret": new_team.secret,
-    }
 
     server_mode = get_config("SERVER_MODE")
     if server_mode == "sharing":
+        db.session.commit()
+        data = {
+            "id": new_team.id,
+            "name": new_team.name,
+            "secret": new_team.secret,
+        }
         return (
             jsonify(
                 status="success",
@@ -44,15 +44,6 @@ def create_team():
                 data=data,
             ),
             200,
-        )
-
-    if "server_id" not in req_body and "server" not in req_body:
-        return (
-            jsonify(
-                status="failed",
-                message="missing server details",
-            ),
-            400,
         )
 
     if "server_id" in req_body:
@@ -64,24 +55,34 @@ def create_team():
         new_team.server_id = server_id
         new_team.server_host = server.host
 
-        data["server"] = {"id": server.id, "host": server.host}
-
     elif "server" in req_body:
-        server = req_body["server"]
-        new_server = Servers(
-            host=server["host"],
-            sshport=server["sshport"],
-            username=server["username"],
-            auth_key=server["auth_key"],
+        server_data = req_body["server"]
+        server = Servers(
+            host=server_data["host"],
+            sshport=server_data["sshport"],
+            username=server_data["username"],
+            auth_key=server_data["auth_key"],
         )
-        db.session.add(new_server)
-        db.session.commit()
+        db.session.add(server)
 
-        new_team.server_id = new_server.id
-        new_team.server_host = new_server.host
+        new_team.server_id = server.id
+        new_team.server_host = server.host
+    else:
+        return (
+            jsonify(
+                status="failed",
+                message="missing server details",
+            ),
+            400,
+        )
 
-        data["server"] = {"id": new_server.id, "host": new_server.host}
-
+    db.session.commit()
+    data = {
+        "id": new_team.id,
+        "name": new_team.name,
+        "secret": new_team.secret,
+        "server": {"id": server.id, "host": server.host},
+    }
     return (
         jsonify(
             status="success",
@@ -138,8 +139,6 @@ def update_team(team_id):
 
 @teams_blueprint.route("/<int:team_id>", methods=["DELETE"])
 def delete_team(team_id):
-    req_body = request.get_json()
-
     team = Teams.query.filter_by(id=team_id).first()
     if team is None:
         return jsonify(status="not found", message="team not found"), 404
