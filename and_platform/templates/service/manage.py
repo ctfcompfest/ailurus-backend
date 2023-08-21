@@ -25,11 +25,11 @@ def get_md5sum(fname):
     return hash_md5.hexdigest()
 
 def read_patchrule():
-    with open(os.path.join(BASE_PATH, "patchrule.yml")) as patchrule_file:
+    with open(os.path.join(BASE_PATH, "meta", "patchrule.yml")) as patchrule_file:
         return yaml.safe_load(patchrule_file)
 
 def update_service_meta(job, **kwargs):
-    with open(os.path.join(BASE_PATH, "meta.yml"), "a+") as meta_file:
+    with open(os.path.join(BASE_PATH, "meta", "meta.yml"), "a+") as meta_file:
         meta_data = yaml.safe_load(meta_file)
         meta_data[f"last_{job}"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d %H:%M:%S %z")
         if len(kwargs) > 0:
@@ -56,14 +56,14 @@ def reset_service():
     start_service()
     update_service_meta("reset")
 
-def path_matching(patches, rules, f = lambda x: x):
+def path_matching(patches, rules, ruletype = "whitelist"):
     ptrn_path = []
     for svc, paths in rules.items():
         expand_rule = [Path(f"/{svc}{p}").resolve() for p in paths]
         ptrn_path += expand_rule
     
     # If whitelist empty, auto reject. If blacklist empty, auto accept
-    if f(len(ptrn_path) != 0):
+    if ruletype == "blacklist" and len(ptrn_path) == 0:
         return True
     
     for realpath in patches:
@@ -71,7 +71,10 @@ def path_matching(patches, rules, f = lambda x: x):
         for ptrn in ptrn_path:
             stt = fnmatch.fnmatch(realpath.as_posix(), ptrn.as_posix()) \
                 or (ptrn in realpath.parents)
-            if f(stt):
+            # The nature of the blacklist is to negate the whitelist bool result.
+            if ruletype == "blacklist":
+                stt = not stt
+            if stt:
                 is_valid = True
                 break
         if not is_valid:
@@ -94,7 +97,7 @@ def check_patch_service():
                 leaf_list.append(elm_path)
 
         path_matching(leaf_list, patchrule["whitelist"])
-        path_matching(leaf_list, patchrule["blacklist"], lambda x: not(x))
+        path_matching(leaf_list, patchrule["blacklist"], "blacklist")
     except PatchInvalidException as e:
         print(f"[-] {e} is not a valid patching path.")
         return False
