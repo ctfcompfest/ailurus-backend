@@ -98,4 +98,4 @@ def admin_service_restart(challenge_id, team_id):
 
     do_restart(team_id, challenge_id, server)
     
-    return jsonify(status="success", message="patch submitted.")
+    return jsonify(status="success", message="restart request submitted.")
