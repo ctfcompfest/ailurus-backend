@@ -22,7 +22,7 @@ def get_challenges_dir_fromid(challenge_id: str):
 
 def load_challenge(challenge_id: str) -> ChallengeData:
     config_path = get_challenges_dir_fromid(challenge_id).joinpath(
-        "challenge.yaml"
+        "challenge.yml"
     )
     with open(config_path, "r") as f:
         return yaml.safe_load(f.read())
