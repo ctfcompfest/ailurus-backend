@@ -23,12 +23,16 @@ def populate_challenges():
 
         chall_id = path.name[6:]
         chall_data = load_challenge(chall_id)
-        chall = Challenges(  # type: ignore
-            id=int(chall_id),
-            name=chall_data["name"],
-            description=chall_data["description"],
-            num_expose=chall_data["num_expose"],
-        )
+
+        chall = Challenges.query.where(Challenges.id == chall_id).first()
+        if chall == None:
+            chall = Challenges(  # type: ignore
+                id=int(chall_id)
+            )
+            db.session.add(chall)
+        chall.name = chall_data["name"]
+        chall.description = chall_data["description"]
+        chall.num_expose = chall_data["num_expose"]
 
         if server_mode == "sharing" and chall_data.get("server_id"):
             server = db.session.execute(
@@ -36,12 +40,12 @@ def populate_challenges():
             ).scalar_one()
             chall.server_id = server.id
             chall.server_host = server.host
-
+        
         populated_challs.append(chall)
 
-    db.session.add_all(populated_challs)
     db.session.commit()
+    populated_challs = Challenges.query.all()
     return (
-        jsonify(status="success", data=convert_model_to_dict(populate_challenges)),
+        jsonify(status="success", data=convert_model_to_dict(populated_challs)),
         200,
     )
