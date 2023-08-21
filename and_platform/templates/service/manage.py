@@ -7,6 +7,7 @@ import subprocess
 import tarfile
 import yaml
 from pathlib import Path
+from shutil import move, rmtree
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 VALID_CMD = ["start", "stop", "restart", "reset", "check_patch", "apply_patch"]
@@ -29,12 +30,13 @@ def read_patchrule():
         return yaml.safe_load(patchrule_file)
 
 def update_service_meta(job, **kwargs):
-    with open(os.path.join(BASE_PATH, "meta", "meta.yml"), "a+") as meta_file:
+    with open(os.path.join(BASE_PATH, "meta", "meta.yml"), "r+") as meta_file:
         meta_data = yaml.safe_load(meta_file)
         meta_data[f"last_{job}"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d %H:%M:%S %z")
         if len(kwargs) > 0:
             for k, v in kwargs.items():
                 meta_data[k] = v
+        meta_file.seek(0)
         yaml.dump(meta_data, meta_file)
 
 def start_service():
@@ -52,7 +54,18 @@ def restart_service():
 
 def reset_service():
     stop_service()
+    
+    src_init = os.path.join(BASE_PATH, "src-tmp")
+    src_old = os.path.join(BASE_PATH, "src")
+    rmtree(src_old, ignore_errors=True)
+    move(src_init, src_old)
+    try:
+        os.remove(os.path.join(BASE_PATH, "service.patch"))
+    except IOError:
+        # file not found, do nothing
+        pass
     print('[+] service resetted')
+
     start_service()
     update_service_meta("reset")
 
