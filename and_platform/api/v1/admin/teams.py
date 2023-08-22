@@ -151,11 +151,3 @@ def delete_team(team_id):
         jsonify(status="success", message="{} successfully deleted.".format(team_name)),
         200,
     )
-
-
-def is_serializable(obj):
-    try:
-        jsonify(obj)
-        return True
-    except TypeError:
-        return False
