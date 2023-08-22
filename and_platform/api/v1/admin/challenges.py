@@ -1,9 +1,10 @@
 import tarfile
 from typing import List
-from sqlalchemy import delete, insert, select
+from sqlalchemy import ScalarResult, delete, insert, select
 from and_platform.api.helper import convert_model_to_dict
 from and_platform.core.challenge import (
     ChallengeData,
+    check_chall_config,
     get_challenges_directory,
     load_challenge,
 )
@@ -102,7 +103,11 @@ def create_new_chall():
     db.session.commit()
 
     set_chall_visibility(chall.id, visibility)
-    return jsonify(status="success", data=convert_model_to_dict(chall))
+
+    result: dict = convert_model_to_dict(chall)  # type: ignore
+    result["visibility"] = visibility
+    result["config_status"] = check_chall_config(chall.id)
+    return jsonify(status="success", data=result)
 
 
 @challenges_blueprint.get("/<int:challenge_id>")
@@ -111,7 +116,10 @@ def get_chall(challenge_id: int):
     if not chall:
         return jsonify(status="not found", message="challenge not found"), 404
 
-    return jsonify(status="success", data=convert_model_to_dict(chall))
+    result: dict = convert_model_to_dict(chall)  # type: ignore
+    result["visibility"] = get_chall_visibility(chall.id)
+    result["config_status"] = check_chall_config(chall.id)
+    return jsonify(status="success", data=result)
 
 
 @challenges_blueprint.put("/<int:challenge_id>")
@@ -148,7 +156,11 @@ def update_chall(challenge_id: int):
 
     db.session.commit()
     set_chall_visibility(challenge_id, visibility)
-    return jsonify(status="success", data=convert_model_to_dict(chall))
+
+    result: dict = convert_model_to_dict(chall)  # type: ignore
+    result["visibility"] = visibility
+    result["config_status"] = check_chall_config(chall.id)
+    return jsonify(status="success", data=result)
 
 
 @challenges_blueprint.delete("/<int:challenge_id>")
@@ -193,3 +205,11 @@ def set_chall_visibility(chall_id: int, rounds: List[int]):
         statement = statement.values(round=round, challenge_id=chall_id)
 
     db.session.execute(statement)
+
+
+def get_chall_visibility(chall_id: int) -> ScalarResult[int]:
+    return db.session.execute(
+        select(ChallengeReleases.round).filter(
+            ChallengeReleases.challenge_id == chall_id
+        )
+    ).scalars()
