@@ -28,7 +28,7 @@ def add_server():
 
     if Servers.is_exist_with_host(req_body.get("host", "127.0.0.1")):
         return jsonify(status="failed", message="server host must be unique."), 400
-    
+
     new_server = Servers(
         host = req_body["host"],
         sshport = req_body["sshport"],
@@ -82,4 +82,3 @@ def delete(server_id):
     db.session.commit()
 
     return jsonify(status="success", message=f"successfully deleted server with id : {server_id}"), 200
-    
