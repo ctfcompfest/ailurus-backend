@@ -117,7 +117,7 @@ def get_chall(challenge_id: int):
         return jsonify(status="not found", message="challenge not found"), 404
 
     result: dict = convert_model_to_dict(chall)  # type: ignore
-    result["visibility"] = get_chall_visibility(chall.id)
+    result["visibility"] = list(get_chall_visibility(chall.id))
     result["config_status"] = check_chall_config(chall.id)
     return jsonify(status="success", data=result)
 
