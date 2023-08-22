@@ -7,6 +7,7 @@ from and_platform.core.challenge import (
     check_chall_config,
     get_challenges_directory,
     load_challenge,
+    write_chall_info,
 )
 from and_platform.core.config import get_config
 from and_platform.models import ChallengeReleases, Challenges, Servers, db
@@ -103,6 +104,15 @@ def create_new_chall():
     db.session.commit()
 
     set_chall_visibility(chall.id, visibility)
+    write_chall_info(
+        {
+            "name": chall.name,
+            "description": chall.description,
+            "num_expose": chall.num_expose,
+            "server_id": server_id,
+        },
+        chall.id,
+    )
 
     result: dict = convert_model_to_dict(chall)  # type: ignore
     result["visibility"] = visibility
@@ -156,6 +166,15 @@ def update_chall(challenge_id: int):
 
     db.session.commit()
     set_chall_visibility(challenge_id, visibility)
+    write_chall_info(
+        {
+            "name": chall.name,
+            "description": chall.description,
+            "num_expose": chall.num_expose,
+            "server_id": server_id,
+        },
+        chall.id,
+    )
 
     result: dict = convert_model_to_dict(chall)  # type: ignore
     result["visibility"] = visibility

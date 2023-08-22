@@ -40,3 +40,12 @@ def check_chall_config(challenge_id: str):
             missing.append(str(path))
 
     return len(missing) == 0, missing
+
+
+def write_chall_info(chall: ChallengeData, challenge_id: str):
+    config_path = get_challenges_directory().joinpath(
+        "chall-" + challenge_id, "challenge.yaml"
+    )
+
+    with open(config_path, "w") as f:
+        return yaml.safe_dump(chall, f)
