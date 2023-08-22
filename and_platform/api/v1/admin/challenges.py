@@ -176,7 +176,7 @@ def upload_config_files(challenge_id: int):
     chall_dir = challs_dir.joinpath(f"chall-{chall.id}")
 
     tar = tarfile.open(fileobj=tar_file.stream)
-    tar.extractall(chall_dir)
+    tar.extractall(chall_dir, filter="data")
     tar.close()
 
     return jsonify(status="success", message="ok")
