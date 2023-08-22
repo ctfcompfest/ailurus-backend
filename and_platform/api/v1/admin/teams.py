@@ -108,7 +108,7 @@ def update_team(team_id):
         team.email = req_body["email"]
     if "password" in req_body:
         team.password = generate_password_hash(req_body["password"])
-    if "server_id" in req_body:
+    if server_mode == "private" and "server_id" in req_body:
         server = Servers.query.filter_by(id=req_body["server_id"]).first()
         if server is None:
             return jsonify(status="not found", message="server not found"), 404
