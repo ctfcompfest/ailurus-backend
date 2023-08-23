@@ -2,6 +2,7 @@ from and_platform.models import Challenges, Teams, Servers, Services
 from and_platform.core.challenge import get_challenges_dir_fromid
 from and_platform.core.config import get_app_config, get_config
 from and_platform.core.ssh import copy_folder, create_ssh_from_server
+from fabric import Connection
 from multiprocessing import Pool
 from shutil import copytree, ignore_patterns, move
 from secrets import token_hex
@@ -69,7 +70,7 @@ def do_provision(team: Teams, challenge: Challenges, server: Servers):
 def _do_patch(team_id, challenge_id, server):
     patch_fname = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
-    
+    print("asdsadsad")
     with create_ssh_from_server(server) as ssh_conn:
         ssh_conn.put(patch_fname, os.path.join(svc_remote_dir, "patch"))
         with ssh_conn.cd(svc_remote_dir):
@@ -112,3 +113,28 @@ def do_reset(team_id: int, challenge_id: int, server: Servers):
     pool = Pool(processes=1)
     pool.apply_async(_do_reset, args=(team_id, challenge_id, server))
     pool.close()
+
+def fetch_metainfo(ssh_conn: Connection, team_id: int, challenge_id: int):
+    sftp_client = ssh_conn.sftp()
+    sftp_client.chdir(get_remote_service_path(team_id, challenge_id))
+    try:
+        with sftp_client.file("meta/meta.yml") as metainfo_file:
+            return metainfo_file.read().decode()
+    except FileNotFoundError:
+        return ""
+
+def fetch_loginfo(ssh_conn: Connection, team_id: int, challenge_id: int):
+    sftp_client = ssh_conn.sftp()
+    sftp_client.chdir(get_remote_service_path(team_id, challenge_id))
+    try:
+        with sftp_client.file("logs/log") as loginfo_file:
+            return loginfo_file.read().decode()
+    except FileNotFoundError:
+        return ""
+
+def get_service_metadata(team_id: int, challenge_id: int, server: Servers):
+    with create_ssh_from_server(server) as ssh_conn:
+        return {
+            "meta": fetch_metainfo(ssh_conn, team_id, challenge_id),
+            "log": fetch_loginfo(ssh_conn, team_id, challenge_id)
+        }
