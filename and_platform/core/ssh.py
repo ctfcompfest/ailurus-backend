@@ -49,8 +49,9 @@ def copy_folder(conn: Connection, local: str, remote: str):
     tar_local = os.path.join("/tmp", tar_fname)
     tar_remote = os.path.join(remote, tar_fname)
 
+    conn.run(f"mkdir -p {remote}", warn=True, hide=True)
     with tarfile.open(tar_local, "w:gz") as tar:
         tar.add(local, arcname=os.path.basename(local))
     conn.put(tar_local, remote)
     os.unlink(tar_local)
-    conn.run(f"tar -xz -C {remote} -f {tar_remote} && rm -f {tar_remote}")
+    conn.run(f"tar -xz -C {remote} -f {tar_remote} && rm -f {tar_remote}", warn=True, hide=True)
