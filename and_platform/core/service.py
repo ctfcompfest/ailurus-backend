@@ -2,6 +2,7 @@ from and_platform.models import Challenges, Teams, Servers, Services
 from and_platform.core.challenge import get_challenges_dir_fromid
 from and_platform.core.config import get_app_config, get_config
 from and_platform.core.ssh import copy_folder, create_ssh_from_server
+from multiprocessing import Pool
 from shutil import copytree, ignore_patterns, move
 
 import os
@@ -9,6 +10,9 @@ import yaml
 
 def get_service_path(teamid: int, challid: int):
     return os.path.join(get_app_config("DATA_DIR"), "services", f"svc-t{teamid}-c{challid}")
+
+def get_remote_service_path(teamid: int, challid: int):
+    return os.path.join(get_config("REMOTE_DIR"), "services", f"svc-t{teamid}-c{challid}")
 
 def do_remote_provision(team: Teams, challenge: Challenges, server: Servers):
     local_path = get_service_path(team.id, challenge.id)
@@ -60,3 +64,17 @@ def do_provision(team: Teams, challenge: Challenges, server: Servers):
         )
         services.append(tmp_service)
     return services
+
+def _do_patch(team_id, challenge_id, server):
+    patch_fname = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
+    svc_remote_dir = get_remote_service_path(team_id, challenge_id)
+    
+    with create_ssh_from_server(server) as ssh_conn:
+        ssh_conn.put(patch_fname, os.path.join(svc_remote_dir, "patch"))
+        with ssh_conn.cd(svc_remote_dir):
+            ssh_conn.run("python3 manage.py apply_patch 2>> logs/error >> logs/log", hide=True)
+
+def do_patch(team_id: int, challenge_id: int, server: Servers):
+    pool = Pool(processes=1)
+    pool.apply_async(_do_patch, args=(team_id, challenge_id, server))
+    pool.close()

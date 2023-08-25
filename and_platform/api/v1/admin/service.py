@@ -1,7 +1,9 @@
-from and_platform.models import db, Challenges, Teams, Services
+from and_platform.models import db, Challenges, Teams, Services, Servers
 from and_platform.core.config import get_config
-from and_platform.core.service import do_provision
+from and_platform.core.service import do_provision, do_patch, get_service_path
 from flask import Blueprint, jsonify, request, views, current_app as app
+
+import os
 
 service_blueprint = Blueprint("service", __name__, url_prefix="/services")
 
@@ -46,3 +48,29 @@ class ServiceProvision(views.MethodView):
         return jsonify(status="success", message="successfully provision all requested services.")
 
 service_blueprint.add_url_rule('/provision', view_func=ServiceProvision.as_view('service_provision'))
+
+@service_blueprint.post("/<int:challenge_id>/teams/<int:team_id>/patch")
+def admin_service_patch(challenge_id, team_id):
+    if not Services.is_teamservice_exist(team_id, challenge_id):
+        return jsonify(status="not found", message="service not found."), 404
+    
+    server_mode = get_config("SERVER_MODE")
+    if server_mode == "sharing":
+        query_res = db.session.query(Challenges.id, Servers)\
+                    .join(Servers, Servers.id == Challenges.server_id)\
+                    .filter(Challenges.id == challenge_id).first()
+    elif server_mode == "private":
+        query_res = db.session.query(Teams.id, Servers)\
+                    .join(Servers, Servers.id == Teams.server_id)\
+                    .filter(Teams.id == challenge_id).first()
+    server = query_res[1]
+
+    patch_dest = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
+    patch_file = request.files.get("patchfile")
+    if not patch_file:
+        return jsonify(status="failed", message="patch file is missing."), 400    
+    patch_file.save(patch_dest)
+    
+    do_patch(team_id, challenge_id, server)
+    
+    return jsonify(status="success", message="patch submitted.")
