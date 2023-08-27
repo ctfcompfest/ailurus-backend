@@ -1,6 +1,14 @@
 from and_platform.models import db, Challenges, Teams, Services, Servers
 from and_platform.core.config import get_config
+<<<<<<< HEAD
 from and_platform.core.service import do_provision, do_patch, do_restart, do_reset, get_service_path
+=======
+<<<<<<< HEAD
+from and_platform.core.service import do_provision, do_patch, do_restart, get_service_path
+=======
+from and_platform.core.service import do_provision, do_patch, get_service_path
+>>>>>>> f1a576bf77e2d82feec305c77850b2870bce1ff4
+>>>>>>> 9742ea65831d745495fa233c885c299f92d4629c
 from flask import Blueprint, jsonify, request, views, current_app as app
 
 import os
