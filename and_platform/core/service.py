@@ -4,6 +4,7 @@ from and_platform.core.config import get_app_config, get_config
 from and_platform.core.ssh import copy_folder, create_ssh_from_server
 from multiprocessing import Pool
 from shutil import copytree, ignore_patterns, move
+from secrets import token_hex
 
 import os
 import yaml
@@ -90,4 +91,24 @@ def _do_restart(team_id, challenge_id, server):
 def do_restart(team_id: int, challenge_id: int, server: Servers):
     pool = Pool(processes=1)
     pool.apply_async(_do_restart, args=(team_id, challenge_id, server))
+    pool.close()
+
+def _do_reset(team_id, challenge_id, server):
+    svc_local_dir = get_service_path(team_id, challenge_id)
+    svc_remote_dir = get_remote_service_path(team_id, challenge_id)
+    
+    with create_ssh_from_server(server) as ssh_conn:
+        local_src = os.path.join(svc_local_dir, "src")
+        tmp_src = f"/tmp/{token_hex(8)}" 
+        dest_src = os.path.join(svc_remote_dir, "src-tmp")
+
+        copy_folder(ssh_conn, local_src, tmp_src)
+        ssh_conn.run(f"mv {tmp_src}/src {dest_src} && rm -rf {tmp_src}")
+
+        with ssh_conn.cd(svc_remote_dir):
+            ssh_conn.run("python3 manage.py reset 2>> logs/error >> logs/log", hide=True)
+
+def do_reset(team_id: int, challenge_id: int, server: Servers):
+    pool = Pool(processes=1)
+    pool.apply_async(_do_reset, args=(team_id, challenge_id, server))
     pool.close()
