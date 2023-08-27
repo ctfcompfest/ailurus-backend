@@ -1,4 +1,4 @@
-from and_platform.models import db, Challenges, Teams, Services, Servers
+from and_platform.models import db, Challenges, Teams, Services, Servers, CheckerQueues, CheckerVerdict
 from and_platform.core.config import get_config
 from and_platform.core.service import do_provision, do_patch, do_restart, do_reset, get_service_path
 from flask import Blueprint, jsonify, request, views, current_app as app
@@ -48,6 +48,19 @@ class ServiceProvision(views.MethodView):
         return jsonify(status="success", message="successfully provision all requested services.")
 
 service_blueprint.add_url_rule('/provision', view_func=ServiceProvision.as_view('service_provision'))
+
+@service_blueprint.get("/")
+def admin_service_getall():
+    response = {}
+    services = Services.query.order_by(Services.challenge_id, Services.team_id, Services.order).all()
+    for service in services:
+        resp_tmp = response.get(service.challenge_id, {})
+        team_svc_tmp = resp_tmp.get(service.team_id, [])
+        team_svc_tmp.append(service.address)
+        
+        resp_tmp[service.team_id] = team_svc_tmp
+        response[service.challenge_id] = resp_tmp
+    return jsonify(status="success", data=response)
 
 @service_blueprint.post("/<int:challenge_id>/teams/<int:team_id>/patch")
 def admin_service_patch(challenge_id, team_id):
@@ -124,3 +137,21 @@ def admin_service_reset(challenge_id, team_id):
     do_reset(team_id, challenge_id, server)
     
     return jsonify(status="success", message="reset request submitted.")
+
+
+@service_blueprint.get("/<int:challenge_id>/teams/<int:team_id>/status")
+def admin_service_getstatus(challenge_id, team_id):
+    if not Services.is_teamservice_exist(team_id, challenge_id):
+        return jsonify(status="not found", message="service not found."), 404
+
+    checker_result = CheckerQueues.query.filter(
+        CheckerQueues.challenge_id == challenge_id,
+        CheckerQueues.team_id == team_id,
+        CheckerQueues.result.in_([CheckerVerdict.FAULTY, CheckerVerdict.VALID]),
+    ).order_by(CheckerQueues.id.desc()).first()
+    
+    response = CheckerVerdict.VALID
+    if checker_result:
+        response = checker_result.result.name
+    
+    return jsonify(status="success", data=response)
