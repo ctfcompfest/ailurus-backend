@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 SERVICE_NAME=${1}
-PATCH_FILE=${2:-service.patch}
+PATCH_FILE=${2:-/.adce_patch/service.patch}
 TARGET_DIR=${3:-/}
 
 if [ $# -lt 1 ];

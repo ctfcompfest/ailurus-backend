@@ -8,6 +8,10 @@ current_team: Optional[Teams] = current_user
 
 
 def admin_only():
+    # Preflight
+    if request.method == "OPTIONS":
+        return
+
     req_secret = request.headers.get("x-adce-secret", None)
 
     # If server admin forgot to set ADCE_SECRET, all request to the admin API are forbid
@@ -16,5 +20,9 @@ def admin_only():
 
 
 def validteam_only():
+    # Preflight
+    if request.method == "OPTIONS":
+        return
+
     if current_team == None:
         return jsonify(status="forbidden", message="forbidden."), 403

@@ -70,7 +70,7 @@ def do_provision(team: Teams, challenge: Challenges, server: Servers):
 def _do_patch(team_id, challenge_id, server):
     patch_fname = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
-    print("asdsadsad")
+    
     with create_ssh_from_server(server) as ssh_conn:
         ssh_conn.put(patch_fname, os.path.join(svc_remote_dir, "patch"))
         with ssh_conn.cd(svc_remote_dir):
