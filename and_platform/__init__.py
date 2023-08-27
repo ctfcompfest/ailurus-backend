@@ -1,5 +1,6 @@
 import datetime
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 load_dotenv()
 
@@ -73,6 +74,12 @@ def create_app():
         app.config.from_prefixed_env()
 
         # Extensions
+        CORS(app, origins=[
+            "https://ctf.compfest.id",
+            "http://127.0.0.1:3000",
+            "http://localhost:3000",
+            "http://localhost"
+        ])
         db.init_app(app)
         migrate.init_app(app, db)
 
