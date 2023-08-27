@@ -1,6 +1,10 @@
 from and_platform.models import db, Challenges, Teams, Services, Servers
 from and_platform.core.config import get_config
+<<<<<<< HEAD
+from and_platform.core.service import do_provision, do_patch, do_restart, get_service_path
+=======
 from and_platform.core.service import do_provision, do_patch, get_service_path
+>>>>>>> f1a576bf77e2d82feec305c77850b2870bce1ff4
 from flask import Blueprint, jsonify, request, views, current_app as app
 
 import os
@@ -74,3 +78,28 @@ def admin_service_patch(challenge_id, team_id):
     do_patch(team_id, challenge_id, server)
     
     return jsonify(status="success", message="patch submitted.")
+
+
+@service_blueprint.post("/<int:challenge_id>/teams/<int:team_id>/restart")
+def admin_service_restart(challenge_id, team_id):
+    confirm_data: dict = request.get_json()
+    if not confirm_data.get("confirm"):
+        return jsonify(status="bad request", message="action not confirmed"), 400
+    
+    if not Services.is_teamservice_exist(team_id, challenge_id):
+        return jsonify(status="not found", message="service not found."), 404
+    
+    server_mode = get_config("SERVER_MODE")
+    if server_mode == "sharing":
+        query_res = db.session.query(Challenges.id, Servers)\
+                    .join(Servers, Servers.id == Challenges.server_id)\
+                    .filter(Challenges.id == challenge_id).first()
+    elif server_mode == "private":
+        query_res = db.session.query(Teams.id, Servers)\
+                    .join(Servers, Servers.id == Teams.server_id)\
+                    .filter(Teams.id == challenge_id).first()
+    server = query_res[1]
+
+    do_restart(team_id, challenge_id, server)
+    
+    return jsonify(status="success", message="restart request submitted.")
