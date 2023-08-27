@@ -11,13 +11,28 @@ from and_platform.api.auth import bp as auth_blueprint
 from and_platform.api.contest import bp as contest_blueprint
 from and_platform.api.flag import bp as flag_blueprint
 from and_platform.api.services import bp as service_blueprint
-from and_platform.checker import main as checker_main
 from and_platform.core.config import get_config, set_config
-from typing import List
+from and_platform.schedule import ContestScheduler, ContestStartSchedule
+from celery import Celery, Task
+from pathlib import Path
 
 import os
+import shelve
 import sqlalchemy
 
+def celery_init_app(app: Flask) -> Celery:
+    class FlaskTask(Task):
+        def __call__(self, *args: object, **kwargs: object) -> object:
+            with app.app_context():
+                db.engine.dispose()
+                return self.run(*args, **kwargs)
+
+    celery_app = Celery(app.name)
+    celery_app.config_from_object(app.config["CELERY"])
+    celery_app.Task = FlaskTask
+    celery_app.set_default()
+    app.extensions["celery"] = celery_app
+    return celery_app
 
 def setup_jwt_app(app: Flask):
     jwt = JWTManager(app)
@@ -28,16 +43,6 @@ def setup_jwt_app(app: Flask):
         return db.session.execute(
             sqlalchemy.select(Teams).filter(Teams.id == identity["team"]["id"])
         ).scalar()
-
-
-def manage(args: List[str]):
-    if len(args) < 1:
-        return
-
-    if args[1] == "checker":
-        return checker_main(args[1:])
-
-    # TODO: Other commands
 
 def init_data_dir(app):
     app.config["TEMPLATE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -91,3 +96,57 @@ def create_app():
         app.register_blueprint(service_blueprint)
 
     return app
+
+def create_celery(flask_app: Flask | None = None) -> Celery:
+    if flask_app == None:
+        flask_app = create_app()
+    redis_uri = flask_app.config.get("REDIS_URI", os.getenv("REDIS_URI"))
+    flask_app.config.from_mapping(
+        CELERY=dict(
+            broker_url=redis_uri,
+            result_backend=redis_uri,
+            task_ignore_result=True,
+        ),
+    )
+    return celery_init_app(flask_app)
+
+def create_checker():
+    celery = create_celery()
+    celery.conf.update(
+        include = ['and_platform.checker'],
+        task_default_queue = 'checker',
+    )
+    return celery
+
+def create_contest_worker(flask_app: Flask):
+    celery = create_celery(flask_app)
+    celery.conf.update(
+        include = ['and_platform.core.contest'],
+        task_default_queue = 'contest',
+    )
+    return celery
+
+def create_scheduler(flask_app: Flask):
+    with flask_app.app_context():
+        celery = create_celery(flask_app)
+        beat_scheduledb = Path(flask_app.config["DATA_DIR"], "celerybeat-schedule.db")
+        schedule_filename = beat_scheduledb.as_posix().removesuffix(".db")
+        if beat_scheduledb.is_file():
+            with shelve.open(schedule_filename) as dbcontent:
+                celery.conf.beat_schedule = dbcontent['entries']
+        else:
+            celery.conf.beat_schedule = {
+                'contest.start': {
+                    'task': 'and_platform.core.contest.init_contest',
+                    'schedule': ContestStartSchedule(exec_datetime=get_config("START_TIME")),
+                    'options': {
+                        'queue': 'contest',
+                    },
+                },
+            }
+        celery.conf.update(
+            beat_scheduler = ContestScheduler,
+            beat_schedule_filename = schedule_filename,
+            flask_func = create_app
+        )
+        return celery
