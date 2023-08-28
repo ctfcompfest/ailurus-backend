@@ -1,18 +1,18 @@
-import datetime
 from dotenv import load_dotenv
-from flask_cors import CORS
 
 load_dotenv()
 
-from flask import Flask
-from flask_jwt_extended import JWTManager
 from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
 from and_platform.core.config import get_config, set_config
 from and_platform.schedule import ContestScheduler, ContestStartSchedule
 from celery import Celery, Task
+from flask import Flask
+from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 from pathlib import Path
 
+import datetime
 import os
 import shelve
 import sqlalchemy
