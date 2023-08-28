@@ -130,7 +130,7 @@ def get_chall(challenge_id: int):
 
     result: dict = convert_model_to_dict(chall)  # type: ignore
     result["visibility"] = list(get_chall_visibility(chall.id))
-    result["config_status"] = check_chall_config(chall.id)
+    result["config_status"] = check_chall_config(str(chall.id))
     return jsonify(status="success", data=result)
 
 
@@ -175,12 +175,12 @@ def update_chall(challenge_id: int):
             "num_expose": chall.num_expose,
             "server_id": server_id,
         },
-        chall.id,
+        str(chall.id),
     )
 
     result: dict = convert_model_to_dict(chall)  # type: ignore
     result["visibility"] = visibility
-    result["config_status"] = check_chall_config(chall.id)
+    result["config_status"] = check_chall_config(str(chall.id))
     return jsonify(status="success", data=result)
 
 
@@ -221,11 +221,12 @@ def set_chall_visibility(chall_id: int, rounds: List[int]):
         delete(ChallengeReleases).filter(ChallengeReleases.challenge_id == chall_id)
     )
 
-    statement = insert(ChallengeReleases)
-    for round in rounds:
-        statement = statement.values(round=round, challenge_id=chall_id)
+    statement = insert(ChallengeReleases).values(
+        [(round, chall_id) for round in rounds]
+    )
 
     db.session.execute(statement)
+    db.session.commit()
 
 
 def get_chall_visibility(chall_id: int) -> ScalarResult[int]:
