@@ -1,5 +1,5 @@
 from and_platform.core.config import get_config
-from flask import Blueprint, jsonify;
+from flask import Blueprint, jsonify
 
 public_contest_blueprint = Blueprint("public_contest_blueprint", __name__, url_prefix="/contest")
 

@@ -1,9 +1,7 @@
 from and_platform.models import Challenges, ChallengeReleases
-from and_platform.api.helper import convert_model_to_dict;
+from and_platform.api.helper import convert_model_to_dict
 from flask import Blueprint, jsonify
 from and_platform.core.config import get_config
-
-from sqlalchemy import Row;
 
 public_challenge_blueprint = Blueprint("public_challenge_blueprint", __name__, url_prefix="/challenges")
 
