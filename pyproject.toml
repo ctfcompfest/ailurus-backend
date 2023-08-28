@@ -18,6 +18,11 @@ pyjwt = "^2.8.0"
 paramiko = "^3.3.1"
 flask-jwt-extended = "^4.5.2"
 pyyaml = "^6.0.1"
+celery = "^5.3.1"
+redis = "^5.0.0"
+fulgens = {git = "https://github.com/CTF-Compfest-15/fulgens.git", rev = "v0.2.0"}
+requests = "^2.31.0"
+pytz = "^2023.3"
 flask-cors = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]

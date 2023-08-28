@@ -16,4 +16,10 @@ services:
       dockerfile: sample_server.Dockerfile
     ports:
     - 22022:22
-  
+  cache:
+    image: redis:7.2.0-alpine
+    restart: always
+    ports:
+    - 6379:6379
+    command: >
+      --requirepass P@ssw0rd

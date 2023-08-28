@@ -148,3 +148,5 @@ class CheckerQueues(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
     result = db.Column(db.Enum(CheckerVerdict))
+    round = db.Column(db.Integer, default=0)
+    tick = db.Column(db.Integer, default=0)
