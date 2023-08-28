@@ -1,4 +1,3 @@
-from and_platform.core.config import get_config
 from flask import Blueprint, jsonify, request
 from sqlalchemy import select
 from flask_jwt_extended import create_access_token

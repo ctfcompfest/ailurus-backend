@@ -1,8 +1,7 @@
 from and_platform.core.security import validteam_only, current_team
 from and_platform.core.config import get_config
-from and_platform.models import Teams, db, ChallengeReleases, Flags, Submissions, Solves
-from flask import Blueprint, current_app as app, jsonify, request, views
-from sqlalchemy import and_
+from and_platform.models import db, ChallengeReleases, Flags, Submissions, Solves
+from flask import Blueprint, jsonify, request
 
 submission_blueprint = Blueprint("submission", __name__)
 submission_blueprint.before_request(validteam_only)
