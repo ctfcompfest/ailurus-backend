@@ -38,9 +38,7 @@ def populate_challenges():
 
         chall = Challenges.query.where(Challenges.id == chall_id).first()
         if chall == None:
-            chall = Challenges(  # type: ignore
-                id=int(chall_id)
-            )
+            chall = Challenges(id=int(chall_id))  # type: ignore
             db.session.add(chall)
         chall.name = chall_data["name"]
         chall.description = chall_data["description"]
@@ -52,7 +50,7 @@ def populate_challenges():
             ).scalar_one()
             chall.server_id = server.id
             chall.server_host = server.host
-        
+
         populated_challs.append(chall)
 
     db.session.commit()
@@ -69,7 +67,7 @@ def get_all_challs():
     return (
         jsonify(
             status="success",
-            data=convert_model_to_dict(challenges),
+            data=[convert_model_to_dict(chall) for chall in challenges],
         ),
         200,
     )
