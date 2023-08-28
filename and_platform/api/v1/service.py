@@ -6,10 +6,7 @@ public_service_blueprint = Blueprint("public_service_blueprint", __name__, url_p
 
 @public_service_blueprint.get("/")
 def get_all_services():
-    current_round = get_config("CURRENT_ROUND")
-    chall_release = ChallengeReleases.query.with_entities(ChallengeReleases.challenge_id)\
-        .filter(ChallengeReleases.round == current_round).all()
-    chall_release = [elm[0] for elm in chall_release]
+    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND"))
 
     services = Services.query.order_by(
         Services.challenge_id,
@@ -30,10 +27,7 @@ def get_all_services():
 
 @public_service_blueprint.get("/<int:chall_id>")
 def get_service_by_challenge(chall_id):
-    current_round = get_config("CURRENT_ROUND")
-    chall_release = ChallengeReleases.query.with_entities(ChallengeReleases.challenge_id)\
-        .filter(ChallengeReleases.round == current_round, ChallengeReleases.challenge_id == chall_id).all()
-    chall_release = [elm[0] for elm in chall_release]
+    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND"))
     
     if chall_id not in chall_release:
         return jsonify(status="failed", message="challenge not found"), 404
@@ -41,7 +35,7 @@ def get_service_by_challenge(chall_id):
     services = Services.query.order_by(
         Services.team_id,
         Services.order
-    ).filter(Services.challenge_id.in_(chall_release)).all()
+    ).filter(Services.challenge_id == chall_id).all()
 
     response = {}
     for service in services:

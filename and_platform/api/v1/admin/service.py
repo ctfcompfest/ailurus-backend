@@ -60,30 +60,24 @@ def admin_service_getall():
         response[service.challenge_id] = resp_tmp
     return jsonify(status="success", data=response)
 
+
 @service_blueprint.post("/<int:challenge_id>/teams/<int:team_id>/patch")
 def admin_service_patch(challenge_id, team_id):
     if not Services.is_teamservice_exist(team_id, challenge_id):
         return jsonify(status="not found", message="service not found."), 404
     
-    server_mode = get_config("SERVER_MODE")
-    if server_mode == "sharing":
-        query_res = db.session.query(Challenges.id, Servers)\
-                    .join(Servers, Servers.id == Challenges.server_id)\
-                    .filter(Challenges.id == challenge_id).first()
-    elif server_mode == "private":
-        query_res = db.session.query(Teams.id, Servers)\
-                    .join(Servers, Servers.id == Teams.server_id)\
-                    .filter(Teams.id == challenge_id).first()
-    server = query_res[1]
-
     patch_dest = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
     patch_file = request.files.get("patchfile")
     if not patch_file:
         return jsonify(status="failed", message="patch file is missing."), 400    
     patch_file.save(patch_dest)
     
-    do_patch(team_id, challenge_id, server)
-    
+    do_patch(
+        team_id,
+        challenge_id,
+        Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
+    )
+
     return jsonify(status="success", message="patch submitted.")
 
 
@@ -96,18 +90,11 @@ def admin_service_restart(challenge_id, team_id):
     if not Services.is_teamservice_exist(team_id, challenge_id):
         return jsonify(status="not found", message="service not found."), 404
     
-    server_mode = get_config("SERVER_MODE")
-    if server_mode == "sharing":
-        query_res = db.session.query(Challenges.id, Servers)\
-                    .join(Servers, Servers.id == Challenges.server_id)\
-                    .filter(Challenges.id == challenge_id).first()
-    elif server_mode == "private":
-        query_res = db.session.query(Teams.id, Servers)\
-                    .join(Servers, Servers.id == Teams.server_id)\
-                    .filter(Teams.id == challenge_id).first()
-    server = query_res[1]
-
-    do_restart(team_id, challenge_id, server)
+    do_restart(
+        team_id,
+        challenge_id,
+        Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
+    )
     
     return jsonify(status="success", message="restart request submitted.")
 
@@ -121,18 +108,11 @@ def admin_service_reset(challenge_id, team_id):
     if not Services.is_teamservice_exist(team_id, challenge_id):
         return jsonify(status="not found", message="service not found."), 404
     
-    server_mode = get_config("SERVER_MODE")
-    if server_mode == "sharing":
-        query_res = db.session.query(Challenges.id, Servers)\
-                    .join(Servers, Servers.id == Challenges.server_id)\
-                    .filter(Challenges.id == challenge_id).first()
-    elif server_mode == "private":
-        query_res = db.session.query(Teams.id, Servers)\
-                    .join(Servers, Servers.id == Teams.server_id)\
-                    .filter(Teams.id == challenge_id).first()
-    server = query_res[1]
-
-    do_reset(team_id, challenge_id, server)
+    do_reset(
+        team_id,
+        challenge_id,
+        Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
+    )
     
     return jsonify(status="success", message="reset request submitted.")
 
@@ -156,17 +136,10 @@ def admin_service_getstatus(challenge_id, team_id):
 def admin_service_getmeta(challenge_id, team_id):
     if not Services.is_teamservice_exist(team_id, challenge_id):
         return jsonify(status="not found", message="service not found."), 404
-    
-    server_mode = get_config("SERVER_MODE")
-    if server_mode == "sharing":
-        query_res = db.session.query(Challenges.id, Servers)\
-                    .join(Servers, Servers.id == Challenges.server_id)\
-                    .filter(Challenges.id == challenge_id).first()
-    elif server_mode == "private":
-        query_res = db.session.query(Teams.id, Servers)\
-                    .join(Servers, Servers.id == Teams.server_id)\
-                    .filter(Teams.id == challenge_id).first()
-    server = query_res[1]
 
-    response = get_service_metadata(team_id, challenge_id, server)
+    response = get_service_metadata(
+        team_id,
+        challenge_id,
+        Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
+    )
     return jsonify(status="success", data=response)

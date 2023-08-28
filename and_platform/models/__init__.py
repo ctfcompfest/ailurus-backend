@@ -32,6 +32,18 @@ class Servers(db.Model):
     def is_exist_with_id(self, id):
         server = self.query.filter_by(id=id).first()
         return server is not None
+    
+    @classmethod
+    def get_server_by_mode(cls, server_mode: str, team_id: int, challenge_id: int):
+        if server_mode == "sharing":
+            query_res = db.session.query(Challenges.id, Servers)\
+                        .join(Servers, Servers.id == Challenges.server_id)\
+                        .filter(Challenges.id == challenge_id).first()
+        elif server_mode == "private":
+            query_res = db.session.query(Teams.id, Servers)\
+                        .join(Servers, Servers.id == Teams.server_id)\
+                        .filter(Teams.id == team_id).first()
+        return query_res[1]
 
 class Teams(db.Model):
     __tablename__ = "teams"
@@ -93,6 +105,10 @@ class Solves(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
 
+    @classmethod
+    def is_solved(cls, team_id: int, chall_id: int) -> list:
+        return cls.query.filter(cls.challenge_id == chall_id, cls.team_id == team_id).count() > 0
+
 class ChallengeReleases(db.Model):
     __tablename__ = "challenge_releases"
     __table_args__ = (
@@ -101,6 +117,13 @@ class ChallengeReleases(db.Model):
 
     round = db.Column(db.Integer)
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
+
+    @classmethod
+    def get_challenges_from_round(cls, current_round: int) -> list:
+        chall_release = ChallengeReleases.query.with_entities(ChallengeReleases.challenge_id)\
+            .filter(ChallengeReleases.round == int(current_round)).all()
+        return [elm[0] for elm in chall_release]
+    
 
 class ScorePerTicks(db.Model):
     __tablename__ = "score_per_ticks"
