@@ -102,7 +102,7 @@ def create_new_chall():
         chall.server_id = server.id
         chall.server_host = server.host
 
-    db.sesion.add(chall)
+    db.session.add(chall)
     db.session.commit()
 
     set_chall_visibility(chall.id, visibility)
