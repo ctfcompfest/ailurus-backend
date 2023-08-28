@@ -1,6 +1,7 @@
 import tarfile
 from typing import List
 from sqlalchemy import ScalarResult, delete, insert, select
+from sqlalchemy.sql.schema import Sequence
 from and_platform.api.helper import convert_model_to_dict
 from and_platform.core.challenge import (
     ChallengeData,
@@ -41,6 +42,8 @@ def populate_challenges():
             chall = Challenges(  # type: ignore
                 id=int(chall_id)
             )
+            # Prevent unaltered sequence 
+            db.session.execute(Sequence('challenges_id_seq'))
             db.session.add(chall)
         chall.name = chall_data["name"]
         chall.description = chall_data["description"]
@@ -52,10 +55,9 @@ def populate_challenges():
             ).scalar_one()
             chall.server_id = server.id
             chall.server_host = server.host
-        
-        populated_challs.append(chall)
 
     db.session.commit()
+
     populated_challs = Challenges.query.all()
     return (
         jsonify(status="success", data=convert_model_to_dict(populated_challs)),
@@ -65,7 +67,7 @@ def populate_challenges():
 
 @challenges_blueprint.get("/")
 def get_all_challs():
-    challenges = db.session.execute(select(Challenges)).scalars()
+    challenges = db.session.execute(select(Challenges)).scalars().all()
     return (
         jsonify(
             status="success",
@@ -104,10 +106,12 @@ def create_new_chall():
         chall.server_id = server.id
         chall.server_host = server.host
 
-    db.sesion.add(chall)
+
+    db.session.add(chall)
     db.session.commit()
 
     set_chall_visibility(chall.id, visibility)
+
     write_chall_info(
         {
             "name": chall.name,
@@ -136,7 +140,7 @@ def get_chall(challenge_id: int):
     return jsonify(status="success", data=result)
 
 
-@challenges_blueprint.put("/<int:challenge_id>")
+@challenges_blueprint.patch("/<int:challenge_id>")
 def update_chall(challenge_id: int):
     server_mode = get_config("SERVER_MODE")
     data: ChallengeRequest = request.get_json()
@@ -191,6 +195,8 @@ def delete_chall(challenge_id: int):
     chall = db.session.get(Challenges, challenge_id)
     if not chall:
         return jsonify(status="not found", message="challenge not found"), 404
+    
+    set_chall_visibility(challenge_id, [])
 
     db.session.delete(chall)
     db.session.commit()
@@ -211,7 +217,7 @@ def upload_config_files(challenge_id: int):
     chall_dir = challs_dir.joinpath(f"chall-{chall.id}")
 
     tar = tarfile.open(fileobj=tar_file.stream)
-    tar.extractall(chall_dir, filter="data")
+    tar.extractall(chall_dir)
     tar.close()
 
     return jsonify(status="success", message="ok")
@@ -223,11 +229,12 @@ def set_chall_visibility(chall_id: int, rounds: List[int]):
         delete(ChallengeReleases).filter(ChallengeReleases.challenge_id == chall_id)
     )
 
-    statement = insert(ChallengeReleases)
-    for round in rounds:
-        statement = statement.values(round=round, challenge_id=chall_id)
+    if len(rounds) > 0:
+        datas = [{"round": round, "challenge_id": chall_id} for round in rounds]
+        statement = insert(ChallengeReleases).values(datas)
+        db.session.execute(statement)
 
-    db.session.execute(statement)
+    db.session.commit()
 
 
 def get_chall_visibility(chall_id: int) -> ScalarResult[int]:

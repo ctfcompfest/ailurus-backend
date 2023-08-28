@@ -34,20 +34,20 @@ def check_chall_config(challenge_id: str):
         Path("docker-compose.yml"),
         Path("patchrule.yml"),
     ]
-    chall_dir = get_challenges_directory().joinpath("chall-" + challenge_id)
+    chall_dir = get_challenges_directory().joinpath("chall-" + str(challenge_id))
 
     missing: List[str] = []
     for path in REQUIRED_PATHS:
         if not chall_dir.joinpath(path).exists():
             missing.append(str(path))
 
-    return len(missing) == 0, missing
+    return len(missing) == 0
 
 
 def write_chall_info(chall: ChallengeData, challenge_id: str):
-    config_path = get_challenges_directory().joinpath(
-        "chall-" + challenge_id, "challenge.yaml"
-    )
+    chall_dir = get_challenges_directory().joinpath("chall-" + str(challenge_id))
+    chall_dir.mkdir(parents=True, exist_ok=True)
 
+    config_path = chall_dir.joinpath("challenge.yml")
     with open(config_path, "w") as f:
         return yaml.safe_dump(chall, f)

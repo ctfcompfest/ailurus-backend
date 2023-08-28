@@ -4,14 +4,14 @@ from flask import Blueprint, jsonify, request;
 
 servers_blueprint = Blueprint("servers_manager", __name__, url_prefix="/servers")
 
-@servers_blueprint.route("/", methods=["GET"])
+@servers_blueprint.get("/")
 def get_all_servers():
     servers = Servers.query.all()
     servers = convert_model_to_dict(servers)
 
     return jsonify(status="success", data=servers), 200
 
-@servers_blueprint.route("/<int:server_id>", methods=["GET"])
+@servers_blueprint.get("/<int:server_id>")
 def get_by_id(server_id):
     server = Servers.query.filter_by(id=server_id).first()
 
@@ -22,7 +22,7 @@ def get_by_id(server_id):
     return jsonify(status="success", data=server), 200
 
 
-@servers_blueprint.route("/", methods=["POST"])
+@servers_blueprint.post("/")
 def add_server():
     req_body = request.get_json()
 
@@ -42,7 +42,7 @@ def add_server():
 
     return jsonify(status="success", message="succesfully added new server.", data=new_server), 200
 
-@servers_blueprint.route("/<int:server_id>", methods=["PATCH"])
+@servers_blueprint.patch("/<int:server_id>")
 def update_server(server_id):
     req_body = request.get_json()
 
@@ -71,7 +71,7 @@ def update_server(server_id):
 
     return jsonify(status="success", message="successfully updated server info.", data=updated_server_data), 200
 
-@servers_blueprint.route("/<int:server_id>", methods=["DELETE"])
+@servers_blueprint.delete("/<int:server_id>")
 def delete(server_id):
     
     server = Servers.query.filter_by(id=server_id).first()
