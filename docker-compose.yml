@@ -1,0 +1,25 @@
+version: '3'
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    ports:
+    - 5432:5432
+    volumes:
+    - ./and_platform/.adce_data/postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+  sample_server:
+    privileged: true
+    build:
+      dockerfile: sample_server.Dockerfile
+    ports:
+    - 22022:22
+  cache:
+    image: redis:7.2.0-alpine
+    restart: always
+    ports:
+    - 6379:6379
+    command: >
+      --requirepass P@ssw0rd

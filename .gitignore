@@ -164,3 +164,4 @@ cython_debug/
 
 # vscode
 .vscode/
+and_platform/.adce_data/**

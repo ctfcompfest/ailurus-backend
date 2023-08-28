@@ -1,6 +1,6 @@
 from and_platform.models import db, Challenges, Teams, Services, Servers, CheckerQueues, CheckerVerdict
 from and_platform.core.config import get_config
-from and_platform.core.service import do_provision, do_patch, do_restart, do_reset, get_service_path
+from and_platform.core.service import do_provision, do_patch, do_restart, do_reset, get_service_path, get_service_metadata
 from flask import Blueprint, jsonify, request, views, current_app as app
 
 import os
@@ -138,7 +138,6 @@ def admin_service_reset(challenge_id, team_id):
     
     return jsonify(status="success", message="reset request submitted.")
 
-
 @service_blueprint.get("/<int:challenge_id>/teams/<int:team_id>/status")
 def admin_service_getstatus(challenge_id, team_id):
     if not Services.is_teamservice_exist(team_id, challenge_id):
@@ -153,5 +152,23 @@ def admin_service_getstatus(challenge_id, team_id):
     response = CheckerVerdict.VALID
     if checker_result:
         response = checker_result.result.name
+    return jsonify(status="success", data=response)
+  
+@service_blueprint.get("/<int:challenge_id>/teams/<int:team_id>/meta")
+def admin_service_getmeta(challenge_id, team_id):
+    if not Services.is_teamservice_exist(team_id, challenge_id):
+        return jsonify(status="not found", message="service not found."), 404
     
+    server_mode = get_config("SERVER_MODE")
+    if server_mode == "sharing":
+        query_res = db.session.query(Challenges.id, Servers)\
+                    .join(Servers, Servers.id == Challenges.server_id)\
+                    .filter(Challenges.id == challenge_id).first()
+    elif server_mode == "private":
+        query_res = db.session.query(Teams.id, Servers)\
+                    .join(Servers, Servers.id == Teams.server_id)\
+                    .filter(Teams.id == challenge_id).first()
+    server = query_res[1]
+
+    response = get_service_metadata(team_id, challenge_id, server)
     return jsonify(status="success", data=response)
