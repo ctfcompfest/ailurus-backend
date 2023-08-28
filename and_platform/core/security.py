@@ -2,7 +2,7 @@ from typing import Optional
 from and_platform.core.config import get_config
 from and_platform.models import db, Teams
 from flask import jsonify, request
-from flask_jwt_extended import current_user
+from flask_jwt_extended import current_user, verify_jwt_in_request
 
 current_team: Optional[Teams] = current_user
 
@@ -23,6 +23,7 @@ def validteam_only():
     # Preflight
     if request.method == "OPTIONS":
         return
-
+    
+    verify_jwt_in_request()
     if current_team == None:
         return jsonify(status="forbidden", message="forbidden."), 403
