@@ -17,13 +17,13 @@ def get_challenges_directory():
     path.mkdir(parents=True, exist_ok=True)
     return path
 
+
 def get_challenges_dir_fromid(challenge_id: str):
     return get_challenges_directory().joinpath("chall-" + challenge_id)
 
+
 def load_challenge(challenge_id: str) -> ChallengeData:
-    config_path = get_challenges_dir_fromid(challenge_id).joinpath(
-        "challenge.yml"
-    )
+    config_path = get_challenges_dir_fromid(challenge_id).joinpath("challenge.yml")
     with open(config_path, "r") as f:
         return yaml.safe_load(f.read())
 
@@ -46,8 +46,9 @@ def check_chall_config(challenge_id: str):
 
 def write_chall_info(chall: ChallengeData, challenge_id: str):
     config_path = get_challenges_directory().joinpath(
-        "chall-" + challenge_id, "challenge.yaml"
+        "chall-" + challenge_id, "challenge.yml"
     )
+    config_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(config_path, "w") as f:
         return yaml.safe_dump(chall, f)
