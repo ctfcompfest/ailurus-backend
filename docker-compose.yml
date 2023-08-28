@@ -23,4 +23,3 @@ services:
     - 6379:6379
     command: >
       --requirepass P@ssw0rd
-  
