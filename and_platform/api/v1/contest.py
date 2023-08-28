@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify;
 
 public_contest_blueprint = Blueprint("public_contest_blueprint", __name__, url_prefix="/contest")
 
-@public_contest_blueprint.route("/info", methods=["GET"])
+@public_contest_blueprint.get("/info")
 def get_contest_config():
     event_name = get_config("EVENT_NAME", "AnD")
     start_time = get_config("START_TIME", "2007-03-01T13:00:00Z")

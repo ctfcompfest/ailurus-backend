@@ -8,10 +8,6 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
-from and_platform.api.auth import bp as auth_blueprint
-from and_platform.api.contest import bp as contest_blueprint
-from and_platform.api.flag import bp as flag_blueprint
-from and_platform.api.services import bp as service_blueprint
 from and_platform.core.config import get_config, set_config
 from and_platform.schedule import ContestScheduler, ContestStartSchedule
 from celery import Celery, Task
@@ -97,10 +93,6 @@ def create_app():
 
         # Blueprints
         app.register_blueprint(api_blueprint)
-        app.register_blueprint(auth_blueprint)
-        app.register_blueprint(contest_blueprint)
-        app.register_blueprint(flag_blueprint)
-        app.register_blueprint(service_blueprint)
 
     return app
 

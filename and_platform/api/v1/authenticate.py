@@ -11,7 +11,7 @@ authenticate_blueprint = Blueprint(
 )
 
 
-@authenticate_blueprint.route("/", methods=["POST"])
+@authenticate_blueprint.post("/")
 def login():
     email = request.json.get("email")
     password = request.json.get("password")

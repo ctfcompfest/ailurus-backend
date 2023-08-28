@@ -1,14 +1,9 @@
 from flask import Blueprint, jsonify
 from and_platform.models import Teams
-from and_platform.api.helper import convert_model_to_dict
 
+public_teams_blueprint = Blueprint("public_teams_blueprint", __name__, url_prefix="/teams")
 
-public_teams_blueprint = Blueprint(
-    "public_teams_blueprint", __name__, url_prefix="/teams"
-)
-
-
-@public_teams_blueprint.route("/", methods=["GET"])
+@public_teams_blueprint.get("/")
 def get_all_teams():
     teams = Teams.query.all()
     teams_data = []
@@ -24,7 +19,7 @@ def get_all_teams():
     return jsonify(status="success", data=teams_data), 200
 
 
-@public_teams_blueprint.route("/<int:team_id>", methods=["GET"])
+@public_teams_blueprint.get("/<int:team_id>")
 def get_team_by_id(team_id):
     team = Teams.query.filter_by(id=team_id).first()
 

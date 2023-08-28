@@ -11,7 +11,7 @@ import json
 teams_blueprint = Blueprint("teams_blueprint", __name__, url_prefix="/teams")
 
 
-@teams_blueprint.route("/", methods=["POST"])
+@teams_blueprint.post("/")
 def create_team():
     req_body = request.get_json()
 
@@ -93,7 +93,7 @@ def create_team():
     )
 
 
-@teams_blueprint.route("/<int:team_id>", methods=["PUT"])
+@teams_blueprint.patch("/<int:team_id>")
 def update_team(team_id):
     server_mode = get_config("SERVER_MODE")
     req_body = request.get_json()
@@ -137,7 +137,7 @@ def update_team(team_id):
     )
 
 
-@teams_blueprint.route("/<int:team_id>", methods=["DELETE"])
+@teams_blueprint.delete("/<int:team_id>")
 def delete_team(team_id):
     team = Teams.query.filter_by(id=team_id).first()
     if team is None:
