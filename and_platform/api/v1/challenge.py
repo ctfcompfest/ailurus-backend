@@ -10,7 +10,6 @@ public_challenge_blueprint = Blueprint("public_challenge_blueprint", __name__, u
 
 @public_challenge_blueprint.get("/")
 def get_all_challenge():
-    
     visible_challenges = [] 
     visible_challenges_id = get_all_released_challenge_id()   
     challenges = Challenges.query.with_entities(Challenges.id, Challenges.name, Challenges.description).filter(Challenges.id.in_(visible_challenges_id)).all()
@@ -19,7 +18,7 @@ def get_all_challenge():
         data = {
             "id" : challenge[0],
             "name" : challenge[1],
-            "descripttion" :challenge[2]
+            "description" :challenge[2]
         }
         visible_challenges.append(data)
 
@@ -36,14 +35,14 @@ def get_challenge_by_id(challenge_id):
     data = {
             "id" : challenge[0],
             "name" : challenge[1],
-            "descripttion" :challenge[2]
+            "description" :challenge[2]
         }
     return jsonify(status="success", data=data), 200
 
 def get_all_released_challenge_id() -> list:
     current_round = get_config("CURRENT_ROUND")
     visible_challenges_id = []
-    challenge_releases = ChallengeReleases.query.filter(ChallengeReleases.round <= current_round).all()
+    challenge_releases = ChallengeReleases.query.filter(ChallengeReleases.round == current_round).all()
 
     if not isinstance(challenge_releases, list):
         challenge_releases = [challenge_releases]

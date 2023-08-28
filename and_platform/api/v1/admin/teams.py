@@ -1,14 +1,34 @@
 from typing import Optional
 from and_platform.core.config import get_config
 from and_platform.models import db, Teams, Servers
-from and_platform.api.helper import convert_model_to_dict
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash
 
 import secrets
-import json
 
 teams_blueprint = Blueprint("teams_blueprint", __name__, url_prefix="/teams")
+
+@teams_blueprint.get("/")
+def get_all_teams():
+    teams = Teams.query.all()
+    response = []
+    for team in teams:
+        response.append({
+            "name": team.name,
+            "email": team.email,
+            "secret": team.secret,
+            "server": {
+                "id": team.server_id,
+                "host": team.server_host,
+            },
+        })
+    return (
+        jsonify(
+            status="success",
+            data=response,
+        ),
+        200,
+    )
 
 
 @teams_blueprint.post("/")
@@ -92,6 +112,27 @@ def create_team():
         200,
     )
 
+@teams_blueprint.get("/<int:team_id>")
+def get_team_detail(team_id):
+    team = Teams.query.filter_by(id=team_id).first()
+    if team is None:
+        return jsonify(status="not found", message="team not found"), 404
+    response = {
+        "name": team.name,
+        "email": team.email,
+        "secret": team.secret,
+        "server": {
+            "id": team.server_id,
+            "host": team.server_host,
+        },
+    }
+    return (
+        jsonify(
+            status="success",
+            data=response,
+        ),
+        200,
+    )
 
 @teams_blueprint.patch("/<int:team_id>")
 def update_team(team_id):

@@ -28,13 +28,16 @@ def add_server():
 
     if Servers.is_exist_with_host(req_body.get("host", "127.0.0.1")):
         return jsonify(status="failed", message="server host must be unique."), 400
-
-    new_server = Servers(
-        host = req_body["host"],
-        sshport = req_body["sshport"],
-        username = req_body["username"],
-        auth_key = req_body["auth_key"]
-    )
+    try:
+        new_server = Servers(
+            host = req_body["host"],
+            sshport = req_body["sshport"],
+            username = req_body["username"],
+            auth_key = req_body["auth_key"]
+        )
+    except KeyError:
+        return jsonify(status="failed", message="missing required attributes.")
+    
     db.session.add(new_server)
     db.session.commit()
     db.session.refresh(new_server) # update the object with newest commit
