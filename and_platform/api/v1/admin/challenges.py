@@ -113,12 +113,12 @@ def create_new_chall():
             "num_expose": chall.num_expose,
             "server_id": server_id,
         },
-        chall.id,
+        str(chall.id),
     )
 
     result: dict = convert_model_to_dict(chall)  # type: ignore
     result["visibility"] = visibility
-    result["config_status"] = check_chall_config(chall.id)
+    result["config_status"] = check_chall_config(str(chall.id))
     return jsonify(status="success", data=result)
 
 
