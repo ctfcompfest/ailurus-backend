@@ -127,9 +127,9 @@ def admin_service_getstatus(challenge_id, team_id):
         CheckerQueues.result.in_([CheckerVerdict.FAULTY, CheckerVerdict.VALID]),
     ).order_by(CheckerQueues.id.desc()).first()
     
-    response = CheckerVerdict.VALID
+    response = CheckerVerdict.VALID.value
     if checker_result:
-        response = checker_result.result.name
+        response = checker_result.result.value
     return jsonify(status="success", data=response)
   
 @service_blueprint.get("/<int:challenge_id>/teams/<int:team_id>/meta")

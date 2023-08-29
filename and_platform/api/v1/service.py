@@ -1,6 +1,7 @@
-from and_platform.models import ChallengeReleases, Services
+from and_platform.models import db, ChallengeReleases, Services, CheckerQueues, CheckerVerdict
 from flask import Blueprint, jsonify
 from and_platform.core.config import get_config
+from sqlalchemy.sql import func
 
 public_service_blueprint = Blueprint("public_service_blueprint", __name__, url_prefix="/services")
 
@@ -43,4 +44,38 @@ def get_service_by_challenge(chall_id):
         team_svc_tmp.append(service.address)
         
         response[service.team_id] = team_svc_tmp
+    return jsonify(status="success", data=response)
+
+
+@public_service_blueprint.get("/status")
+def get_all_services_status():
+    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND"))
+
+    latest_id = func.max(CheckerQueues.id).label("latest_id")
+    checker_results = db.session.query(
+        latest_id,
+        CheckerQueues.challenge_id,
+        CheckerQueues.team_id,
+        CheckerQueues.result,
+    ).where(
+        CheckerQueues.challenge_id.in_(chall_release),
+        CheckerQueues.result.in_([
+            CheckerVerdict.FAULTY,
+            CheckerVerdict.VALID,
+        ])
+    ).group_by(
+        CheckerQueues.challenge_id,
+        CheckerQueues.team_id,
+        CheckerQueues.result,
+    ).order_by(latest_id.desc()).all()
+    
+    response = {}
+    for row in checker_results:
+        _, chall_id, team_id, result = row
+        chall_data = response.get(chall_id, {})
+        if team_id in chall_data: continue
+
+        chall_data[team_id] = result.value
+        response[chall_id] = chall_data
+
     return jsonify(status="success", data=response)
