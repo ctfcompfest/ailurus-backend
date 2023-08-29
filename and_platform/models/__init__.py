@@ -1,5 +1,6 @@
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 
 import enum
 import secrets
@@ -95,6 +96,7 @@ class Submissions(db.Model):
     value = db.Column(db.Text, index=True)
     verdict = db.Column(db.Boolean)
     flag_id = db.Column(db.Integer, db.ForeignKey("flags.id"), default=None)
+    time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
 class Solves(db.Model):
     __tablename__ = "solves"
@@ -104,6 +106,7 @@ class Solves(db.Model):
 
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
+    time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
     @classmethod
     def is_solved(cls, team_id: int, chall_id: int) -> list:
@@ -134,10 +137,12 @@ class ScorePerTicks(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     round = db.Column(db.Integer)
     tick = db.Column(db.Integer)
+    challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
     attack_score = db.Column(db.Double)
     defense_score = db.Column(db.Double)
     sla = db.Column(db.Double)
+    time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
     team = db.relationship("Teams", foreign_keys="ScorePerTicks.team_id", lazy="joined")
 
@@ -173,3 +178,4 @@ class CheckerQueues(db.Model):
     result = db.Column(db.Enum(CheckerVerdict))
     round = db.Column(db.Integer, default=0)
     tick = db.Column(db.Integer, default=0)
+    time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
