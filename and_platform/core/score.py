@@ -87,7 +87,7 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
             for captured in flag_captured:
                 attack_score += team_len * _get_service_weight(captured, chall, data_accum)
             
-            defense_score = team_len * flag_stolen * sla_score
+            defense_score = (team_len / flag_stolen) * sla_score
 
             score = ScorePerTicks(
                 round = round,
