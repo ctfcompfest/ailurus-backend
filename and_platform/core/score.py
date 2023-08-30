@@ -1,6 +1,9 @@
 from and_platform.models import db, ScorePerTicks, Submissions, CheckerQueues, Flags, Challenges, Teams, CheckerVerdict
 from and_platform.core.constant import CHECKER_INTERVAL
-from typing import List
+from typing import List, Optional, TypedDict
+from sqlalchemy.sql import func
+from datetime import datetime
+
 import time
 
 def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
@@ -85,7 +88,12 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
             
             attack_score = 0
             for captured in flag_captured:
-                attack_score += team_len * _get_service_weight(captured, chall, data_accum)
+                attack_score += team_len * get_service_weight(
+                        team_id=captured,
+                        challenge_id=chall,
+                        current_round=round,
+                        current_tick=tick,
+                    )
             
             defense_score = (team_len / flag_stolen) * sla_score
 
@@ -93,6 +101,7 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
                 round = round,
                 tick = tick,
                 team_id = team.id,
+                challenge_id = chall,
                 attack_score = attack_score,
                 defense_score = defense_score,
                 sla = sla_score,
@@ -101,12 +110,123 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
             db.session.add(score)
     db.session.commit()
 
+class TeamChallengeScore(TypedDict):
+    challenge_id: int
+    flag_captured: int
+    flag_stolen: int
+    attack: float
+    defense: float
+    sla: float
 
-def _get_service_weight(def_id: int, chall_id: int, data: dict):
-    chall_data = data.get(chall_id)
-    if not chall_data: return 0
-    team_data = chall_data.get(def_id)
-    if not team_data: return 0
-    stolen_cnt = team_data.get("stolen", 0)
-    if stolen_cnt == 0: return 1
-    return 1/stolen_cnt
+class TeamScore(TypedDict):
+    team_id: int
+    total_score: float
+    challenges: List[TeamChallengeScore]    
+
+def get_service_weight(team_id: int, challenge_id: int, current_round: int, current_tick: int) -> float:
+    current_stolen = db.session.query(
+        Submissions.id,
+    ).join(
+        Flags,
+        Flags.id == Submissions.flag_id
+    ).filter(
+        Submissions.round == current_round,
+        Submissions.tick == current_tick,
+        Submissions.verdict == True,
+        Flags.team_id == team_id,
+        Submissions.team_id != team_id,
+        Submissions.challenge_id == challenge_id,
+    ).count()
+    team_number = db.session.query(Teams.id).count()
+    
+    return (team_number - current_stolen)/team_number
+
+
+def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: datetime = None) -> TeamChallengeScore:
+    def get_attack_score() -> float:
+        return scores[0]
+
+    def get_defense_score() -> float:
+        return scores[1]
+
+    def get_sla() -> float:    
+        filters = [
+            CheckerQueues.challenge_id == challenge_id,
+            CheckerQueues.team_id == team_id,
+            CheckerQueues.result.in_([CheckerVerdict.VALID, CheckerVerdict.FAULTY]),
+        ]
+        if before:
+            filters.append(CheckerQueues.time_created < before)
+
+        all_checker_count = db.session.query(
+            CheckerQueues.result,
+            func.count(CheckerQueues.id),
+        ).filter(*filters).group_by(CheckerQueues.result).all()
+
+        checker_count = {}
+        for elm in all_checker_count:
+            status, count = elm
+            checker_count[status.value] = count
+        sla_rate = checker_count[1] / (checker_count[0] + checker_count[1])
+        return sla_rate
+
+    flag_captured_filters = [
+        Submissions.verdict == True,
+        Submissions.team_id == team_id,
+        Submissions.challenge_id == challenge_id,
+    ]
+    flag_stolen_filters = [
+        Submissions.verdict == True,
+        Flags.team_id == team_id,
+        Submissions.team_id != team_id,
+        Submissions.challenge_id == challenge_id,
+    ]
+    if before:
+        flag_captured_filters.append(Submissions.time_created < before)
+        flag_stolen_filters.append(Submissions.time_created < before)
+
+    all_flag_captured = db.session.query(
+        Submissions.id,
+        Flags.team_id,
+    ).join(
+        Flags,
+        Flags.id == Submissions.flag_id
+    ).filter(*flag_captured_filters).count()
+
+    all_flag_stolen = db.session.query(
+        Submissions.id,
+        Submissions.team_id,
+    ).join(
+        Flags,
+        Flags.id == Submissions.flag_id
+    ).filter(*flag_stolen_filters).count()
+    
+    score_filters = [
+        ScorePerTicks.challenge_id == challenge_id,
+        ScorePerTicks.team_id == team_id,
+    ]
+    if before:
+        score_filters.append(ScorePerTicks.time_created < before)
+
+    scores = db.session.query(
+        func.sum(ScorePerTicks.attack_score),
+        func.sum(ScorePerTicks.defense_score),
+    ).filter(*score_filters).group_by(ScorePerTicks.challenge_id, ScorePerTicks.team_id).all()
+
+    return TeamChallengeScore(
+        challenge_id=challenge_id,
+        flag_captured=all_flag_captured,
+        flag_stolen=all_flag_stolen,
+        sla=get_sla(),
+        attack=get_attack_score(),
+        defense=get_defense_score()
+    )
+
+def get_overall_team_score(team_id: int, before: datetime = None) -> TeamScore:
+    challs = Challenges.query.all()
+    team_score = TeamScore(team_id=team_id, total_score=0, challenges=list())
+    for chall in challs:
+        tmp = get_overall_team_challenge_score(team_id, chall.id, before)
+        team_score["total_score"] += tmp["attack"] + tmp["attack"]
+        team_score["challenges"].append(tmp)
+    return team_score
