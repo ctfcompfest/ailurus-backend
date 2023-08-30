@@ -15,8 +15,7 @@ def get_all_challenge():
     for challenge in challenges:
         data = {
             "id" : challenge[0],
-            "name" : challenge[1],
-            "description" :challenge[2]
+            "name" : challenge[1]
         }
         visible_challenges.append(data)
 

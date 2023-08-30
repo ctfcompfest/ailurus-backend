@@ -68,14 +68,15 @@ def populate_challenges():
 @challenges_blueprint.get("/")
 def get_all_challs():
     challenges = db.session.execute(select(Challenges)).scalars().all()
-    return (
-        jsonify(
-            status="success",
-            data=convert_model_to_dict(challenges),
-        ),
-        200,
-    )
+    response = []
+    for challenge in challenges:
+        data = {
+            "id" : challenge[0],
+            "name" : challenge[1]
+        }
+        response.append(data)
 
+    return jsonify(status="success", data=response), 200
 
 @challenges_blueprint.post("/")
 def create_new_chall():
