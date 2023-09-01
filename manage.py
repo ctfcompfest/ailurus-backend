@@ -1,6 +1,7 @@
-from and_platform import create_scheduler, create_app, create_checker, create_contest_worker
+from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker
 from multiprocessing import Process
 import sys
+import argparse
 
 args = sys.argv[1:]
 
@@ -16,19 +17,36 @@ def run_web(argv):
     Process(target=celery_worker.start, args=(["worker", "-l", "info"],)).start()
     flask_app.run()
 
-def run_checker(argv):
+def run_checker():
     celery = create_checker()
-    celery.start(["worker"] + argv)
+    celery.start(["worker", "-E", "--loglevel", "INFO"])
+    
+def run_checker_executor(**kwargs):
+    checker = create_checker_executor()
+    checker.run_check(kwargs['team'], kwargs['challenge'])
+
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog='PROG')
+    subparser = parser.add_subparsers(dest="command", help='subcommand help')
+
+    checkexec_parser = subparser.add_parser('checkexec', help='checker executor command help')
+    checkexec_parser.add_argument('--team', type=int, required=True, help="team id")
+    checkexec_parser.add_argument('--challenge', type=int, required=True, help="challenge id")
+
+    checker_parser = subparser.add_parser('checker', help='checker command help')
+    web_parser = subparser.add_parser('web', help='web command help')
+
     if len(args) < 1:
-        help()
+        parser.print_help()
         exit()
 
-    module_name = args[0]
-    if module_name == "checker":
-        run_checker(args[1:])
-    elif module_name == "web":
-        run_web(args[1:])
+    user_arg = parser.parse_args(args)
+    if user_arg.command == "checkexec":
+        run_checker_executor(**vars(user_arg))
+    elif user_arg.command == "checker":
+        run_checker()
+    elif user_arg.command == "web":
+        run_web(user_arg)
     else:
         help()    

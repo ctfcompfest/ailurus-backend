@@ -6,6 +6,7 @@ from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
 from and_platform.core.config import get_config, set_config
 from and_platform.schedule import ContestScheduler, ContestStartSchedule
+from and_platform.checker import CheckerExecutor
 from celery import Celery, Task
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -112,10 +113,13 @@ def create_celery(flask_app: Flask | None = None) -> Celery:
 def create_checker():
     celery = create_celery()
     celery.conf.update(
-        include = ['and_platform.checker'],
+        include = ['and_platform.checker.tasks'],
         task_default_queue = 'checker',
     )
     return celery
+
+def create_checker_executor():
+    return CheckerExecutor(create_app())
 
 def create_contest_worker(flask_app: Flask):
     celery = create_celery(flask_app)

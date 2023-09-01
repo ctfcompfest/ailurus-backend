@@ -29,7 +29,7 @@ class ContestScheduler(PersistentScheduler):
                 schedule_name = f'checker.challenge-{chall.id}'
                 entries[schedule_name] = {
                     "name": schedule_name,
-                    "task": 'and_platform.checker.run_checker_for_challenge',
+                    "task": 'and_platform.checker.tasks.run_checker_for_challenge',
                     "args": (chall.id, ),
                     "schedule": schedule(run_every=CHECKER_INTERVAL, relative=True),
                     "relative": True,
@@ -37,6 +37,7 @@ class ContestScheduler(PersistentScheduler):
                         'queue':'checker',
                     }
                 }
+                self.apply_entry(self.Entry(**dict(entries[schedule_name], app=self.app)), producer=self.producer)
         self.update_from_dict(entries)
 
     def apply_entry(self, entry, producer=None):
