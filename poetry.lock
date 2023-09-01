@@ -34,6 +34,17 @@ files = [
 vine = ">=5.0.0"
 
 [[package]]
+name = "argparse"
+version = "1.4.0"
+description = "Python command-line parsing library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314"},
+    {file = "argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4"},
+]
+
+[[package]]
 name = "async-timeout"
 version = "4.0.3"
 description = "Timeout context manager for asyncio programs"
@@ -474,6 +485,41 @@ wrapt = ">=1.10,<2"
 dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "sphinx (<2)", "tox"]
 
 [[package]]
+name = "dnspython"
+version = "2.4.2"
+description = "DNS toolkit"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "dnspython-2.4.2-py3-none-any.whl", hash = "sha256:57c6fbaaeaaf39c891292012060beb141791735dbb4004798328fc2c467402d8"},
+    {file = "dnspython-2.4.2.tar.gz", hash = "sha256:8dcfae8c7460a2f84b4072e26f1c9f4101ca20c071649cb7c34e8b6a93d58984"},
+]
+
+[package.extras]
+dnssec = ["cryptography (>=2.6,<42.0)"]
+doh = ["h2 (>=4.1.0)", "httpcore (>=0.17.3)", "httpx (>=0.24.1)"]
+doq = ["aioquic (>=0.9.20)"]
+idna = ["idna (>=2.1,<4.0)"]
+trio = ["trio (>=0.14,<0.23)"]
+wmi = ["wmi (>=1.5.1,<2.0.0)"]
+
+[[package]]
+name = "eventlet"
+version = "0.33.3"
+description = "Highly concurrent networking library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "eventlet-0.33.3-py2.py3-none-any.whl", hash = "sha256:e43b9ae05ba4bb477a10307699c9aff7ff86121b2640f9184d29059f5a687df8"},
+    {file = "eventlet-0.33.3.tar.gz", hash = "sha256:722803e7eadff295347539da363d68ae155b8b26ae6a634474d0a920be73cfda"},
+]
+
+[package.dependencies]
+dnspython = ">=1.15.0"
+greenlet = ">=0.3"
+six = ">=1.10.0"
+
+[[package]]
 name = "fabric"
 version = "3.2.1"
 description = "High level SSH command execution"
@@ -611,8 +657,8 @@ PyYAML = ">5.0,<7.0"
 [package.source]
 type = "git"
 url = "https://github.com/CTF-Compfest-15/fulgens.git"
-reference = "v0.2.0"
-resolved_reference = "4d0ae8e75c6850a4e3f32e92b00a4ec8c379deb0"
+reference = "v0.2.1"
+resolved_reference = "7754f9f7280b3b0dfc81a82503bf129fd9b96453"
 
 [[package]]
 name = "greenlet"
@@ -1515,4 +1561,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c9a2370436c222a84bda779ab8385bb15bcee61e8d317b5bda3a9b3864110fb7"
+content-hash = "f71e21f58087bcd636637de8084c1c66a1f4115ec1ad9a6a0a92cf99e8af36f2"

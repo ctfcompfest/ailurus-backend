@@ -27,9 +27,15 @@ def copy_file(host: str, path: PathLike, remote: PathLike):
     return conn.put(local_path, remote=remote_path)
 
 def create_ssh_from_server(server: Servers) -> Connection:
-    sshkey = "".join(server.auth_key.split("\n")[1:-1])
-    # Find "ssh-<something>" except "ssh-key"
-    key_mode = re.search(b"ssh-(?!key)[A-Za-z0-9]+", b64decode(sshkey.encode())).group(0).decode()
+    sshkey_split = server.auth_key.split("\n")
+    sshkey_header = sshkey_split[0]
+
+    if sshkey_header.find("RSA") != -1:
+        key_mode = "ssh-rsa"
+    elif sshkey_header.find("OPENSSH") != -1:
+        sshkey = "".join(sshkey_split("\n")[1:-1])
+        # Find "ssh-<something>" except "ssh-key"
+        key_mode = re.search(b"ssh-(?!key)[A-Za-z0-9]+", b64decode(sshkey.encode())).group(0).decode()
     
     keyfile = StringIO(server.auth_key)
     if key_mode == "ssh-ed25519":

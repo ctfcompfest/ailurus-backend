@@ -1,0 +1,27 @@
+- name: Install aptitude
+  apt:
+    name: aptitude
+    state: latest
+    update_cache: true
+
+- name: Install required system packages
+  apt:
+    pkg:
+      - apt-transport-https
+      - binfmt-support
+      - ca-certificates
+      - curl
+      - gnupg
+      - net-tools
+      - python3
+      - python3-pip
+      - python3-setuptools
+      - qemu-user-static
+      - software-properties-common
+      - virtualenv
+    state: latest
+    update_cache: true
+
+- name: Set timezone to Asia/Jakarta
+  community.general.timezone:
+    name: Asia/Jakarta

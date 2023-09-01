@@ -29,6 +29,8 @@ def init_contest():
 
 @celery.shared_task
 def move_tick():
+    if is_contest_finished(): return
+    
     prev_tick = get_config("CURRENT_TICK", 0)
     prev_round = get_config("CURRENT_ROUND", 0)
     number_tick = get_config("NUMBER_TICK", 0)
@@ -48,3 +50,11 @@ def move_tick():
 
     # Calculate score for previous tick
     calculate_score_tick(prev_round, prev_tick)
+
+def is_contest_finished():
+    current_tick = get_config("CURRENT_TICK", 0)
+    current_round = get_config("CURRENT_ROUND", 0)
+
+    limit_tick = get_config("NUMBER_TICK")
+    limit_round = get_config("NUMBER_ROUND")
+    return current_round >= limit_round and current_tick >= limit_tick

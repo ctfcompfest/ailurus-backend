@@ -179,3 +179,4 @@ class CheckerQueues(db.Model):
     round = db.Column(db.Integer, default=0)
     tick = db.Column(db.Integer, default=0)
     time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    message = db.Column(db.Text)
