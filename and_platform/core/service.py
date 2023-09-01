@@ -82,6 +82,32 @@ def do_patch(team_id: int, challenge_id: int, server: Servers):
     pool.close()
 
 
+def _do_start(team_id, challenge_id, server):
+    svc_remote_dir = get_remote_service_path(team_id, challenge_id)
+    
+    with create_ssh_from_server(server) as ssh_conn:
+        with ssh_conn.cd(svc_remote_dir):
+            ssh_conn.run("python3 manage.py start 2>> logs/error >> logs/log", hide=True)
+
+def do_start(team_id: int, challenge_id: int, server: Servers):
+    pool = Pool(processes=1)
+    pool.apply_async(_do_start, args=(team_id, challenge_id, server))
+    pool.close()
+
+
+def _do_stop(team_id, challenge_id, server):
+    svc_remote_dir = get_remote_service_path(team_id, challenge_id)
+    
+    with create_ssh_from_server(server) as ssh_conn:
+        with ssh_conn.cd(svc_remote_dir):
+            ssh_conn.run("python3 manage.py stop 2>> logs/error >> logs/log", hide=True)
+
+def do_stop(team_id: int, challenge_id: int, server: Servers):
+    pool = Pool(processes=1)
+    pool.apply_async(_do_stop, args=(team_id, challenge_id, server))
+    pool.close()
+
+
 def _do_restart(team_id, challenge_id, server):
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
     

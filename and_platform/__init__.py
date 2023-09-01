@@ -131,11 +131,13 @@ def create_contest_worker(flask_app: Flask):
 
 def create_scheduler(flask_app: Flask):
     with flask_app.app_context():
+        time_now = datetime.datetime.now(datetime.timezone.utc)
+        time_start = get_config("START_TIME")
         celery = create_celery(flask_app)
         celery.conf.beat_schedule = {
             'contest.start': {
                 'task': 'and_platform.core.contest.init_contest',
-                'schedule': ContestStartSchedule(exec_datetime=get_config("START_TIME")),
+                'schedule': ContestStartSchedule(exec_datetime=time_start),
                 'options': {
                     'queue': 'contest',
                 },
@@ -144,7 +146,7 @@ def create_scheduler(flask_app: Flask):
         
         beat_scheduledb = Path(flask_app.config["DATA_DIR"], "celerybeat-schedule.db")
         schedule_filename = beat_scheduledb.as_posix().removesuffix(".db")
-        if beat_scheduledb.is_file():
+        if time_now > time_start and beat_scheduledb.is_file():
             with shelve.open(schedule_filename) as dbcontent:
                 if 'contest.move-tick' in dbcontent['entries']:
                     celery.conf.beat_schedule = dbcontent['entries']

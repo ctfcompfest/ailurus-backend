@@ -1,6 +1,6 @@
 from and_platform.models import db, Challenges, Teams, Services, Servers, CheckerQueues, CheckerVerdict
 from and_platform.core.config import get_config
-from and_platform.core.service import do_provision, do_patch, do_restart, do_reset, get_service_path, get_service_metadata
+from and_platform.core.service import do_provision, do_start, do_stop, do_patch, do_restart, do_reset, get_service_path, get_service_metadata
 from flask import Blueprint, jsonify, request, views, current_app as app
 
 import os
@@ -31,7 +31,6 @@ def service_provision():
     server_mode = get_config("SERVER_MODE")
     for team in teams:
         for chall in challenges:
-            if Services.is_teamservice_exist(team.id, chall.id): continue
             if server_mode == "private": server = team.server
             else: server = chall.server
             
@@ -41,6 +40,11 @@ def service_provision():
                 error_msg = f"error when provisioning challenge id={chall.id} for team id={team.id}: {ex}"
                 app.logger.error(ex, exc_info=True)
                 return jsonify(status="failed", message=error_msg), 500
+            
+            # Remove old data
+            db.session.execute(
+                delete(Services).filter(Services.team_id == team.id, Services.challenge_id == chall.id)
+            )
             db.session.add_all(services)
             db.session.commit()
     
@@ -79,6 +83,31 @@ def admin_service_patch(challenge_id, team_id):
     )
 
     return jsonify(status="success", message="patch submitted.")
+
+@service_blueprint.post("/<int:challenge_id>/teams/<int:team_id>/manage")
+def admin_service_manage(challenge_id, team_id):
+    ACTION_FUNC = {
+        "start": do_start,
+        "stop": do_stop,
+        "restart": do_restart,
+        "reset": do_reset,
+    }
+
+    confirm_data: dict = request.get_json()
+    action = confirm_data.get("action")
+    if not action or action not in ACTION_FUNC:
+        return jsonify(status="bad request", message="invalid action"), 400
+    
+    if not Services.is_teamservice_exist(team_id, challenge_id):
+        return jsonify(status="not found", message="service not found."), 404
+
+    ACTION_FUNC[action](
+        team_id,
+        challenge_id,
+        Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
+    )
+    
+    return jsonify(status="success", message=f"{action} request submitted.")
 
 
 @service_blueprint.post("/<int:challenge_id>/teams/<int:team_id>/restart")
