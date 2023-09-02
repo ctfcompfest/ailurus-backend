@@ -18,6 +18,9 @@ PATCH_TARPATH = os.path.join(BASE_PATH, PATCH_TARFILE)
 class PatchInvalidException(Exception):
     """Exception for invalid patch file"""
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 def get_md5sum(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
@@ -109,10 +112,11 @@ def check_patch_service():
             if elm_path not in leaf_list[-1].parents:
                 leaf_list.append(elm_path)
 
-        path_matching(leaf_list, patchrule["whitelist"])
-        path_matching(leaf_list, patchrule["blacklist"], "blacklist")
+        path_matching(leaf_list, patchrule.get('whitelist', {}))
+        path_matching(leaf_list, patchrule.get('blacklist', {}), "blacklist")
     except PatchInvalidException as e:
-        print(f"[-] {e} is not a valid patching path.")
+        eprint(f"[-] {e} is invalid patching path.")
+        print(f"[-] found invalid patching path.")
         return False
     except Exception as e:
         print("[-] failed processing patch file.")
