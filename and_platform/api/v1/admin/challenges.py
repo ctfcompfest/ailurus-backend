@@ -71,8 +71,8 @@ def get_all_challs():
     response = []
     for challenge in challenges:
         data = {
-            "id" : challenge[0],
-            "name" : challenge[1]
+            "id" : challenge.id,
+            "name" : challenge.name
         }
         response.append(data)
 

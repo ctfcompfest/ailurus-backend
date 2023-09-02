@@ -1,4 +1,4 @@
-import datetime
+import time
 import fnmatch
 import hashlib
 import os
@@ -8,6 +8,7 @@ import tarfile
 import yaml
 from pathlib import Path
 from shutil import move, rmtree
+import traceback
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 VALID_CMD = ["start", "stop", "restart", "reset", "check_patch", "apply_patch"]
@@ -17,6 +18,9 @@ PATCH_TARPATH = os.path.join(BASE_PATH, PATCH_TARFILE)
 
 class PatchInvalidException(Exception):
     """Exception for invalid patch file"""
+
+def get_time():
+    return time.strftime("%Y/%m/%d %H:%M:%S %z", time.localtime())
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -35,7 +39,7 @@ def read_patchrule():
 def update_service_meta(job, **kwargs):
     with open(os.path.join(BASE_PATH, "meta", "meta.yml"), "r+") as meta_file:
         meta_data = yaml.safe_load(meta_file)
-        meta_data[f"last_{job}"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d %H:%M:%S %z")
+        meta_data[f"last_{job}"] = get_time()
         if len(kwargs) > 0:
             for k, v in kwargs.items():
                 meta_data[k] = v
@@ -67,7 +71,7 @@ def reset_service():
     except IOError:
         # file not found, do nothing
         pass
-    print('[+] service resetted')
+    print('[+] service reseted')
 
     start_service()
     update_service_meta("reset")
@@ -119,6 +123,7 @@ def check_patch_service():
         print(f"[-] found invalid patching path.")
         return False
     except Exception as e:
+        eprint(traceback.format_exc())
         print("[-] failed processing patch file.")
         return False
 
@@ -150,7 +155,7 @@ if __name__ == "__main__":
         exit(1)
     
     print()
-    print(datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d %H:%M:%S %z"))
+    print(get_time())
     print("=" * 10)
 
     command = sys.argv[1]
