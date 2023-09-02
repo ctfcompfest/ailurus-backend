@@ -1,7 +1,13 @@
 from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker
-from multiprocessing import Process
+from multiprocessing import Process, cpu_count
+from wsgi import StandaloneApplication
 import sys
 import argparse
+
+WSGI_OPTS = {
+    "workers": (cpu_count()) + 1,
+    "worker_class": "sync",
+}
 
 args = sys.argv[1:]
 
@@ -9,17 +15,40 @@ def help():
     print("Usage: python manage.py [module] [args]\n")
     print("Available modules: checker, web")
 
-def run_web(argv):
+def run_web(**kwargs):
     flask_app = create_app()
     celery_schedule = create_scheduler(flask_app)
     celery_worker = create_contest_worker(flask_app)
-    Process(target=celery_schedule.start, args=(["beat", "-l", "info"],)).start()
-    Process(target=celery_worker.start, args=(["worker", "-l", "info"],)).start()
-    flask_app.run()
 
-def run_checker():
+    if kwargs['debug']:
+        celery_extra_opts = ['--loglevel', "INFO"]
+
+        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
+        Process(target=celery_worker.start, args=(["worker"] + celery_extra_opts,)).start()
+        
+        flask_arg = {
+            'debug': True,
+            'host': kwargs.get('host') or '0.0.0.0',
+            'port': kwargs.get('port') or 5000,
+        }
+        flask_app.run(**flask_arg)
+    else:
+        Process(target=celery_schedule.start, args=(["beat"],)).start()
+        Process(target=celery_worker.start, args=(["worker", "-E"],)).start()
+
+        bind_host = kwargs.get('host') or '0.0.0.0'
+        bind_port = kwargs.get('port') or 5000
+        WSGI_OPTS['bind'] = f'{bind_host}:{bind_port}'
+        StandaloneApplication('and_platform:create_app()', WSGI_OPTS).run()
+
+
+def run_checker(**kwargs):
+    celery_extra_opts = []
+    if kwargs['debug']:
+        celery_extra_opts = ['--loglevel', "INFO"]
+
     celery = create_checker()
-    celery.start(["worker", "-E", "--loglevel", "INFO"])
+    celery.start(["worker", "-E"] + celery_extra_opts)
     
 def run_checker_executor(**kwargs):
     checker = create_checker_executor()
@@ -31,11 +60,16 @@ if __name__ == "__main__":
     subparser = parser.add_subparsers(dest="command", help='subcommand help')
 
     checkexec_parser = subparser.add_parser('checkexec', help='checker executor command help')
-    checkexec_parser.add_argument('--team', type=int, required=True, help="team id")
-    checkexec_parser.add_argument('--challenge', type=int, required=True, help="challenge id")
+    checkexec_parser.add_argument('--team', type=int, required=True, help="specify service team id.")
+    checkexec_parser.add_argument('--challenge', type=int, required=True, help="specify service challenge id.")
 
     checker_parser = subparser.add_parser('checker', help='checker command help')
+    checker_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
+
     web_parser = subparser.add_parser('web', help='web command help')
+    web_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
+    web_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
+    web_parser.add_argument('--port', type=int, help='the port web app will bind to.')
 
     if len(args) < 1:
         parser.print_help()
@@ -45,8 +79,8 @@ if __name__ == "__main__":
     if user_arg.command == "checkexec":
         run_checker_executor(**vars(user_arg))
     elif user_arg.command == "checker":
-        run_checker()
+        run_checker(**vars(user_arg))
     elif user_arg.command == "web":
-        run_web(user_arg)
+        run_web(**vars(user_arg))
     else:
         help()    

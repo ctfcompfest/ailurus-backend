@@ -104,6 +104,7 @@ def create_celery(flask_app: Flask | None = None) -> Celery:
     flask_app.config.from_mapping(
         CELERY=dict(
             broker_url=redis_uri,
+            broker_connection_retry_on_startup=True,
             result_backend=redis_uri,
             task_ignore_result=True,
         ),
