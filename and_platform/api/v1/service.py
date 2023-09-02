@@ -7,7 +7,7 @@ public_service_blueprint = Blueprint("public_service_blueprint", __name__, url_p
 
 @public_service_blueprint.get("/")
 def get_all_services():
-    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND"))
+    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
     services = Services.query.order_by(
         Services.challenge_id,
@@ -28,7 +28,7 @@ def get_all_services():
 
 @public_service_blueprint.get("/<int:chall_id>")
 def get_service_by_challenge(chall_id):
-    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND"))
+    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
     
     if chall_id not in chall_release:
         return jsonify(status="failed", message="challenge not found"), 404
@@ -49,7 +49,7 @@ def get_service_by_challenge(chall_id):
 
 @public_service_blueprint.get("/status")
 def get_all_services_status():
-    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND"))
+    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
     latest_id = func.max(CheckerQueues.id).label("latest_id")
     checker_results = db.session.query(
