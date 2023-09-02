@@ -164,5 +164,8 @@ cython_debug/
 
 # vscode
 .vscode/
+
+# custom
 and_platform/.adce_data/**
 ansible/inventory
+.postgres-data/
