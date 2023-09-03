@@ -2,6 +2,7 @@ from and_platform.models import db, Challenges, Teams, Services, Servers, Checke
 from and_platform.core.config import get_config
 from and_platform.core.service import do_provision, do_start, do_stop, do_patch, do_restart, do_reset, get_service_path, get_service_metadata
 from flask import Blueprint, jsonify, request, views, current_app as app
+from sqlalchemy import delete
 
 import os
 

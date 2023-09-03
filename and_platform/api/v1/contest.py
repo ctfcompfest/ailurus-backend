@@ -13,6 +13,7 @@ def get_contest_config():
     event_status = {}
     current_round = get_config("CURRENT_ROUND", 0)
     current_tick = get_config("CURRENT_TICK", 0)
+    logo_url = get_config("LOGO_URL", "")
 
     if current_round == 0:
         event_status["state"] = "not started"
@@ -29,7 +30,8 @@ def get_contest_config():
         "start_time" : start_time.isoformat(),
         "number_round" : number_round,
         "number_tick" : number_tick,
-        "tick_duration" : tick_duration
+        "tick_duration" : tick_duration,
+        "logo_url": logo_url,
     }
 
     return jsonify(status="success", data=info), 200
