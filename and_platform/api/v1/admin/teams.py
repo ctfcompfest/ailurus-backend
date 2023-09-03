@@ -14,6 +14,7 @@ def get_all_teams():
     response = []
     for team in teams:
         response.append({
+            "id": team.id,
             "name": team.name,
             "email": team.email,
             "secret": team.secret,
@@ -118,6 +119,7 @@ def get_team_detail(team_id):
     if team is None:
         return jsonify(status="not found", message="team not found"), 404
     response = {
+        "id": team.id,
         "name": team.name,
         "email": team.email,
         "secret": team.secret,
