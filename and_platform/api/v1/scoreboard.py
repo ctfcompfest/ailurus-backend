@@ -10,6 +10,7 @@ public_scoreboard_blueprint = Blueprint("public_scoreboard", __name__, url_prefi
 @public_scoreboard_blueprint.get("/")
 def get_public_scoreboard():
     freeze_time = get_config("FREEZE_TIME")
+    freeze_time = freeze_time.replace(tzinfo=None)
     is_freeze = freeze_time and datetime.utcnow() > freeze_time
 
     teams = Teams.query.all()
