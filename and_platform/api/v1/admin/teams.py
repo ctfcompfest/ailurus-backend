@@ -85,6 +85,7 @@ def create_team():
             auth_key=server_data["auth_key"],
         )
         db.session.add(server)
+        db.session.flush()
 
         new_team.server_id = server.id
         new_team.server_host = server.host
