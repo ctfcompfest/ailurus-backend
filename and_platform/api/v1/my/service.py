@@ -18,7 +18,7 @@ def ensure_authorize_service(f: Callable[Param, RetType]) -> Callable[Param, tup
         if not Services.is_teamservice_exist(current_team.id, challenge_id):
             return jsonify(status="not found", message="service not found."), 404
         if not Solves.is_solved(current_team.id, challenge_id) or \
-            challenge_id not in ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND")):
+            challenge_id not in ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0)):
             return jsonify(status="forbidden", message="you have no access to this resource."), 403
         return f(*args, **kwargs)
     return wrapped
