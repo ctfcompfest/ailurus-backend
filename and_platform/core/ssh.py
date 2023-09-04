@@ -33,7 +33,7 @@ def create_ssh_from_server(server: Servers) -> Connection:
     if sshkey_header.find("RSA") != -1:
         key_mode = "ssh-rsa"
     elif sshkey_header.find("OPENSSH") != -1:
-        sshkey = "".join(sshkey_split("\n")[1:-1])
+        sshkey = "".join(sshkey_split[1:-1])
         # Find "ssh-<something>" except "ssh-key"
         key_mode = re.search(b"ssh-(?!key)[A-Za-z0-9]+", b64decode(sshkey.encode())).group(0).decode()
     

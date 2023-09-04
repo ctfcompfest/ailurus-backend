@@ -14,6 +14,7 @@ def get_all_teams():
     response = []
     for team in teams:
         response.append({
+            "id": team.id,
             "name": team.name,
             "email": team.email,
             "secret": team.secret,
@@ -84,6 +85,7 @@ def create_team():
             auth_key=server_data["auth_key"],
         )
         db.session.add(server)
+        db.session.flush()
 
         new_team.server_id = server.id
         new_team.server_host = server.host
@@ -118,6 +120,7 @@ def get_team_detail(team_id):
     if team is None:
         return jsonify(status="not found", message="team not found"), 404
     response = {
+        "id": team.id,
         "name": team.name,
         "email": team.email,
         "secret": team.secret,

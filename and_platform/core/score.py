@@ -144,10 +144,10 @@ def get_service_weight(team_id: int, challenge_id: int, current_round: int, curr
 
 def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: datetime = None) -> TeamChallengeScore:
     def get_attack_score() -> float:
-        return scores[0]
+        return scores[0] if len(scores) == 2 else 0
 
     def get_defense_score() -> float:
-        return scores[1]
+        return scores[1] if len(scores) == 2 else 0
 
     def get_sla() -> float:    
         filters = [
@@ -163,11 +163,17 @@ def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: da
             func.count(CheckerQueues.id),
         ).filter(*filters).group_by(CheckerQueues.result).all()
 
-        checker_count = {}
+        checker_count = {
+            0: 0,
+            1: 1,
+        }
         for elm in all_checker_count:
             status, count = elm
             checker_count[status.value] = count
-        sla_rate = checker_count[1] / (checker_count[0] + checker_count[1])
+        if (checker_count[0] + checker_count[1]) > 0:
+            sla_rate = checker_count[1] / (checker_count[0] + checker_count[1])
+        else:
+            sla_rate = 0
         return sla_rate
 
     flag_captured_filters = [
