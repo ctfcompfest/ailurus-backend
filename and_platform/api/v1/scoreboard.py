@@ -10,6 +10,7 @@ public_scoreboard_blueprint = Blueprint("public_scoreboard", __name__, url_prefi
 @public_scoreboard_blueprint.get("/")
 def get_public_scoreboard():
     freeze_time = get_config("FREEZE_TIME")
+    freeze_time = freeze_time.replace(tzinfo=None)
     is_freeze = freeze_time and datetime.utcnow() > freeze_time
 
     teams = Teams.query.all()
@@ -34,5 +35,5 @@ def get_public_scoreboard():
 
     scoreboard_sort = sorted(scoreboard, key=lambda x: x["total_score"])
     for i in range(len(scoreboard_sort)):
-        scoreboard_sort["rank"] = i+1
+        scoreboard_sort[i]["rank"] = i+1
     return jsonify(status="success", is_freeze=is_freeze, data=scoreboard_sort)

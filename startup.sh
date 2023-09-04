@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-flask db upgrade
+flask --app "and_platform:create_app()" db upgrade
 
 CMD=${@:-web}
 echo $CMD

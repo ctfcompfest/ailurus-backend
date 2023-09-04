@@ -10,7 +10,7 @@ myapi_blueprint.register_blueprint(myservice_blueprint)
 
 @myapi_blueprint.get("/solves")
 def get_my_solves():
-    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND"))
+    chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
     solves = Solves.query.with_entities(Solves.challenge_id).filter(
         Solves.team_id == current_team.id,
         Solves.challenge_id.in_(chall_release),
