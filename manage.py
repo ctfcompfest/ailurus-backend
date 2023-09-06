@@ -21,7 +21,7 @@ def run_web(**kwargs):
     celery_worker = create_contest_worker(flask_app)
 
     if kwargs['debug']:
-        celery_extra_opts = ['--loglevel', "INFO"]
+        celery_extra_opts = ['--loglevel', "DEBUG"]
 
         Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
         Process(target=celery_worker.start, args=(["worker"] + celery_extra_opts,)).start()
@@ -33,8 +33,10 @@ def run_web(**kwargs):
         }
         flask_app.run(**flask_arg)
     else:
-        Process(target=celery_schedule.start, args=(["beat"],)).start()
-        Process(target=celery_worker.start, args=(["worker", "-E"],)).start()
+        celery_extra_opts = ['--loglevel', "INFO"]
+        
+        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
+        Process(target=celery_worker.start, args=(["worker", "-E"] + celery_extra_opts,)).start()
 
         bind_host = kwargs.get('host') or '0.0.0.0'
         bind_port = kwargs.get('port') or 5000
