@@ -1,11 +1,11 @@
 from dotenv import load_dotenv
+from and_platform.core.contest import install_contest_entries
 
 load_dotenv()
 
 from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
 from and_platform.core.config import get_config, set_config
-from and_platform.schedule import ContestScheduler, ContestStartSchedule
 from and_platform.checker import CheckerExecutor
 from celery import Celery, Task
 from flask import Flask
@@ -18,6 +18,7 @@ import os
 import shelve
 import sqlalchemy
 
+
 def celery_init_app(app: Flask) -> Celery:
     class FlaskTask(Task):
         def __call__(self, *args: object, **kwargs: object) -> object:
@@ -29,8 +30,15 @@ def celery_init_app(app: Flask) -> Celery:
     celery_app.config_from_object(app.config["CELERY"])
     celery_app.Task = FlaskTask
     celery_app.set_default()
+    celery_app.conf.update(
+        flask_func=create_app,
+        beat_schedule_filename="/tmp/celerybeat-schedule",
+        beat_max_loop_interval=5,
+    )
+
     app.extensions["celery"] = celery_app
     return celery_app
+
 
 def setup_jwt_app(app: Flask):
     jwt = JWTManager(app)
@@ -42,14 +50,20 @@ def setup_jwt_app(app: Flask):
             sqlalchemy.select(Teams).filter(Teams.id == identity["team"]["id"])
         ).scalar()
 
+
 def init_data_dir(app):
-    app.config["TEMPLATE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+    app.config["TEMPLATE_DIR"] = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "templates"
+    )
     if not app.config.get("DATA_DIR"):
-        app.config["DATA_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".adce_data")
+        app.config["DATA_DIR"] = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), ".adce_data"
+        )
 
     for d in ["challenges", "services"]:
         dirpath = os.path.join(app.config["DATA_DIR"], d)
         os.makedirs(dirpath, exist_ok=True)
+
 
 def load_adce_config():
     # If config already exists in database, it will not follow .env
@@ -71,12 +85,15 @@ def create_app():
         app.config.from_prefixed_env()
 
         # Extensions
-        CORS(app, origins=[
-            "https://ctf.compfest.id",
-            "http://127.0.0.1:3000",
-            "http://localhost:3000",
-            "http://localhost"
-        ])
+        CORS(
+            app,
+            origins=[
+                "https://ctf.compfest.id",
+                "http://127.0.0.1:3000",
+                "http://localhost:3000",
+                "http://localhost",
+            ],
+        )
         db.init_app(app)
         migrate.init_app(app, db)
 
@@ -97,6 +114,7 @@ def create_app():
 
     return app
 
+
 def create_celery(flask_app: Flask | None = None) -> Celery:
     if flask_app == None:
         flask_app = create_app()
@@ -111,50 +129,42 @@ def create_celery(flask_app: Flask | None = None) -> Celery:
     )
     return celery_init_app(flask_app)
 
+
 def create_checker():
     celery = create_celery()
     celery.conf.update(
-        include = ['and_platform.checker.tasks'],
-        task_default_queue = 'checker',
+        include=["and_platform.checker.tasks"],
+        task_default_queue="checker",
     )
     return celery
+
 
 def create_checker_executor():
     return CheckerExecutor(create_app())
 
+
 def create_contest_worker(flask_app: Flask):
-    celery = create_celery(flask_app)
+    celery = create_celery(create_app())
     celery.conf.update(
-        include = ['and_platform.core.contest'],
-        task_default_queue = 'contest',
+        include=["and_platform.core.contest"],
+        task_default_queue="contest",
     )
     return celery
 
+
 def create_scheduler(flask_app: Flask):
     with flask_app.app_context():
-        time_now = datetime.datetime.now(datetime.timezone.utc)
-        time_start = get_config("START_TIME")
         celery = create_celery(flask_app)
         celery.conf.beat_schedule = {
-            'contest.start': {
-                'task': 'and_platform.core.contest.init_contest',
-                'schedule': ContestStartSchedule(exec_datetime=time_start),
-                'options': {
-                    'queue': 'contest',
+            "contest.start": {
+                "task": "and_platform.core.contest.init_contest",
+                "schedule": 10,
+                "options": {
+                    "queue": "contest",
                 },
             },
         }
-        
-        beat_scheduledb = Path(flask_app.config["DATA_DIR"], "celerybeat-schedule.db")
-        schedule_filename = beat_scheduledb.as_posix().removesuffix(".db")
-        if time_now > time_start and beat_scheduledb.is_file():
-            with shelve.open(schedule_filename) as dbcontent:
-                if 'contest.move-tick' in dbcontent['entries']:
-                    celery.conf.beat_schedule = dbcontent['entries']
-            
-        celery.conf.update(
-            beat_scheduler = ContestScheduler,
-            beat_schedule_filename = schedule_filename,
-            flask_func = create_app
-        )
+
+        install_contest_entries(celery)
+
         return celery
