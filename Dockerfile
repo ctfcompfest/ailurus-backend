@@ -15,6 +15,7 @@ RUN mkdir -p -m=777 and_platform/.adce_data
 COPY .env.example .env
 COPY . .
 RUN chmod +x startup.sh
+RUN ln -s /run/shm /dev/shm
 
 USER nobody
 
