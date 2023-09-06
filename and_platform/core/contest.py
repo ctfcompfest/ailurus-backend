@@ -10,6 +10,7 @@ from and_platform.core.constant import CHECKER_INTERVAL
 from and_platform.core.flag import generate_flag, rotate_flag
 from and_platform.core.score import calculate_score_tick
 from and_platform.models import (
+    db,
     Challenges,
     CheckerQueues,
     Flags,
@@ -20,24 +21,24 @@ from and_platform.models import (
 
 
 @celery.shared_task
-def init_contest(app=None):
+def init_contest():
     current_tick = get_config("CURRENT_TICK", 0)
     current_round = get_config("CURRENT_ROUND", 0)
     if current_tick > 0 and current_round > 0:
         return
 
-    if not app:
-        app = celery.current_app
     current_round = 1
     current_tick = 1
     set_config("CURRENT_ROUND", current_round)
     set_config("CURRENT_TICK", current_tick)
 
-    Flags.query.delete()
     Submissions.query.delete()
     Solves.query.delete()
+    Flags.query.delete()
     ScorePerTicks.query.delete()
     CheckerQueues.query.delete()
+
+    db.session.commit()
 
     generate_flag(current_round, current_tick)
     rotate_flag(current_round, current_tick)
