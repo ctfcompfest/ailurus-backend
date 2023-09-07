@@ -65,7 +65,7 @@ class Challenges(db.Model):
     name = db.Column(db.String(80))
     description = db.Column(db.Text)
     num_expose = db.Column(db.Integer, default=1)
-    server_id = db.Column(db.Integer, db.ForeignKey("servers.id"), unique=True)
+    server_id = db.Column(db.Integer, db.ForeignKey("servers.id"))
     server_host = db.Column(db.String)
     server = db.relationship("Servers", foreign_keys="Challenges.server_id", lazy=True)
 
