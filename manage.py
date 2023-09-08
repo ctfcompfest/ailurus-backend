@@ -17,15 +17,8 @@ def help():
 
 def run_web(**kwargs):
     flask_app = create_app()
-    celery_schedule = create_scheduler(flask_app)
-    celery_worker = create_contest_worker(flask_app)
-
+    
     if kwargs['debug']:
-        celery_extra_opts = ['--loglevel', "DEBUG"]
-
-        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
-        Process(target=celery_worker.start, args=(["worker"] + celery_extra_opts,)).start()
-        
         flask_arg = {
             'debug': True,
             'host': kwargs.get('host') or '0.0.0.0',
@@ -33,16 +26,29 @@ def run_web(**kwargs):
         }
         flask_app.run(**flask_arg)
     else:
-        celery_extra_opts = ['--loglevel', "INFO"]
-        
-        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
-        Process(target=celery_worker.start, args=(["worker", "-E"] + celery_extra_opts,)).start()
-
         bind_host = kwargs.get('host') or '0.0.0.0'
         bind_port = kwargs.get('port') or 5000
         WSGI_OPTS['bind'] = f'{bind_host}:{bind_port}'
         StandaloneApplication('and_platform:create_app()', WSGI_OPTS).run()
 
+
+
+def run_webcelery(**kwargs):
+    flask_app = create_app()
+    celery_schedule = create_scheduler(flask_app)
+    celery_worker = create_contest_worker(flask_app)
+
+    if kwargs['debug']:
+        celery_extra_opts = ['--loglevel', "DEBUG"]
+
+        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
+        celery_worker.start(["worker"] + celery_extra_opts).start()
+    else:
+        celery_extra_opts = ['--loglevel', "INFO"]
+        
+        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
+        celery_worker.start(["worker", "-E"] + celery_extra_opts).start()
+ 
 
 def run_checker(**kwargs):
     celery_extra_opts = []
@@ -73,6 +79,11 @@ if __name__ == "__main__":
     web_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
     web_parser.add_argument('--port', type=int, help='the port web app will bind to.')
 
+    webcelery_parser = subparser.add_parser('webcelery', help='web celery command help')
+    webcelery_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
+    webcelery_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
+    webcelery_parser.add_argument('--port', type=int, help='the port web app will bind to.')
+
     if len(args) < 1:
         parser.print_help()
         exit()
@@ -84,5 +95,7 @@ if __name__ == "__main__":
         run_checker(**vars(user_arg))
     elif user_arg.command == "web":
         run_web(**vars(user_arg))
+    elif user_arg.command == "webcelery":
+        run_webcelery(**vars(user_arg))
     else:
         help()    
