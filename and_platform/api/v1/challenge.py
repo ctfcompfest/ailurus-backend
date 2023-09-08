@@ -1,3 +1,4 @@
+from and_platform.cache import cache
 from and_platform.models import Challenges, ChallengeReleases
 from and_platform.api.helper import convert_model_to_dict
 from flask import Blueprint, jsonify
@@ -7,6 +8,7 @@ public_challenge_blueprint = Blueprint("public_challenge_blueprint", __name__, u
 
 
 @public_challenge_blueprint.get("/")
+@cache.cached()
 def get_all_challenge():
     visible_challenges = [] 
     visible_challenges_id = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
@@ -22,6 +24,7 @@ def get_all_challenge():
     return jsonify(status="success", data=visible_challenges), 200
 
 @public_challenge_blueprint.get("/<int:challenge_id>")
+@cache.cached()
 def get_challenge_by_id(challenge_id):
     visible_challenges_id = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 

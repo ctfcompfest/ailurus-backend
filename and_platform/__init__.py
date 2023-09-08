@@ -7,6 +7,7 @@ from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
 from and_platform.core.config import get_config, set_config
 from and_platform.checker import CheckerExecutor
+from and_platform.cache import cache
 from celery import Celery, Task
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -94,8 +95,10 @@ def create_app():
                 "http://localhost",
             ],
         )
+        
         db.init_app(app)
         migrate.init_app(app, db)
+        cache.init_app(app)
 
         app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
         app.config["JWT_ALGORITHM"] = "HS512"
@@ -111,6 +114,7 @@ def create_app():
 
         # Blueprints
         app.register_blueprint(api_blueprint)
+        
 
     return app
 

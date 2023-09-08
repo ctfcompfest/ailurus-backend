@@ -1,5 +1,6 @@
 # Taken from https://github.com/CTFd/CTFd/blob/master/CTFd/utils/__init__.py with some modification
 
+from and_platform.cache import cache
 from and_platform.models import db, Configs
 
 from datetime import datetime
@@ -29,6 +30,7 @@ def get_app_config(key: str, default=None):
         return _convert_config_value(value)
     return default
 
+@cache.memoize()
 def _get_config(key: str):
     config = db.session.execute(
         Configs.__table__.select().where(Configs.key == key)

@@ -1,3 +1,4 @@
+from and_platform.cache import cache
 from and_platform.models import Teams
 from and_platform.core.config import get_config
 from and_platform.core.score import get_overall_team_score
@@ -8,6 +9,7 @@ public_scoreboard_blueprint = Blueprint("public_scoreboard", __name__, url_prefi
 
 
 @public_scoreboard_blueprint.get("/")
+@cache.cached(timeout=60)
 def get_public_scoreboard():
     freeze_time = get_config("FREEZE_TIME")
     freeze_time = freeze_time.replace(tzinfo=None)
