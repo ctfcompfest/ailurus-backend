@@ -32,14 +32,14 @@ def init_contest():
     current_tick = 1
     set_config("CURRENT_ROUND", current_round)
     set_config("CURRENT_TICK", current_tick)
-    cache.delete_memoized(get_config, "CURRENT_ROUND")
-    cache.delete_memoized(get_config, "CURRENT_TICK")
 
     Submissions.query.delete()
     Solves.query.delete()
     Flags.query.delete()
     ScorePerTicks.query.delete()
     CheckerQueues.query.delete()
+
+    cache.clear()
 
     db.session.commit()
 
@@ -68,12 +68,10 @@ def move_tick():
 
     set_config("CURRENT_TICK", current_tick)
     set_config("CURRENT_ROUND", current_round)
-    cache.delete_memoized(get_config, "CURRENT_ROUND")
-    cache.delete_memoized(get_config, "CURRENT_TICK")
     
     # Calculate score for previous tick
     calculate_score_tick(prev_round, prev_tick)
-
+    cache.clear()
 
 def is_outside_contest_time():
     current_tick = get_config("CURRENT_TICK", 0)
