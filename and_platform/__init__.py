@@ -93,6 +93,7 @@ def create_app():
                 "http://127.0.0.1:3000",
                 "http://localhost:3000",
                 "http://localhost",
+		"https://and-frontend.vercel.app",
             ],
         )
         

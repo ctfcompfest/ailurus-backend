@@ -68,7 +68,7 @@ def submit_flag():
     if prev_correct_submission == None:
         new_submission.flag_id = flag_found.id
         db.session.add(new_submission)
-        if flag_found.team_id == current_team.id:
+        if flag_found.team_id == current_team.id and len(Solves.query.filter_by(team_id=current_team.id, challenge_id=src_challid).all()) == 0:
             solve = Solves(team_id=current_team.id, challenge_id=src_challid)
             db.session.add(solve)
 

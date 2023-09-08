@@ -28,7 +28,7 @@ def get_admin_scoreboard():
 
         scoreboard.append(team_score)
 
-    scoreboard_sort = sorted(scoreboard, key=lambda x: x["total_score"])
+    scoreboard_sort = sorted(scoreboard, key=lambda x: x["total_score"], reverse=True)
     for i in range(len(scoreboard_sort)):
         scoreboard_sort[i]["rank"] = i+1
     return jsonify(status="success", data=scoreboard_sort)

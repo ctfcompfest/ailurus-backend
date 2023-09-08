@@ -131,7 +131,7 @@ class ChallengeReleases(db.Model):
 class ScorePerTicks(db.Model):
     __tablename__ = "score_per_ticks"
     __table_args__ = (
-        db.UniqueConstraint("round", "tick", "team_id"),
+        db.UniqueConstraint("round", "tick", "team_id", "challenge_id"),
     )
 
     id = db.Column(db.Integer, primary_key=True)

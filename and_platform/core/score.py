@@ -32,10 +32,14 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
         _, attacker, chall_id, defender = row
         tmp = data_accum.get(chall_id, {})
 
-        atc_tmp = tmp.get(attacker, {"captured": [], "stolen": 0})
-        atc_tmp["captured"] = atc_tmp["captured"].append(defender)
+        atc_tmp = tmp.get(attacker, {})
+        atc_tmp["captured"] = atc_tmp.get("captured", [])
+        atc_tmp["stolen"] = atc_tmp.get("stolen", 0)
+        atc_tmp["captured"].append(defender)
 
         def_tmp = tmp.get(defender, {"captured": [], "stolen": 0})
+        def_tmp["captured"] = def_tmp.get("captured", [])
+        def_tmp["stolen"] = def_tmp.get("stolen", 0)
         def_tmp["stolen"] = def_tmp["stolen"] + 1
 
         tmp[attacker] = atc_tmp
@@ -44,7 +48,7 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
         data_accum[chall_id] = tmp
 
     # Waiting time for latest checker
-    time.sleep(CHECKER_INTERVAL.seconds)
+    #time.sleep(CHECKER_INTERVAL.seconds)
 
     checker_results = db.session.query(CheckerQueues).filter(
         CheckerQueues.round == round,
@@ -57,7 +61,9 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
         verdict = checker_result.result
         
         tmp = data_accum.get(chall_id, {})
-        team_tmp = tmp.get(team_id, {"faulty": 0, "valid": 0})
+        team_tmp = tmp.get(team_id, {})
+        team_tmp["valid"] = team_tmp.get("valid", 0)
+        team_tmp["faulty"] = team_tmp.get("faulty", 0)
         if verdict == CheckerVerdict.VALID:
             team_tmp["valid"] += 1
         elif verdict == CheckerVerdict.FAULTY:
@@ -71,7 +77,8 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
     team_len = len(teams)
     scores = list()
 
-    for chall in challs:
+    for chall_row in challs:
+        chall = chall_row[0]
         chall_data = data_accum.get(chall)
         if not chall_data: continue
 
@@ -96,8 +103,10 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
                         current_round=round,
                         current_tick=tick,
                     )
-            
-            defense_score = (team_len / flag_stolen) * sla_score
+
+            defense_score = team_len * sla_score
+            if flag_stolen != 0:
+                defense_score /= flag_stolen
 
             score = ScorePerTicks(
                 round = round,
@@ -222,6 +231,12 @@ def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: da
         func.sum(ScorePerTicks.defense_score),
     ).filter(*score_filters).group_by(ScorePerTicks.challenge_id, ScorePerTicks.team_id).all()
 
+    print(scores)
+    if len(scores) == 0:
+        scores = (0, 0)
+    else:
+        scores = scores[0]
+
     return TeamChallengeScore(
         challenge_id=challenge_id,
         flag_captured=all_flag_captured,
@@ -237,6 +252,6 @@ def get_overall_team_score(team_id: int, before: datetime = None) -> TeamScore:
     team_score = TeamScore(team_id=team_id, total_score=0, challenges=list())
     for chall in challs:
         tmp = get_overall_team_challenge_score(team_id, chall.id, before)
-        team_score["total_score"] += tmp["attack"] + tmp["attack"]
+        team_score["total_score"] += tmp["attack"] + tmp["defense"]
         team_score["challenges"].append(tmp)
     return team_score
