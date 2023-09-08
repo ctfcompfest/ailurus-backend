@@ -28,7 +28,7 @@ def init_contest():
 
     start_time = get_config("START_TIME")
     time_now = datetime.now().astimezone()
-    if start_time < time_now:
+    if start_time > time_now:
         set_config("CURRENT_TICK", 0)
         set_config("CURRENT_ROUND", 0)
         return
