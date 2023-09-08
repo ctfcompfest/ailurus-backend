@@ -88,9 +88,7 @@ def is_outside_contest_time():
     limit_tick = get_config("NUMBER_TICK")
     limit_round = get_config("NUMBER_ROUND")
     return (
-        current_round <= 0
-        and current_tick <= 0
-        and current_round >= limit_round
+        current_round >= limit_round
         and current_tick >= limit_tick
     )
 
