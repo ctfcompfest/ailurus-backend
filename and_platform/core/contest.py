@@ -32,8 +32,6 @@ def init_contest():
     current_tick = 1
     set_config("CURRENT_ROUND", current_round)
     set_config("CURRENT_TICK", current_tick)
-    cache.delete_memoized(get_config, "CURRENT_ROUND")
-    cache.delete_memoized(get_config, "CURRENT_TICK")
 
     Submissions.query.delete()
     Solves.query.delete()
@@ -88,14 +86,6 @@ def is_outside_contest_time():
         and current_tick >= limit_tick
     )
 
-def is_contest_started():
-    current_tick = get_config("CURRENT_TICK", 0)
-    current_round = get_config("CURRENT_ROUND", 0)
-
-    return (
-        current_round > 0
-        and current_tick > 0
-    )
 
 def install_contest_entries(app: Celery):
     time_start = get_config("START_TIME")

@@ -2,7 +2,6 @@ from and_platform.cache import cache
 from and_platform.models import db, ChallengeReleases, Services, CheckerQueues, CheckerVerdict
 from flask import Blueprint, jsonify
 from and_platform.core.config import get_config
-from and_platform.core.contest import is_contest_started
 from sqlalchemy.sql import func
 
 public_service_blueprint = Blueprint("public_service_blueprint", __name__, url_prefix="/services")
@@ -10,9 +9,6 @@ public_service_blueprint = Blueprint("public_service_blueprint", __name__, url_p
 @public_service_blueprint.get("/")
 @cache.cached()
 def get_all_services():
-    if not is_contest_started():
-        return jsonify(status="success", data={})
-     
     chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
     services = Services.query.order_by(
@@ -37,7 +33,7 @@ def get_all_services():
 def get_service_by_challenge(chall_id):
     chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
     
-    if chall_id not in chall_release or not is_contest_started():
+    if chall_id not in chall_release:
         return jsonify(status="failed", message="challenge not found"), 404
 
     services = Services.query.order_by(
@@ -57,9 +53,6 @@ def get_service_by_challenge(chall_id):
 @public_service_blueprint.get("/status")
 @cache.cached(timeout=60)
 def get_all_services_status():
-    if not is_contest_started():
-        return jsonify(status="success", data={})
-    
     chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
     latest_id = func.max(CheckerQueues.id).label("latest_id")

@@ -1,5 +1,4 @@
 from and_platform.cache import cache
-from and_platform.core.contest import is_contest_started
 from and_platform.models import Challenges, ChallengeReleases
 from and_platform.api.helper import convert_model_to_dict
 from flask import Blueprint, jsonify
@@ -11,9 +10,6 @@ public_challenge_blueprint = Blueprint("public_challenge_blueprint", __name__, u
 @public_challenge_blueprint.get("/")
 @cache.cached()
 def get_all_challenge():
-    if not is_contest_started():
-        return jsonify(status="success", data=[])
-    
     visible_challenges = [] 
     visible_challenges_id = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
     challenges = Challenges.query.with_entities(Challenges.id, Challenges.name).filter(Challenges.id.in_(visible_challenges_id)).all()
@@ -32,7 +28,7 @@ def get_all_challenge():
 def get_challenge_by_id(challenge_id):
     visible_challenges_id = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
-    if challenge_id not in visible_challenges_id or not is_contest_started():
+    if challenge_id not in visible_challenges_id:
         return jsonify(status="failed", message="challenge not found"), 404
 
     challenge = Challenges.query.with_entities(Challenges.id, Challenges.name, Challenges.description).filter_by(id=challenge_id).first()
