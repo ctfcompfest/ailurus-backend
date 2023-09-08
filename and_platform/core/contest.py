@@ -41,6 +41,8 @@ def init_contest():
     ScorePerTicks.query.delete()
     CheckerQueues.query.delete()
 
+    cache.clear()
+
     db.session.commit()
 
     generate_flag(current_round, current_tick)
@@ -68,12 +70,10 @@ def move_tick():
 
     set_config("CURRENT_TICK", current_tick)
     set_config("CURRENT_ROUND", current_round)
-    cache.delete_memoized(get_config, "CURRENT_ROUND")
-    cache.delete_memoized(get_config, "CURRENT_TICK")
     
     # Calculate score for previous tick
     calculate_score_tick(prev_round, prev_tick)
-
+    cache.clear()
 
 def is_outside_contest_time():
     current_tick = get_config("CURRENT_TICK", 0)
