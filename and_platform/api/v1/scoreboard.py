@@ -1,5 +1,6 @@
 from and_platform.cache import cache
 from and_platform.models import Teams
+from and_platform.core.contest import is_contest_started
 from and_platform.core.config import get_config
 from and_platform.core.score import get_overall_team_score
 from flask import Blueprint, jsonify
@@ -11,6 +12,9 @@ public_scoreboard_blueprint = Blueprint("public_scoreboard", __name__, url_prefi
 @public_scoreboard_blueprint.get("/")
 @cache.cached(timeout=60)
 def get_public_scoreboard():
+    if not is_contest_started():
+        return jsonify(status="success", is_freeze=False, data=[])
+
     freeze_time = get_config("FREEZE_TIME")
     freeze_time = freeze_time.replace(tzinfo=None)
     is_freeze = freeze_time and datetime.utcnow() > freeze_time

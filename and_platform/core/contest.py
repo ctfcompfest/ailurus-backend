@@ -88,6 +88,14 @@ def is_outside_contest_time():
         and current_tick >= limit_tick
     )
 
+def is_contest_started():
+    current_tick = get_config("CURRENT_TICK", 0)
+    current_round = get_config("CURRENT_ROUND", 0)
+
+    return (
+        current_round > 0
+        and current_tick > 0
+    )
 
 def install_contest_entries(app: Celery):
     time_start = get_config("START_TIME")
