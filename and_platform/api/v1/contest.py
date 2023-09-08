@@ -1,9 +1,11 @@
+from and_platform.cache import cache
 from and_platform.core.config import get_config
 from flask import Blueprint, jsonify
 
 public_contest_blueprint = Blueprint("public_contest_blueprint", __name__, url_prefix="/contest")
 
 @public_contest_blueprint.get("/info")
+@cache.cached(timeout=60)
 def get_contest_config():
     event_name = get_config("EVENT_NAME", "AnD")
     start_time = get_config("START_TIME")

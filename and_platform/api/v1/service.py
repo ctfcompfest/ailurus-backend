@@ -1,3 +1,4 @@
+from and_platform.cache import cache
 from and_platform.models import db, ChallengeReleases, Services, CheckerQueues, CheckerVerdict
 from flask import Blueprint, jsonify
 from and_platform.core.config import get_config
@@ -6,6 +7,7 @@ from sqlalchemy.sql import func
 public_service_blueprint = Blueprint("public_service_blueprint", __name__, url_prefix="/services")
 
 @public_service_blueprint.get("/")
+@cache.cached()
 def get_all_services():
     chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
@@ -27,6 +29,7 @@ def get_all_services():
 
 
 @public_service_blueprint.get("/<int:chall_id>")
+@cache.cached()
 def get_service_by_challenge(chall_id):
     chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
     
@@ -48,6 +51,7 @@ def get_service_by_challenge(chall_id):
 
 
 @public_service_blueprint.get("/status")
+@cache.cached(timeout=60)
 def get_all_services_status():
     chall_release = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 

@@ -1,3 +1,4 @@
+from and_platform.cache import cache
 from and_platform.models import db, ScorePerTicks, Submissions, CheckerQueues, Flags, Challenges, Teams, CheckerVerdict
 from and_platform.core.constant import CHECKER_INTERVAL
 from typing import List, Optional, TypedDict
@@ -6,6 +7,7 @@ from datetime import datetime
 
 import time
 
+@cache.memoize()
 def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
     # Prevent duplicate data
     ScorePerTicks.query.filter(ScorePerTicks.round == round, ScorePerTicks.tick == tick).delete()
@@ -123,6 +125,7 @@ class TeamScore(TypedDict):
     total_score: float
     challenges: List[TeamChallengeScore]    
 
+@cache.memoize()
 def get_service_weight(team_id: int, challenge_id: int, current_round: int, current_tick: int) -> float:
     current_stolen = db.session.query(
         Submissions.id,
@@ -141,7 +144,7 @@ def get_service_weight(team_id: int, challenge_id: int, current_round: int, curr
     
     return (team_number - current_stolen)/team_number
 
-
+@cache.memoize()
 def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: datetime = None) -> TeamChallengeScore:
     def get_attack_score() -> float:
         return scores[0] if len(scores) == 2 else 0
@@ -228,6 +231,7 @@ def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: da
         defense=get_defense_score()
     )
 
+@cache.memoize()
 def get_overall_team_score(team_id: int, before: datetime = None) -> TeamScore:
     challs = Challenges.query.all()
     team_score = TeamScore(team_id=team_id, total_score=0, challenges=list())

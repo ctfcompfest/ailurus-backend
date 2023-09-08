@@ -5,6 +5,7 @@ import celery
 from celery import Celery
 from celery.schedules import BaseSchedule, schedule
 
+from and_platform.cache import cache
 from and_platform.core.config import get_config, set_config
 from and_platform.core.constant import CHECKER_INTERVAL
 from and_platform.core.flag import generate_flag, rotate_flag
@@ -31,6 +32,8 @@ def init_contest():
     current_tick = 1
     set_config("CURRENT_ROUND", current_round)
     set_config("CURRENT_TICK", current_tick)
+    cache.delete_memoized(get_config, "CURRENT_ROUND")
+    cache.delete_memoized(get_config, "CURRENT_TICK")
 
     Submissions.query.delete()
     Solves.query.delete()
@@ -65,7 +68,9 @@ def move_tick():
 
     set_config("CURRENT_TICK", current_tick)
     set_config("CURRENT_ROUND", current_round)
-
+    cache.delete_memoized(get_config, "CURRENT_ROUND")
+    cache.delete_memoized(get_config, "CURRENT_TICK")
+    
     # Calculate score for previous tick
     calculate_score_tick(prev_round, prev_tick)
 
