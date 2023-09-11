@@ -67,3 +67,25 @@ def set_config(key: str, value):
         key = str(key)
 
     return config
+
+def check_contest_is_started():
+    time_now = datetime.now().astimezone()
+    start_time = get_config("START_TIME")
+
+    if start_time and (time_now >= start_time):
+        return True
+    return False
+
+def check_contest_is_finished():
+    current_tick = get_config("CURRENT_TICK", 0)
+    current_round = get_config("CURRENT_ROUND", 0)
+    number_tick = get_config("NUMBER_TICK", 0)
+    number_round = get_config("NUMBER_ROUND", 0)
+    return (
+        current_round >= number_round
+        and
+        current_tick >= number_tick
+    )
+
+def check_contest_is_running():
+    return check_contest_is_started() and not check_contest_is_finished()

@@ -62,7 +62,6 @@ def rotate_flag(current_round: int, current_tick: int):
         
         local_path = os.path.join(get_service_path(flag.team_id, flag.challenge_id), "flag", "flag.txt")
         remote_dir = os.path.join(get_remote_service_path(flag.team_id, flag.challenge_id), "flag", "flag.txt")
-        print(remote_dir)
         
         with open(local_path, "w") as flagfile_local:
             flagfile_local.write(flag.value)

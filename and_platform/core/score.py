@@ -47,9 +47,6 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
 
         data_accum[chall_id] = tmp
 
-    # Waiting time for latest checker
-    #time.sleep(CHECKER_INTERVAL.seconds)
-
     checker_results = db.session.query(CheckerQueues).filter(
         CheckerQueues.round == round,
         CheckerQueues.tick == tick,
@@ -229,14 +226,8 @@ def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: da
     scores = db.session.query(
         func.sum(ScorePerTicks.attack_score),
         func.sum(ScorePerTicks.defense_score),
-    ).filter(*score_filters).group_by(ScorePerTicks.challenge_id, ScorePerTicks.team_id).all()
-
-    print(scores)
-    if len(scores) == 0:
-        scores = (0, 0)
-    else:
-        scores = scores[0]
-
+    ).filter(*score_filters).group_by(ScorePerTicks.challenge_id, ScorePerTicks.team_id).first()
+    
     return TeamChallengeScore(
         challenge_id=challenge_id,
         flag_captured=all_flag_captured,

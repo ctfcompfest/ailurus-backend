@@ -6,7 +6,7 @@ from celery import Celery
 from celery.schedules import BaseSchedule, schedule
 
 from and_platform.cache import cache
-from and_platform.core.config import get_config, set_config
+from and_platform.core.config import get_config, set_config, check_contest_is_running, check_contest_is_started
 from and_platform.core.constant import CHECKER_INTERVAL
 from and_platform.core.flag import generate_flag, rotate_flag
 from and_platform.core.score import calculate_score_tick
@@ -23,19 +23,12 @@ from and_platform.models import (
 
 @celery.shared_task
 def init_contest():
-    current_tick = get_config("CURRENT_TICK", 0)
-    current_round = get_config("CURRENT_ROUND", 0)
-
-    start_time = get_config("START_TIME")
-    time_now = datetime.now().astimezone()
-    if start_time > time_now:
+    if not check_contest_is_started():    
+        cache.clear()
         set_config("CURRENT_TICK", 0)
         set_config("CURRENT_ROUND", 0)
         return
     
-    if (current_tick > 0 and current_round > 0):
-        return
-
     current_round = 1
     current_tick = 1
     set_config("CURRENT_ROUND", current_round)
@@ -47,17 +40,15 @@ def init_contest():
     ScorePerTicks.query.delete()
     CheckerQueues.query.delete()
 
-    cache.clear()
-
     db.session.commit()
 
     generate_flag(current_round, current_tick)
     rotate_flag(current_round, current_tick)
-
+    cache.clear()
 
 @celery.shared_task
 def move_tick():
-    if is_outside_contest_time():
+    if not check_contest_is_running():
         return
 
     prev_tick = get_config("CURRENT_TICK", 0)
@@ -80,18 +71,6 @@ def move_tick():
     # Calculate score for previous tick
     calculate_score_tick(prev_round, prev_tick)
     cache.clear()
-
-def is_outside_contest_time():
-    current_tick = get_config("CURRENT_TICK", 0)
-    current_round = get_config("CURRENT_ROUND", 0)
-
-    limit_tick = get_config("NUMBER_TICK")
-    limit_round = get_config("NUMBER_ROUND")
-    return (
-        current_round >= limit_round
-        and current_tick >= limit_tick
-    )
-
 
 def install_contest_entries(app: Celery):
     time_start = get_config("START_TIME")
