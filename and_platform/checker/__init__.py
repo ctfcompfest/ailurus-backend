@@ -9,6 +9,7 @@ from fulgens import ChallengeHelper, Verdict
 from importlib.machinery import SourceFileLoader
 from multiprocessing import TimeoutError
 from multiprocessing.pool import ThreadPool
+import traceback
 
 class CheckerExecutor():
     def __init__(self, app: Flask):
@@ -54,7 +55,7 @@ class CheckerExecutor():
             except TimeoutError:
                 verdict = verdict.FAIL("timeout")
             except Exception as ex:
-                verdict = Verdict.ERROR(repr(ex))            
+                verdict = Verdict.ERROR(traceback.format_exc())            
 
             current_round = get_config("CURRENT_ROUND", 0)
             current_tick = get_config("CURRENT_TICK", 0)
