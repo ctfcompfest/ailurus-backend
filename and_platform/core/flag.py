@@ -53,7 +53,7 @@ def rotate_flag(current_round: int, current_tick: int):
     if get_config("SERVER_MODE") == "private":
         sql_query = sql_query.join(Teams, Teams.id == Flags.team_id).join(Servers, Servers.id == Teams.server_id)
     elif get_config("SERVER_MODE") == "sharing":
-        sql_query = sql_query.join(Challenges, Challenges.id == Flags.team_id).join(Servers, Servers.id == Challenges.server_id)
+        sql_query = sql_query.join(Challenges, Challenges.id == Flags.challenge_id).join(Servers, Servers.id == Challenges.server_id)
     
     rows = sql_query.filter(Flags.round == current_round, Flags.tick == current_tick).all()
     for row in rows:

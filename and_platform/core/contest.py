@@ -1,36 +1,56 @@
-from and_platform.models import (
-    Flags,
-    Submissions,
-    Solves,
-    ScorePerTicks,
-    CheckerQueues,
-)
-from and_platform.core.config import set_config, get_config
-from and_platform.core.flag import rotate_flag, generate_flag
-from and_platform.core.score import calculate_score_tick
+from datetime import datetime, timedelta
+from typing import Callable
+
 import celery
+from celery import Celery
+from celery.schedules import BaseSchedule, schedule
+
+from and_platform.cache import cache
+from and_platform.core.config import get_config, set_config, check_contest_is_running, check_contest_is_started
+from and_platform.core.constant import CHECKER_INTERVAL
+from and_platform.core.flag import generate_flag, rotate_flag
+from and_platform.core.score import calculate_score_tick
+from and_platform.models import (
+    db,
+    Challenges,
+    CheckerQueues,
+    Flags,
+    ScorePerTicks,
+    Solves,
+    Submissions,
+)
+
 
 @celery.shared_task
 def init_contest():
+    if not check_contest_is_started():    
+        cache.clear()
+        set_config("CURRENT_TICK", 0)
+        set_config("CURRENT_ROUND", 0)
+        return
+    
     current_round = 1
     current_tick = 1
     set_config("CURRENT_ROUND", current_round)
     set_config("CURRENT_TICK", current_tick)
 
-    Flags.query.delete()
     Submissions.query.delete()
     Solves.query.delete()
+    Flags.query.delete()
     ScorePerTicks.query.delete()
     CheckerQueues.query.delete()
 
+    db.session.commit()
+
     generate_flag(current_round, current_tick)
     rotate_flag(current_round, current_tick)
-
+    cache.clear()
 
 @celery.shared_task
 def move_tick():
-    if is_contest_finished(): return
-    
+    if not check_contest_is_running():
+        return
+
     prev_tick = get_config("CURRENT_TICK", 0)
     prev_round = get_config("CURRENT_ROUND", 0)
     number_tick = get_config("NUMBER_TICK", 0)
@@ -41,20 +61,45 @@ def move_tick():
     if current_tick > number_tick:
         current_tick = 1
         current_round = current_round + 1
-    
+
     generate_flag(current_round, current_tick)
     rotate_flag(current_round, current_tick)
 
-    set_config("CURRENT_TICK", current_tick + 1)
+    set_config("CURRENT_TICK", current_tick)
     set_config("CURRENT_ROUND", current_round)
-
+    
     # Calculate score for previous tick
     calculate_score_tick(prev_round, prev_tick)
+    cache.clear()
 
-def is_contest_finished():
-    current_tick = get_config("CURRENT_TICK", 0)
-    current_round = get_config("CURRENT_ROUND", 0)
+def install_contest_entries(app: Celery):
+    time_start = get_config("START_TIME")
+    tick_duration = get_config("TICK_DURATION")
 
-    limit_tick = get_config("NUMBER_TICK")
-    limit_round = get_config("NUMBER_ROUND")
-    return current_round >= limit_round and current_tick >= limit_tick
+    entries = app.conf.beat_schedule
+    entries["contest.move-tick"] = {
+        "task": "and_platform.core.contest.move_tick",
+        "schedule": schedule(run_every=timedelta(seconds=tick_duration)),
+        "relative": True,
+        "options": {
+            "queue": "contest",
+            "eta": time_start + timedelta(seconds=tick_duration),
+        },
+    }
+
+    challenges = Challenges.query.all()
+    for chall in challenges:
+        schedule_name = f"checker.challenge-{chall.id}"
+        entries[schedule_name] = {
+            "name": schedule_name,
+            "task": "and_platform.checker.tasks.run_checker_for_challenge",
+            "args": (chall.id,),
+            "schedule": schedule(run_every=CHECKER_INTERVAL, relative=True),
+            "relative": True,
+            "options": {
+                "queue": "checker",
+                "eta": time_start,
+            },
+        }
+
+    app.conf.beat_schedule = entries
