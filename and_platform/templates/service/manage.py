@@ -140,7 +140,7 @@ def apply_patch_service():
     print(f'[*] applying patch')
     for svc in service_list:
         try:
-            subprocess.check_output(f'docker compose exec -d {svc} sh /.adce_patch/apply_patch.sh {svc}'.split(" "), cwd=BASE_PATH)
+            subprocess.check_output(f'docker compose exec {svc} sh /.adce_patch/apply_patch.sh {svc}'.split(" "), cwd=BASE_PATH)
             print(f'   ... {svc} done')
         except Exception as e:
             print("[-] patching failed.")
