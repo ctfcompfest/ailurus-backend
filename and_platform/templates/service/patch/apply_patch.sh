@@ -10,4 +10,4 @@ then
     exit 1
 fi
 
-tar -xv --strip-components=1 -C ${TARGET_DIR} -f ${PATCH_FILE} ${SERVICE_NAME}
+tar -xmv --strip-components=1 -C ${TARGET_DIR} -f ${PATCH_FILE} ${SERVICE_NAME}
