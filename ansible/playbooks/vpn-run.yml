@@ -1,0 +1,6 @@
+---
+- name: Run VPN Server
+  hosts: vpn
+  become: true
+  roles:
+  - wireguard-run

@@ -1,0 +1,6 @@
+---
+- name: Stop VPN Server
+  hosts: vpn
+  become: true
+  roles:
+  - wireguard-terminate

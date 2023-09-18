@@ -1,0 +1,5 @@
+- include_tasks:
+    file: generator.yml
+  loop: "{{ range(1, number_user + 1) | list }}"
+  loop_control:
+    loop_var: peer_num

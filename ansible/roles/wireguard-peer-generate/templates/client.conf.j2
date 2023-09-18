@@ -1,0 +1,10 @@
+[Interface]
+PrivateKey = {{wgclient_privkey}}
+Address = {{wgclient_ip}}/32
+DNS = {{dns | default([]) | join(',')}}
+
+[Peer]
+PublicKey = {{wgserver_pubkey}}
+AllowedIPs = {{wgserver_subnet}}
+Endpoint = {{endpoint.ip}}:{{endpoint.port}}
+PersistentKeepalive = 20
