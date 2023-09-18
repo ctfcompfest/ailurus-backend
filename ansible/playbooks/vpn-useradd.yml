@@ -1,0 +1,10 @@
+---
+- name: Generate VPN client configuration
+  hosts: vpn
+  become: true
+  roles:
+  - wireguard-peer-generate
+  - wireguard-peer-config
+  - role: wireguard-terminate
+    ignore_errors: yes
+  - wireguard-run

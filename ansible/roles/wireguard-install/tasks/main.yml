@@ -1,0 +1,49 @@
+- name: Update apt and install wireguard
+  apt:
+    pkg:
+      - wireguard
+    state: latest
+    update_cache: true
+
+- file:
+    path: /etc/wireguard/keys/
+    state: directory
+
+- name: Check server's wireguard key file
+  stat:
+    path: /etc/wireguard/keys/server.privkey
+  register: privkey_stat
+
+- name: Generate server's wireguard key
+  shell: wg genkey | tee /etc/wireguard/keys/server.privkey | wg pubkey > /etc/wireguard/keys/server.pubkey
+  when: not privkey_stat.stat.exists
+
+- command: "cat /etc/wireguard/keys/server.{{item}}"
+  register: key_proc
+  loop:
+    - privkey
+    - pubkey
+
+- set_fact:
+    wgserver_privkey: "{{key_proc['results'][0]['stdout']}}"
+    wgserver_pubkey: "{{key_proc['results'][1]['stdout']}}"
+
+- name: Generate server IP Address
+  set_fact:
+    wgserver_ip: "{{ subnet | ansible.utils.ipaddr('next_usable') }}/{{ subnet | ansible.utils.ipaddr('prefix') }}"
+    wgserver_subnet: "{{ subnet | ansible.utils.ipaddr('net') }}"
+
+- name: Generate the configuration file
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+  
+- name: Generate backup configuration file
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.back.conf
+
+- name: Enable the wireguard service
+  systemd:
+    name: wg-quick@wg0
+    enabled: yes

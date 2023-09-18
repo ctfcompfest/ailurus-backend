@@ -1,0 +1,39 @@
+- name: Generate peer IP address
+  set_fact:
+    wgclient_ip: "{{ subnet | ansible.utils.next_nth_usable(1 + peer_num)}}"
+
+- assert:
+    that: wgclient_ip != ""
+
+- name: Check server's wireguard key file
+  stat:
+    path: /etc/wireguard/keys/{{peer_num}}.privkey
+  register: privkey_stat
+
+- name: Generate peer wireguard key
+  shell: wg genkey | tee /etc/wireguard/keys/{{peer_num}}.privkey | wg pubkey > /etc/wireguard/keys/{{peer_num}}.pubkey
+  when: not privkey_stat.stat.exists
+
+- command: "cat /etc/wireguard/keys/{{peer_num}}.{{item}}"
+  register: key_proc
+  loop:
+    - privkey
+    - pubkey
+
+- set_fact:
+    wgclient_privkey: "{{key_proc['results'][0]['stdout']}}"
+    wgclient_pubkey: "{{key_proc['results'][1]['stdout']}}"
+
+- name: Generating configuration file
+  template:
+    src: "{{item}}.conf.j2"
+    dest: /etc/wireguard/user{{peer_num}}.{{item}}.conf
+  loop:
+  - client
+  - peer
+
+- name: Copying configuration file
+  fetch:
+    src: /etc/wireguard/user{{peer_num}}.client.conf
+    dest: ../wireguard-result/
+    flat: true

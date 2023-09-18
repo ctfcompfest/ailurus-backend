@@ -1,0 +1,18 @@
+##########################################
+# This configuration is required for these playbooks:
+# * vpn-setup.yml
+# * vpn-useradd.yml
+##########################################
+
+endpoint:
+  # Public VPN server IP address
+  ip: 1.2.3.4
+  # Server need to allowed UDP connection on this port
+  port: 51820
+
+# Usable IP must be greater that number_user
+subnet: 10.0.0.0/8
+number_user: 3
+
+dns:
+- 8.8.8.8

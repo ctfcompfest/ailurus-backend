@@ -1,0 +1,11 @@
+---
+- name: Setup VPN Server
+  hosts: vpn
+  become: true
+  roles:
+  - wireguard-install
+  - wireguard-peer-generate
+  - wireguard-peer-config
+  - role: wireguard-terminate
+    ignore_errors: yes
+  - wireguard-run
