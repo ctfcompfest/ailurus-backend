@@ -19,6 +19,7 @@
       - qemu-user-static
       - software-properties-common
       - virtualenv
+      - python3-yaml
     state: latest
     update_cache: true
 

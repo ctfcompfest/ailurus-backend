@@ -1,76 +1,81 @@
 from and_platform.core.security import validteam_only, current_team
-from and_platform.core.config import get_config
+from and_platform.core.config import get_config, check_contest_is_running
 from and_platform.models import db, ChallengeReleases, Flags, Submissions, Solves
 from flask import Blueprint, jsonify, request
+from typing import List
 
 submission_blueprint = Blueprint("submission", __name__)
 submission_blueprint.before_request(validteam_only)
 
-@submission_blueprint.post("/submit")
-def submit_flag():
+def submit_flag(team_id: int, flag: str, chall_id: int | None = None):
+    current_tick = get_config("CURRENT_TICK", 0)
     current_round = get_config("CURRENT_ROUND", 0)
-    if current_round == 0:
-        return jsonify(status="failed", message="contest has not started yet."), 400
-    number_round = get_config("NUMBER_ROUND", 0)
-    if current_round > number_round:
-        return jsonify(status="failed", message="contest is over."), 400
+    chall_releases = ChallengeReleases.get_challenges_from_round(current_round)
     
-    current_tick = get_config("CURRENT_TICK")
-    req_body = request.get_json()
-    src_challid = int(req_body.get("challenge_id", 0))
-    src_flag = req_body.get("flag", "")
-    
-    release_challenge = db.session.execute(
-        ChallengeReleases.__table__.select().where(
-            ChallengeReleases.round == current_round,
-            ChallengeReleases.challenge_id == src_challid,
-        )
-    ).fetchone()
-    if release_challenge == None:
-        return jsonify(status="failed", message="challenge id not found."), 404
-    
-    flag_found = db.session.execute(
-        Flags.__table__.select().where(
-            Flags.challenge_id == src_challid,
-            Flags.value == src_flag,
-        )
-    ).fetchone()
-    
-    submission_verdict = (
-        flag_found != None
-        and flag_found.round == current_round
-        and flag_found.tick == current_tick
-    )
     new_submission = Submissions(
-        team_id=current_team.id,
-        challenge_id=src_challid,
+        team_id=team_id,
+        challenge_id=chall_id,
         round=current_round,
         tick=current_tick,
-        value=src_flag,
-        verdict=submission_verdict,
+        value=flag,
     )
-    if not submission_verdict:
-        db.session.add(new_submission)
-        db.session.commit()
-        return jsonify(status="failed", message="flag is wrong or expired."), 400
-    
-    # Check for previous correct submission from
-    # the same team in the same challenge
-    prev_correct_submission = db.session.execute(
-        Submissions.__table__.select().where(
-            Submissions.team_id == current_team.id,
-            Submissions.flag_id == flag_found.id,
-            Submissions.verdict == True,
-        )
-    ).fetchone()
-    
-    # Only record new correct submission
-    if prev_correct_submission == None:
-        new_submission.flag_id = flag_found.id
-        db.session.add(new_submission)
-        if flag_found.team_id == current_team.id:
-            solve = Solves(team_id=current_team.id, challenge_id=src_challid)
-            db.session.add(solve)
 
+    flag_found = Flags.query.filter(
+        Flags.value == flag,
+        Flags.tick == current_tick,
+    ).fetchone()
+    if (flag_found == None) or \
+        (flag_found.challenge_id not in chall_releases) or \
+        (chall_id not in chall_releases) or \
+        (chall_id != None and flag_found.challenge_id != chall_id):
+       new_submission.verdict = False
+       db.session.add(new_submission)
+       return {"flag": flag, "verdict": "flag is wrong or expired."}
+    
+    prev_correct_submission = Submissions.query.filter(
+        Submissions.flag_id == flag_found.id,
+        Submissions.team_id == team_id,
+        Submissions.verdict == True,
+    ).fetchone()
+    # Repeated correct submission will not be logged
+    if prev_correct_submission:
+       return {"flag": flag, "verdict": "flag already submitted."}
+
+    new_submission.verdict = True
+    new_submission.flag_id = flag_found.id
+    new_submission.challenge_id = flag_found.challenge_id
+    db.session.add(new_submission)
+
+    prev_solve = Solves.query.filter_by(team_id=team_id, challenge_id=flag_found.challenge_id).fetchone()
+    if prev_solve == None:
+        solve = Solves(team_id=current_team.id, challenge_id=flag_found.challenge_id)
+        db.session.add(solve)
     db.session.commit()
-    return jsonify(status="success", message="flag submitted.")
+    return {"flag": flag, "verdict": "flag is correct."}
+
+def bulk_submit(team_id: int, flags: List[str]):
+    max_submit = get_config("MAX_BULK_SUBMIT", 100)
+    if len(flags) > max_submit:
+        return jsonify(status="failed", message=f"maximum {max_submit} flags at a time"), 400
+    response = []
+    for flag in flags:
+        response.append(submit_flag(team_id, flag))
+    return jsonify(status="success", data=response)
+
+@submission_blueprint.post("/submit")
+def submit_flag():
+    if not check_contest_is_running():
+        return jsonify(status="failed", message="contest has not started or finished."), 400
+    
+    req_body = request.get_json()
+    if req_body.get("flags") != None:
+        return bulk_submit(int(current_team.id), req_body.get("flags"))
+    else:
+        src_challid = int(req_body.get("challenge_id", 0))
+        src_flag = req_body.get("flag", "")
+        
+        resp = submit_flag(int(current_team.id), src_flag, src_challid)
+        if resp['verdict'].find("correct") != -1:
+            return jsonify(status="success", data=resp)
+        else:
+            return jsonify(status="failed", data=resp), 400

@@ -65,7 +65,7 @@ class Challenges(db.Model):
     name = db.Column(db.String(80))
     description = db.Column(db.Text)
     num_expose = db.Column(db.Integer, default=1)
-    server_id = db.Column(db.Integer, db.ForeignKey("servers.id"), unique=True)
+    server_id = db.Column(db.Integer, db.ForeignKey("servers.id"))
     server_host = db.Column(db.String)
     server = db.relationship("Servers", foreign_keys="Challenges.server_id", lazy=True)
 
@@ -131,7 +131,7 @@ class ChallengeReleases(db.Model):
 class ScorePerTicks(db.Model):
     __tablename__ = "score_per_ticks"
     __table_args__ = (
-        db.UniqueConstraint("round", "tick", "team_id"),
+        db.UniqueConstraint("round", "tick", "team_id", "challenge_id"),
     )
 
     id = db.Column(db.Integer, primary_key=True)

@@ -1,3 +1,4 @@
+from and_platform.cache import cache
 from and_platform.models import Challenges, Teams, Servers, Services
 from and_platform.core.challenge import get_challenges_dir_fromid
 from and_platform.core.config import get_app_config, get_config
@@ -75,6 +76,8 @@ def _do_patch(team_id, challenge_id, server):
         ssh_conn.put(patch_fname, os.path.join(svc_remote_dir, "patch"))
         with ssh_conn.cd(svc_remote_dir):
             ssh_conn.run("python3 manage.py apply_patch 2>> logs/error >> logs/log", hide=True)
+    cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
+    
 
 def do_patch(team_id: int, challenge_id: int, server: Servers):
     pool = Pool(processes=1)
@@ -88,6 +91,8 @@ def _do_start(team_id, challenge_id, server):
     with create_ssh_from_server(server) as ssh_conn:
         with ssh_conn.cd(svc_remote_dir):
             ssh_conn.run("python3 manage.py start 2>> logs/error >> logs/log", hide=True)
+    cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
+    
 
 def do_start(team_id: int, challenge_id: int, server: Servers):
     pool = Pool(processes=1)
@@ -101,6 +106,8 @@ def _do_stop(team_id, challenge_id, server):
     with create_ssh_from_server(server) as ssh_conn:
         with ssh_conn.cd(svc_remote_dir):
             ssh_conn.run("python3 manage.py stop 2>> logs/error >> logs/log", hide=True)
+    cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
+    
 
 def do_stop(team_id: int, challenge_id: int, server: Servers):
     pool = Pool(processes=1)
@@ -114,6 +121,7 @@ def _do_restart(team_id, challenge_id, server):
     with create_ssh_from_server(server) as ssh_conn:
         with ssh_conn.cd(svc_remote_dir):
             ssh_conn.run("python3 manage.py restart 2>> logs/error >> logs/log", hide=True)
+    cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
 
 def do_restart(team_id: int, challenge_id: int, server: Servers):
     pool = Pool(processes=1)
@@ -134,6 +142,7 @@ def _do_reset(team_id, challenge_id, server):
 
         with ssh_conn.cd(svc_remote_dir):
             ssh_conn.run("python3 manage.py reset 2>> logs/error >> logs/log", hide=True)
+    cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
 
 def do_reset(team_id: int, challenge_id: int, server: Servers):
     pool = Pool(processes=1)
@@ -158,7 +167,10 @@ def fetch_loginfo(ssh_conn: Connection, team_id: int, challenge_id: int):
     except FileNotFoundError:
         return ""
 
-def get_service_metadata(team_id: int, challenge_id: int, server: Servers):
+@cache.memoize()
+def get_service_metadata(team_id: int, challenge_id: int, server: Servers | int):
+    if isinstance(server, int):
+        server = Servers.query.filter(Servers.id == server).fetchone()
     with create_ssh_from_server(server) as ssh_conn:
         return {
             "meta": fetch_metainfo(ssh_conn, team_id, challenge_id),
