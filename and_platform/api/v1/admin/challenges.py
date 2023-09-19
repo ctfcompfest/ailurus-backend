@@ -9,10 +9,12 @@ from and_platform.core.challenge import (
     get_challenges_directory,
     load_challenge,
     write_chall_info,
+    get_challenges_dir_fromid,
 )
 from and_platform.core.config import get_config
 from and_platform.models import ChallengeReleases, Challenges, Servers, db
 from flask import Blueprint, jsonify, request
+from shutil import rmtree
 
 challenges_blueprint = Blueprint("challenges", __name__, url_prefix="/challenges")
 
@@ -55,6 +57,8 @@ def populate_challenges():
             ).scalar_one()
             chall.server_id = server.id
             chall.server_host = server.host
+        
+        set_chall_visibility(chall.id, chall_data.get("visibility", []))
 
     db.session.commit()
 
@@ -119,6 +123,7 @@ def create_new_chall():
             "description": chall.description,
             "num_expose": chall.num_expose,
             "server_id": server_id,
+            "visibility": visibility,
         },
         chall.id,
     )
@@ -181,6 +186,7 @@ def update_chall(challenge_id: int):
             "description": chall.description,
             "num_expose": chall.num_expose,
             "server_id": server_id,
+            "visibility": visibility,
         },
         chall.id,
     )
@@ -198,6 +204,7 @@ def delete_chall(challenge_id: int):
         return jsonify(status="not found", message="challenge not found"), 404
     
     set_chall_visibility(challenge_id, [])
+    rmtree(get_challenges_dir_fromid(str(challenge_id)))
 
     db.session.delete(chall)
     db.session.commit()

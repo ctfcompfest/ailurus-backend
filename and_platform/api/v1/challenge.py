@@ -1,8 +1,9 @@
 from and_platform.cache import cache
 from and_platform.models import Challenges, ChallengeReleases
-from and_platform.api.helper import convert_model_to_dict
 from flask import Blueprint, jsonify
 from and_platform.core.config import get_config
+
+import markdown
 
 public_challenge_blueprint = Blueprint("public_challenge_blueprint", __name__, url_prefix="/challenges")
 
@@ -33,8 +34,9 @@ def get_challenge_by_id(challenge_id):
 
     challenge = Challenges.query.with_entities(Challenges.id, Challenges.name, Challenges.description).filter_by(id=challenge_id).first()
     data = {
-            "id" : challenge[0],
-            "name" : challenge[1],
-            "description" :challenge[2]
+            "id": challenge[0],
+            "name": challenge[1],
+            "description": markdown.markdown(challenge[2]),
+            "description_raw": challenge[2],
         }
     return jsonify(status="success", data=data), 200
