@@ -2,6 +2,8 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 
+from and_platform.cache import cache
+
 import enum
 import secrets
 
@@ -25,16 +27,19 @@ class Servers(db.Model):
     auth_key = db.Column(db.Text)
 
     @classmethod
+    @cache.memoize()
     def is_exist_with_host(self, host):
         server = self.query.filter_by(host=host).first()
         return server is not None
     
     @classmethod
+    @cache.memoize()
     def is_exist_with_id(self, id):
         server = self.query.filter_by(id=id).first()
         return server is not None
     
     @classmethod
+    @cache.memoize()
     def get_server_by_mode(cls, server_mode: str, team_id: int, challenge_id: int):
         if server_mode == "sharing":
             query_res = db.session.query(Challenges.id, Servers)\
@@ -122,6 +127,7 @@ class ChallengeReleases(db.Model):
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
 
     @classmethod
+    @cache.memoize()
     def get_challenges_from_round(cls, current_round: int) -> list:
         chall_release = ChallengeReleases.query.with_entities(ChallengeReleases.challenge_id)\
             .filter(ChallengeReleases.round == int(current_round)).all()

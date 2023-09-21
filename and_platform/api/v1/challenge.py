@@ -9,11 +9,16 @@ public_challenge_blueprint = Blueprint("public_challenge_blueprint", __name__, u
 
 
 @public_challenge_blueprint.get("/")
-@cache.cached()
+@cache.memoize()
 def get_all_challenge():
     visible_challenges = [] 
     visible_challenges_id = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
-    challenges = Challenges.query.with_entities(Challenges.id, Challenges.name).filter(Challenges.id.in_(visible_challenges_id)).all()
+    challenges = Challenges.query.with_entities(
+        Challenges.id,
+        Challenges.name,
+    ).filter(
+        Challenges.id.in_(visible_challenges_id),
+    ).order_by(Challenges.id).all()
 
     for challenge in challenges:
         data = {
@@ -25,7 +30,7 @@ def get_all_challenge():
     return jsonify(status="success", data=visible_challenges), 200
 
 @public_challenge_blueprint.get("/<int:challenge_id>")
-@cache.cached()
+@cache.memoize()
 def get_challenge_by_id(challenge_id):
     visible_challenges_id = ChallengeReleases.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 

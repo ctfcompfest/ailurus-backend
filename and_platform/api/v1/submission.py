@@ -23,10 +23,11 @@ def submit_flag(team_id: int, flag: str, chall_id: int | None = None):
     flag_found = Flags.query.filter(
         Flags.value == flag,
         Flags.tick == current_tick,
-    ).fetchone()
+    ).first()
+    print((flag_found == None), (flag_found.challenge_id not in chall_releases), (chall_id not in chall_releases))
     if (flag_found == None) or \
         (flag_found.challenge_id not in chall_releases) or \
-        (chall_id not in chall_releases) or \
+        (chall_id != None and chall_id not in chall_releases) or \
         (chall_id != None and flag_found.challenge_id != chall_id):
        new_submission.verdict = False
        db.session.add(new_submission)
@@ -36,7 +37,7 @@ def submit_flag(team_id: int, flag: str, chall_id: int | None = None):
         Submissions.flag_id == flag_found.id,
         Submissions.team_id == team_id,
         Submissions.verdict == True,
-    ).fetchone()
+    ).first()
     # Repeated correct submission will not be logged
     if prev_correct_submission:
        return {"flag": flag, "verdict": "flag already submitted."}
@@ -46,7 +47,7 @@ def submit_flag(team_id: int, flag: str, chall_id: int | None = None):
     new_submission.challenge_id = flag_found.challenge_id
     db.session.add(new_submission)
 
-    prev_solve = Solves.query.filter_by(team_id=team_id, challenge_id=flag_found.challenge_id).fetchone()
+    prev_solve = Solves.query.filter_by(team_id=team_id, challenge_id=flag_found.challenge_id).first()
     if prev_solve == None:
         solve = Solves(team_id=current_team.id, challenge_id=flag_found.challenge_id)
         db.session.add(solve)
@@ -63,19 +64,21 @@ def bulk_submit(team_id: int, flags: List[str]):
     return jsonify(status="success", data=response)
 
 @submission_blueprint.post("/submit")
-def submit_flag():
-    if not check_contest_is_running():
-        return jsonify(status="failed", message="contest has not started or finished."), 400
+def flag_submission():
+    # if not check_contest_is_running():
+    #     return jsonify(status="failed", message="contest has not started or finished."), 400
     
     req_body = request.get_json()
     if req_body.get("flags") != None:
         return bulk_submit(int(current_team.id), req_body.get("flags"))
     else:
-        src_challid = int(req_body.get("challenge_id", 0))
+        src_challid = req_body.get("challenge_id")
+        if src_challid:
+            src_challid = int(src_challid)
         src_flag = req_body.get("flag", "")
         
         resp = submit_flag(int(current_team.id), src_flag, src_challid)
         if resp['verdict'].find("correct") != -1:
-            return jsonify(status="success", data=resp)
+            return jsonify(status="success", message=resp['verdict'], data=resp)
         else:
-            return jsonify(status="failed", data=resp), 400
+            return jsonify(status="failed", message=resp['verdict'], data=resp), 400
