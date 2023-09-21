@@ -169,7 +169,7 @@ class Services(db.Model):
     def is_teamservice_exist(cls, team_id, challenge_id):
         return cls.query.where(cls.team_id == team_id, cls.challenge_id == challenge_id).count() > 0
 
-class CheckerVerdict(enum.Enum):
+class CheckerVerdict(enum.IntEnum, enum.Enum):
     QUEUE = -1
     PROCESS = 99
     FAULTY = 0
