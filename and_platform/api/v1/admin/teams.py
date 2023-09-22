@@ -1,6 +1,7 @@
 from typing import Optional
 from and_platform.core.config import get_config
 from and_platform.models import db, Teams, Servers
+from and_platform.cache import clear_public_team
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash
 
@@ -105,6 +106,9 @@ def create_team():
         "secret": new_team.secret,
         "server": {"id": server.id, "host": server.host},
     }
+
+    clear_public_team()
+
     return (
         jsonify(
             status="success",
@@ -170,6 +174,8 @@ def update_team(team_id):
     if server_mode == "private":
         server = Servers.query.filter_by(id=team.server_id).first()
         data["server"] = {"id": server.id, "host": server.host}
+    
+    clear_public_team()
 
     return (
         jsonify(
@@ -190,6 +196,8 @@ def delete_team(team_id):
     team_name = team.name
     db.session.delete(team)
     db.session.commit()
+    
+    clear_public_team()
 
     return (
         jsonify(status="success", message="{} successfully deleted.".format(team_name)),

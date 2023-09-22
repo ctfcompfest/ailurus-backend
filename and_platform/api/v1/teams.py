@@ -6,7 +6,7 @@ from and_platform.core.config import get_config
 public_teams_blueprint = Blueprint("public_teams_blueprint", __name__, url_prefix="/teams")
 
 @public_teams_blueprint.get("/")
-@cache.cached()
+@cache.memoize()
 def get_all_teams():
     server_mode = get_config("SERVER_MODE")
     teams = Teams.query.all()
@@ -25,7 +25,7 @@ def get_all_teams():
 
 
 @public_teams_blueprint.get("/<int:team_id>")
-@cache.cached()
+@cache.memoize()
 def get_team_by_id(team_id):
     server_mode = get_config("SERVER_MODE")
     team = Teams.query.filter_by(id=team_id).first()
