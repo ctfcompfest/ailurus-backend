@@ -18,8 +18,8 @@ def bulk_submit(team_id: int, flags: List[str]):
 
 @submission_blueprint.post("/submit")
 def flag_submission():
-    # if not check_contest_is_running():
-    #     return jsonify(status="failed", message="contest has not started or finished."), 400
+    if not check_contest_is_running():
+        return jsonify(status="failed", message="contest has not started or finished."), 400
     
     req_body = request.get_json()
     if req_body.get("flags") != None:

@@ -20,7 +20,7 @@ def run_web(**kwargs):
     flask_app = create_app()
     
     flask_arg = {
-        'debug': kwargs.get('host') or False,
+        'debug': kwargs.get('debug') or False,
         'host': kwargs.get('host') or '0.0.0.0',
         'port': kwargs.get('port') or 5000,
     }

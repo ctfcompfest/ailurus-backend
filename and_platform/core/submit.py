@@ -1,4 +1,4 @@
-from and_platform.core.config import get_config
+from and_platform.core.config import get_config, check_contest_is_freeze
 from and_platform.models import db, ChallengeReleases, Flags, Submissions, Solves, Teams
 from and_platform.socket import send_attack_event
 
@@ -56,7 +56,7 @@ def submit_flag(team_id: int, flag: str, chall_id: int | None = None):
     db.session.commit()
     
     # Emit attack event only when attacker and defender is different
-    if (flag_found.team_id != team_id):
+    if (flag_found.team_id != team_id) and not check_contest_is_freeze():
         attacker = Teams.query.filter(Teams.id == team_id).first()
         defender = Teams.query.filter(Teams.id == flag_found.team_id).first()
         send_attack_event(attacker, defender)  

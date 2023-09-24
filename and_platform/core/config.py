@@ -89,3 +89,11 @@ def check_contest_is_finished():
 
 def check_contest_is_running():
     return check_contest_is_started() and not check_contest_is_finished()
+
+def check_contest_is_freeze():
+    time_now = datetime.now().astimezone()
+    freeze_time = get_config("FREEZE_TIME")
+
+    if freeze_time and (time_now >= freeze_time):
+        return True
+    return False

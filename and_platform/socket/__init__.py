@@ -1,7 +1,7 @@
 from flask_socketio import SocketIO
 from and_platform.models import Teams
 
-socketio = SocketIO(logger=True)
+socketio = SocketIO(logger=True, cors_allowed_origins='*')
 
 def send_attack_event(attacker: Teams, defender: Teams):
     attacker_dict = {
@@ -12,4 +12,4 @@ def send_attack_event(attacker: Teams, defender: Teams):
         "id": defender.id,
         "name": defender.name,
     }
-    socketio.emit('attack event', {'attacker': attacker_dict, 'defender': defender_dict})
+    socketio.emit('attack-event', {'attacker': attacker_dict, 'defender': defender_dict})
