@@ -1,4 +1,5 @@
 from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker
+from and_platform.socket import socketio
 from multiprocessing import Process, cpu_count
 from wsgi import StandaloneApplication
 import sys
@@ -18,19 +19,12 @@ def help():
 def run_web(**kwargs):
     flask_app = create_app()
     
-    if kwargs['debug']:
-        flask_arg = {
-            'debug': True,
-            'host': kwargs.get('host') or '0.0.0.0',
-            'port': kwargs.get('port') or 5000,
-        }
-        flask_app.run(**flask_arg)
-    else:
-        bind_host = kwargs.get('host') or '0.0.0.0'
-        bind_port = kwargs.get('port') or 5000
-        WSGI_OPTS['bind'] = f'{bind_host}:{bind_port}'
-        StandaloneApplication('and_platform:create_app()', WSGI_OPTS).run()
-
+    flask_arg = {
+        'debug': kwargs.get('debug') or False,
+        'host': kwargs.get('host') or '0.0.0.0',
+        'port': kwargs.get('port') or 5000,
+    }
+    socketio.run(flask_app, **flask_arg)
 
 
 def run_webcelery(**kwargs):

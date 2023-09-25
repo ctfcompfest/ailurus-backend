@@ -8,6 +8,7 @@ from and_platform.api import api_blueprint
 from and_platform.core.config import get_config, set_config
 from and_platform.checker import CheckerExecutor
 from and_platform.cache import cache
+from and_platform.socket import socketio
 from celery import Celery, Task
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -100,7 +101,8 @@ def create_app():
         db.init_app(app)
         migrate.init_app(app, db)
         cache.init_app(app)
-
+        socketio.init_app(app)
+        
         app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
         app.config["JWT_ALGORITHM"] = "HS512"
         app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(hours=12)
