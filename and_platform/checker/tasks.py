@@ -1,12 +1,12 @@
 from and_platform.models import Challenges, Teams
-from and_platform.core.contest import is_outside_contest_time
+from and_platform.core.config import check_contest_is_running
 import celery
 import os
 
 
 @celery.shared_task
 def run_checker_for_service(team_id: int, challenge_id: int):
-    if is_outside_contest_time():
+    if not check_contest_is_running():
         return
 
     os.system(

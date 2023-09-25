@@ -15,4 +15,9 @@ def clear_public_team():
 
     cache.delete_memoized(get_all_teams)
     cache.delete_memoized(get_team_by_id)
+
+def clear_config():
+    from and_platform.core.config import _get_config
+
+    cache.delete_memoized(_get_config)
     

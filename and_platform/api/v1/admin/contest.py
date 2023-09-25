@@ -1,4 +1,5 @@
 from and_platform.models import db, Configs
+from and_platform.cache import clear_config
 from flask import Blueprint, jsonify, request, views
 from sqlalchemy import select
 
@@ -27,4 +28,6 @@ def update_contest_config():
         response[cfg[0].key] = cfg[0].value
     db.session.commit()
     
+    clear_config()
+
     return jsonify(status="success", data=response)
