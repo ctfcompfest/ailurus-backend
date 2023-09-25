@@ -2,6 +2,8 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 
+from and_platform.cache import cache
+
 import enum
 import secrets
 
@@ -25,16 +27,19 @@ class Servers(db.Model):
     auth_key = db.Column(db.Text)
 
     @classmethod
+    @cache.memoize()
     def is_exist_with_host(self, host):
         server = self.query.filter_by(host=host).first()
         return server is not None
     
     @classmethod
+    @cache.memoize()
     def is_exist_with_id(self, id):
         server = self.query.filter_by(id=id).first()
         return server is not None
     
     @classmethod
+    @cache.memoize()
     def get_server_by_mode(cls, server_mode: str, team_id: int, challenge_id: int):
         if server_mode == "sharing":
             query_res = db.session.query(Challenges.id, Servers)\
@@ -65,7 +70,7 @@ class Challenges(db.Model):
     name = db.Column(db.String(80))
     description = db.Column(db.Text)
     num_expose = db.Column(db.Integer, default=1)
-    server_id = db.Column(db.Integer, db.ForeignKey("servers.id"), unique=True)
+    server_id = db.Column(db.Integer, db.ForeignKey("servers.id"))
     server_host = db.Column(db.String)
     server = db.relationship("Servers", foreign_keys="Challenges.server_id", lazy=True)
 
@@ -122,6 +127,7 @@ class ChallengeReleases(db.Model):
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"))
 
     @classmethod
+    @cache.memoize()
     def get_challenges_from_round(cls, current_round: int) -> list:
         chall_release = ChallengeReleases.query.with_entities(ChallengeReleases.challenge_id)\
             .filter(ChallengeReleases.round == int(current_round)).all()
@@ -131,7 +137,7 @@ class ChallengeReleases(db.Model):
 class ScorePerTicks(db.Model):
     __tablename__ = "score_per_ticks"
     __table_args__ = (
-        db.UniqueConstraint("round", "tick", "team_id"),
+        db.UniqueConstraint("round", "tick", "team_id", "challenge_id"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -163,7 +169,7 @@ class Services(db.Model):
     def is_teamservice_exist(cls, team_id, challenge_id):
         return cls.query.where(cls.team_id == team_id, cls.challenge_id == challenge_id).count() > 0
 
-class CheckerVerdict(enum.Enum):
+class CheckerVerdict(enum.IntEnum, enum.Enum):
     QUEUE = -1
     PROCESS = 99
     FAULTY = 0

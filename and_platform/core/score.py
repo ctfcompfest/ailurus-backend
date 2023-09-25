@@ -1,3 +1,4 @@
+from and_platform.cache import cache
 from and_platform.models import db, ScorePerTicks, Submissions, CheckerQueues, Flags, Challenges, Teams, CheckerVerdict
 from and_platform.core.constant import CHECKER_INTERVAL
 from typing import List, Optional, TypedDict
@@ -6,6 +7,7 @@ from datetime import datetime
 
 import time
 
+@cache.memoize()
 def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
     # Prevent duplicate data
     ScorePerTicks.query.filter(ScorePerTicks.round == round, ScorePerTicks.tick == tick).delete()
@@ -30,19 +32,20 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
         _, attacker, chall_id, defender = row
         tmp = data_accum.get(chall_id, {})
 
-        atc_tmp = tmp.get(attacker, {"captured": [], "stolen": 0})
-        atc_tmp["captured"] = atc_tmp["captured"].append(defender)
+        atc_tmp = tmp.get(attacker, {})
+        atc_tmp["captured"] = atc_tmp.get("captured", [])
+        atc_tmp["stolen"] = atc_tmp.get("stolen", 0)
+        atc_tmp["captured"].append(defender)
 
         def_tmp = tmp.get(defender, {"captured": [], "stolen": 0})
+        def_tmp["captured"] = def_tmp.get("captured", [])
+        def_tmp["stolen"] = def_tmp.get("stolen", 0)
         def_tmp["stolen"] = def_tmp["stolen"] + 1
 
         tmp[attacker] = atc_tmp
         tmp[defender] = def_tmp
 
         data_accum[chall_id] = tmp
-
-    # Waiting time for latest checker
-    time.sleep(CHECKER_INTERVAL.seconds)
 
     checker_results = db.session.query(CheckerQueues).filter(
         CheckerQueues.round == round,
@@ -55,7 +58,9 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
         verdict = checker_result.result
         
         tmp = data_accum.get(chall_id, {})
-        team_tmp = tmp.get(team_id, {"faulty": 0, "valid": 0})
+        team_tmp = tmp.get(team_id, {})
+        team_tmp["valid"] = team_tmp.get("valid", 0)
+        team_tmp["faulty"] = team_tmp.get("faulty", 0)
         if verdict == CheckerVerdict.VALID:
             team_tmp["valid"] += 1
         elif verdict == CheckerVerdict.FAULTY:
@@ -69,7 +74,8 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
     team_len = len(teams)
     scores = list()
 
-    for chall in challs:
+    for chall_row in challs:
+        chall = chall_row[0]
         chall_data = data_accum.get(chall)
         if not chall_data: continue
 
@@ -94,8 +100,10 @@ def calculate_score_tick(round: int, tick: int) -> List[ScorePerTicks]:
                         current_round=round,
                         current_tick=tick,
                     )
-            
-            defense_score = (team_len / flag_stolen) * sla_score
+
+            defense_score = team_len * sla_score
+            if flag_stolen != 0:
+                defense_score /= flag_stolen
 
             score = ScorePerTicks(
                 round = round,
@@ -123,6 +131,7 @@ class TeamScore(TypedDict):
     total_score: float
     challenges: List[TeamChallengeScore]    
 
+@cache.memoize()
 def get_service_weight(team_id: int, challenge_id: int, current_round: int, current_tick: int) -> float:
     current_stolen = db.session.query(
         Submissions.id,
@@ -141,7 +150,7 @@ def get_service_weight(team_id: int, challenge_id: int, current_round: int, curr
     
     return (team_number - current_stolen)/team_number
 
-
+@cache.memoize()
 def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: datetime = None) -> TeamChallengeScore:
     def get_attack_score() -> float:
         return scores[0] if len(scores) == 2 else 0
@@ -217,8 +226,8 @@ def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: da
     scores = db.session.query(
         func.sum(ScorePerTicks.attack_score),
         func.sum(ScorePerTicks.defense_score),
-    ).filter(*score_filters).group_by(ScorePerTicks.challenge_id, ScorePerTicks.team_id).all()
-
+    ).filter(*score_filters).group_by(ScorePerTicks.challenge_id, ScorePerTicks.team_id).first()
+    
     return TeamChallengeScore(
         challenge_id=challenge_id,
         flag_captured=all_flag_captured,
@@ -228,11 +237,12 @@ def get_overall_team_challenge_score(team_id: int, challenge_id: int, before: da
         defense=get_defense_score()
     )
 
+@cache.memoize()
 def get_overall_team_score(team_id: int, before: datetime = None) -> TeamScore:
     challs = Challenges.query.all()
     team_score = TeamScore(team_id=team_id, total_score=0, challenges=list())
     for chall in challs:
         tmp = get_overall_team_challenge_score(team_id, chall.id, before)
-        team_score["total_score"] += tmp["attack"] + tmp["attack"]
+        team_score["total_score"] += tmp["attack"] + tmp["defense"]
         team_score["challenges"].append(tmp)
     return team_score

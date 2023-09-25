@@ -53,7 +53,7 @@ class CheckerExecutor():
                 
                 verdict = job.get(CHECKER_TIMEOUT.total_seconds())
             except TimeoutError:
-                verdict = verdict.FAIL("timeout")
+                verdict = Verdict.FAIL("timeout")
             except Exception as ex:
                 verdict = Verdict.ERROR(traceback.format_exc())            
 

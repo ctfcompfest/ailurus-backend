@@ -2,6 +2,7 @@ import tarfile
 from typing import List
 from sqlalchemy import ScalarResult, delete, insert, select
 from sqlalchemy.sql.schema import Sequence
+from and_platform.cache import clear_public_challenge
 from and_platform.api.helper import convert_model_to_dict
 from and_platform.core.challenge import (
     ChallengeData,
@@ -9,10 +10,12 @@ from and_platform.core.challenge import (
     get_challenges_directory,
     load_challenge,
     write_chall_info,
+    get_challenges_dir_fromid,
 )
 from and_platform.core.config import get_config
 from and_platform.models import ChallengeReleases, Challenges, Servers, db
 from flask import Blueprint, jsonify, request
+from shutil import rmtree
 
 challenges_blueprint = Blueprint("challenges", __name__, url_prefix="/challenges")
 
@@ -55,8 +58,11 @@ def populate_challenges():
             ).scalar_one()
             chall.server_id = server.id
             chall.server_host = server.host
+        
+        set_chall_visibility(chall.id, chall_data.get("visibility", []))
 
     db.session.commit()
+    clear_public_challenge()
 
     populated_challs = Challenges.query.all()
     return (
@@ -67,7 +73,7 @@ def populate_challenges():
 
 @challenges_blueprint.get("/")
 def get_all_challs():
-    challenges = db.session.execute(select(Challenges)).scalars().all()
+    challenges = db.session.execute(select(Challenges).order_by(Challenges.id)).scalars().all()
     response = []
     for challenge in challenges:
         data = {
@@ -119,10 +125,12 @@ def create_new_chall():
             "description": chall.description,
             "num_expose": chall.num_expose,
             "server_id": server_id,
+            "visibility": visibility,
         },
         chall.id,
     )
-
+    clear_public_challenge()
+    
     result: dict = convert_model_to_dict(chall)  # type: ignore
     result["visibility"] = visibility
     result["config_status"] = check_chall_config(chall.id)
@@ -181,10 +189,13 @@ def update_chall(challenge_id: int):
             "description": chall.description,
             "num_expose": chall.num_expose,
             "server_id": server_id,
+            "visibility": visibility,
         },
         chall.id,
     )
-
+    
+    clear_public_challenge()
+    
     result: dict = convert_model_to_dict(chall)  # type: ignore
     result["visibility"] = visibility
     result["config_status"] = check_chall_config(chall.id)
@@ -198,7 +209,9 @@ def delete_chall(challenge_id: int):
         return jsonify(status="not found", message="challenge not found"), 404
     
     set_chall_visibility(challenge_id, [])
-
+    rmtree(get_challenges_dir_fromid(str(challenge_id)))
+    clear_public_challenge()
+    
     db.session.delete(chall)
     db.session.commit()
     return jsonify(status="success", message=f"challenge {challenge_id} deleted")

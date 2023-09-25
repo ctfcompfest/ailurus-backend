@@ -10,7 +10,7 @@ endpoint:
   # Server need to allowed UDP connection on this port
   port: 51820
 
-# Usable IP must be greater that number_user
+# Usable IP must be greater than the number_user value
 subnet: 10.0.0.0/8
 number_user: 3
 
