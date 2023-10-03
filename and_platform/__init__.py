@@ -148,8 +148,10 @@ def create_checker():
 
 
 def create_checker_executor():
-    install_checker_dependencies()
-    return CheckerExecutor(create_app())
+    app = create_app()
+    with app.app_context():
+        install_checker_dependencies()
+        return CheckerExecutor(app)
 
 
 def create_contest_worker(flask_app: Flask):
