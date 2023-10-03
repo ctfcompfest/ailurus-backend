@@ -7,6 +7,7 @@ from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
 from and_platform.core.config import get_config, set_config
 from and_platform.checker import CheckerExecutor
+from and_platform.checker.utils import install_checker_dependencies
 from and_platform.cache import cache
 from and_platform.socket import socketio
 from celery import Celery, Task
@@ -147,6 +148,7 @@ def create_checker():
 
 
 def create_checker_executor():
+    install_checker_dependencies()
     return CheckerExecutor(create_app())
 
 
