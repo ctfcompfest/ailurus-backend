@@ -17,8 +17,6 @@ COPY . .
 RUN chmod +x startup.sh
 RUN ln -s /run/shm /dev/shm
 
-USER nobody
-
 EXPOSE 5000
 
 ENTRYPOINT [ "./startup.sh" ]
