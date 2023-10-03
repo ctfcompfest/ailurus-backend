@@ -5,6 +5,6 @@ DNS = {{dns | default([]) | join(',')}}
 
 [Peer]
 PublicKey = {{wgserver_pubkey}}
-AllowedIPs = {{wgserver_subnet}}
+AllowedIPs = {{allowed_ips}}
 Endpoint = {{endpoint.ip}}:{{endpoint.port}}
 PersistentKeepalive = 20

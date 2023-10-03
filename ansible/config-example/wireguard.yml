@@ -11,7 +11,11 @@ endpoint:
   port: 51820
 
 # Usable IP must be greater than the number_user value
-subnet: 10.0.0.0/8
+subnet: 10.15.0.0/16
+# Allowed routed IPs
+allowed_ips: 10.0.0.0/8
+# Network interface name on vpn server to forward the connection
+interface_name: eth0
 number_user: 3
 
 dns:
