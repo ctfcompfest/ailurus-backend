@@ -29,11 +29,14 @@ def init_contest():
         set_config("CURRENT_ROUND", 0)
         return
     
+    if set_config("CURRENT_ROUND") and set_config("CURRENT_TICK"):
+        return
+    
     current_round = 1
     current_tick = 1
     set_config("CURRENT_ROUND", current_round)
     set_config("CURRENT_TICK", current_tick)
-
+    
     Submissions.query.delete()
     Solves.query.delete()
     Flags.query.delete()
