@@ -16,7 +16,7 @@ def run_checker_for_service(team_id: int, challenge_id: int):
 
 @celery.shared_task
 def run_checker_for_challenge(chall_id: int):
-    if is_outside_contest_time():
+    if not check_contest_is_running():
         return
 
     teams = Teams.query.all()
@@ -26,7 +26,7 @@ def run_checker_for_challenge(chall_id: int):
 
 @celery.shared_task
 def run_checker_for_team(team_id: int):
-    if is_outside_contest_time():
+    if not check_contest_is_running():
         return
 
     challenges = Challenges.query.all()
