@@ -14,7 +14,7 @@ def get_submission():
     query_filter = []
     for elm in ALLOWED_QUERY:
         arg_val = request.args.get(elm, type=_convert_config_value)
-        if not arg_val: continue
+        if arg_val == None: continue
         query_filter.append(getattr(Submissions, elm) == arg_val)
 
     submissions = db.session.query(

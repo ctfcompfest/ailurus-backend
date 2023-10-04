@@ -14,7 +14,7 @@ def get_checker_result():
     query_filter = []
     for elm in ALLOWED_QUERY:
         arg_val = request.args.get(elm, type=_convert_config_value)
-        if not arg_val: continue
+        if arg_val == None: continue
         if elm == "result":
             arg_val = CheckerVerdict(arg_val)
         query_filter.append(getattr(CheckerQueues, elm) == arg_val)
