@@ -29,7 +29,7 @@ def init_contest():
         set_config("CURRENT_ROUND", 0)
         return
     
-    if set_config("CURRENT_ROUND") and set_config("CURRENT_TICK"):
+    if get_config("CURRENT_ROUND") and get_config("CURRENT_TICK"):
         return
     
     current_round = 1
@@ -64,6 +64,11 @@ def move_tick():
     if current_tick > number_tick:
         current_tick = 1
         current_round = current_round + 1
+
+    # Prevent data duplicate
+    Flags.query.filter(
+        Flags.round == current_round, Flags.tick == current_tick
+    ).delete()
 
     generate_flag(current_round, current_tick)
     rotate_flag(current_round, current_tick)
