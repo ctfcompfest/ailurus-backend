@@ -113,16 +113,18 @@ def calculate_score_tick(round: int, tick: int):
     for chall_row in challs:
         chall = chall_row[0]
         chall_data = data_accum.get(chall)
-        if not chall_data:
-            continue
 
         for team in teams:
-            team_data = chall_data.get(team.id)
-            if not team_data:
-                continue
-
-            flag_captured = team_data.get("captured", [])
-            team_sla = team_slas[team.id]
+            team_sla = team_slas.get(
+                team.id,
+                {
+                    cid[0]: {
+                        "faulty": 0,
+                        "valid": 0,
+                    }
+                    for cid in challs
+                },
+            )
 
             attack_score = 0.0
             current_pos = 1
@@ -131,50 +133,53 @@ def calculate_score_tick(round: int, tick: int):
                     current_pos = i + 1
                     break
 
-            for captured in flag_captured:
-                total_stolen = get_total_stolen(
-                    team_id=captured,
-                    challenge_id=chall,
-                    current_round=round,
-                    current_tick=tick,
-                )
-                current_score = math.sqrt(1 / total_stolen)
-                captured_pos = 1
-                for i, player in enumerate(current_leaderboard):
-                    if player["team_id"] == captured:
-                        captured_pos = i + 1
-                        break
-
-                if current_pos > captured_pos:
-                    current_score *= 1 + (current_pos - captured_pos) / (team_len - 1)
-
-                attack_score += current_score
-
-            sla_score = 0.0
-            defense_score = 0.0
-            for service_team_chall in challs:
-                curr_chall_id = service_team_chall[0]
-                total_stolen = get_total_stolen(
-                    team_id=team.id,
-                    challenge_id=curr_chall_id,
-                    current_round=round,
-                    current_tick=tick,
-                )
-
-                service_sla = team_sla[curr_chall_id]
-                current_sla = 0.0
-                if service_sla["faulty"] + service_sla["valid"] > 0:
-                    current_sla = (
-                        service_sla["valid"] / service_sla["faulty"]
-                        + service_sla["valid"]
+            if chall_data:
+                team_data = chall_data.get(team.id, {"captured": []})  # type: ignore
+                flag_captured = team_data.get("captured", [])
+                for captured in flag_captured:
+                    total_stolen = get_total_stolen(
+                        team_id=captured,
+                        challenge_id=chall,
+                        current_round=round,
+                        current_tick=tick,
                     )
+                    current_score = math.sqrt(1 / total_stolen)
+                    captured_pos = 1
+                    for i, player in enumerate(current_leaderboard):
+                        if player["team_id"] == captured:
+                            captured_pos = i + 1
+                            break
 
-                total_not_owning = team_len - 1 - total_stolen
-                defense_score += math.sqrt(
-                    (total_not_owning + challs_len * current_sla)
-                    / (team_len - 1 + challs_len)
+                    if current_pos > captured_pos:
+                        current_score *= 1 + (current_pos - captured_pos) / (
+                            team_len - 1
+                        )
+
+                    attack_score += current_score
+
+            defense_score = 0.0
+            total_stolen = get_total_stolen(
+                team_id=team.id,
+                challenge_id=chall,
+                current_round=round,
+                current_tick=tick,
+            )
+
+            service_sla = team_sla.get(
+                chall,
+                {"faulty": 0, "valid": 0},
+            )
+            sla_score = 0.0
+            if service_sla["faulty"] + service_sla["valid"] > 0:
+                sla_score = service_sla["valid"] / (
+                    service_sla["faulty"] + service_sla["valid"]
                 )
-                sla_score += current_sla
+
+            total_not_owning = team_len - 1 - total_stolen
+            defense_score += math.sqrt(
+                (total_not_owning + challs_len * sla_score)
+                / (team_len - 1 + challs_len)
+            )
 
             score = ScorePerTicks(
                 round=round,
@@ -277,7 +282,7 @@ def get_overall_team_challenge_score(
 
     scores = (
         db.session.query(
-            func.sum(ScorePerTicks.sla),
+            func.avg(ScorePerTicks.sla),
             func.sum(ScorePerTicks.attack_score),
             func.sum(ScorePerTicks.defense_score),
         )
@@ -302,7 +307,7 @@ def get_overall_team_score(team_id: int, before: datetime | None = None) -> Team
     team_score = TeamScore(team_id=team_id, total_score=0, challenges=list())
     for chall in challs:
         tmp = get_overall_team_challenge_score(team_id, chall.id, before)
-        team_score["total_score"] += tmp["attack"] + tmp["defense"]
+        team_score["total_score"] += tmp["attack"] + tmp["defense"] + tmp["sla"]
         team_score["challenges"].append(tmp)
     return team_score
 
