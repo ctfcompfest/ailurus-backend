@@ -29,7 +29,7 @@ def init_contest():
         set_config("CURRENT_ROUND", 0)
         return
     
-    if set_config("CURRENT_ROUND") and set_config("CURRENT_TICK"):
+    if get_config("CURRENT_ROUND") and get_config("CURRENT_TICK"):
         return
     
     current_round = 1
