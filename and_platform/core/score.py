@@ -241,6 +241,7 @@ def get_overall_team_challenge_score(
     flag_captured_filters = [
         Submissions.verdict == True,
         Submissions.team_id == team_id,
+        Flags.team_id != team_id,
         Submissions.challenge_id == challenge_id,
     ]
     flag_stolen_filters = [
