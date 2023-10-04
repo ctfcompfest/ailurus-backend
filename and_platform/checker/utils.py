@@ -10,4 +10,4 @@ def install_checker_dependencies():
         req_path = path.joinpath("test", "requirements.txt")
         if not req_path.exists(): continue
 
-        pip.main(["install", "-r", req_path.as_posix()])
+        pip.main(["install", "-q", "-r", req_path.as_posix()])
