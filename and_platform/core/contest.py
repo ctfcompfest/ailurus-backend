@@ -65,6 +65,11 @@ def move_tick():
         current_tick = 1
         current_round = current_round + 1
 
+    # Prevent data duplicate
+    Flags.query.filter(
+        Flags.round == current_round, Flags.tick == current_tick
+    ).delete()
+
     generate_flag(current_round, current_tick)
     rotate_flag(current_round, current_tick)
 
