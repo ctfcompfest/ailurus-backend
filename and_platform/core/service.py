@@ -32,7 +32,7 @@ def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int
     dest_dir = get_service_path(team.id, challenge.id)
 
     copytree(SVC_TEMPLATE_DIR, dest_dir, dirs_exist_ok=True)    
-    copytree(SOURCE_CHALL_DIR, dest_dir, ignore=ignore_patterns("test", "challenge.yml", "docker-compose.yml"), dirs_exist_ok=True)
+    copytree(SOURCE_CHALL_DIR, dest_dir, ignore=ignore_patterns("attachment", "test", "challenge.yml", "docker-compose.yml"), dirs_exist_ok=True)
     move(os.path.join(dest_dir, "patchrule.yml"), os.path.join(dest_dir, "meta", "patchrule.yml"))
     
     # Generate compose file
