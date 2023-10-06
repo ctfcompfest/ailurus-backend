@@ -1,6 +1,6 @@
 from and_platform.models import db, Challenges, Teams, Services, Servers, CheckerQueues, CheckerVerdict
 from and_platform.core.config import get_config
-from and_platform.core.service import do_provision, do_start, do_stop, do_patch, do_restart, do_reset, get_service_path, get_service_metadata
+from and_platform.core.service import do_provision, do_manage, do_start, do_stop, do_patch, do_restart, do_reset, get_service_path, get_service_metadata
 from flask import Blueprint, jsonify, request, views, current_app as app
 from sqlalchemy import delete
 
@@ -51,6 +51,35 @@ def service_provision():
     
     return jsonify(status="success", message="successfully provision all requested services.")
 
+@service_blueprint.post("/manage")
+def service_manage():
+    req = request.get_json()
+    provision_challs = req.get("challenges")
+    provision_teams = req.get("teams")
+    action = req.get("action")
+    if not provision_challs or not provision_teams or \
+        not action or action not in ["start", "stop", "restart", "reset"]:
+        return jsonify(status="failed", message="invalid body."), 400
+    
+    teams_query = Teams.query
+    challs_query = Challenges.query
+    if isinstance(provision_teams, list):
+        teams_query = teams_query.where(Teams.id.in_(provision_teams))
+    if isinstance(provision_challs, list):
+        challs_query = challs_query.where(Challenges.id.in_(provision_challs))
+    
+    teams = teams_query.all()
+    challenges = challs_query.all()
+    if (isinstance(provision_teams, list) and len(teams) != len(provision_teams)) \
+        or (isinstance(provision_challs, list) and len(challenges) != len(provision_challs)):
+        return jsonify(status="failed", message="challenge or team cannot be found."), 400
+    
+    for team in teams:
+        for chall in challenges:
+            do_manage(action, team.id, chall.id)
+
+    return jsonify(status="success", message="successfully provision all requested services.")
+
 
 @service_blueprint.get("/")
 def admin_service_getall():
@@ -87,27 +116,16 @@ def admin_service_patch(challenge_id, team_id):
 
 @service_blueprint.post("/<int:challenge_id>/teams/<int:team_id>/manage")
 def admin_service_manage(challenge_id, team_id):
-    ACTION_FUNC = {
-        "start": do_start,
-        "stop": do_stop,
-        "restart": do_restart,
-        "reset": do_reset,
-    }
-
     confirm_data: dict = request.get_json()
     action = confirm_data.get("action")
-    if not action or action not in ACTION_FUNC:
+    if not action or action not in ["start", "stop", "restart", "reset"]:
         return jsonify(status="bad request", message="invalid action"), 400
     
     if not Services.is_teamservice_exist(team_id, challenge_id):
         return jsonify(status="not found", message="service not found."), 404
 
-    ACTION_FUNC[action](
-        team_id,
-        challenge_id,
-        Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
-    )
-    
+    do_manage(action, team_id, challenge_id)
+
     return jsonify(status="success", message=f"{action} request submitted.")
 
 

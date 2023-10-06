@@ -53,7 +53,10 @@ def generate_provision_asset(team: Teams, challenge: Challenges, ports: list[int
         yaml.safe_dump(compose_data, compose_file)
 
 def do_provision(team: Teams, challenge: Challenges, server: Servers):
-    ports = [50000 + team.id * 100 + challenge.id]
+    ports = [50000 + challenge.id]
+    if get_config("SERVER_MODE") == "sharing":
+        ports = [p + team.id * 100 for p in ports]
+
     generate_provision_asset(team, challenge, ports)
     do_remote_provision(team, challenge, server)
 
@@ -67,6 +70,23 @@ def do_provision(team: Teams, challenge: Challenges, server: Servers):
         )
         services.append(tmp_service)
     return services
+
+def do_manage(action: str, team_id: int, challenge_id: int):
+    ACTION_FUNC = {
+        "start": do_start,
+        "stop": do_stop,
+        "restart": do_restart,
+        "reset": do_reset,
+    }
+    if not action or action not in ACTION_FUNC:
+        raise ValueError(f"'{action}' is invalid action.")
+
+    ACTION_FUNC[action](
+        team_id,
+        challenge_id,
+        Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
+    )
+    
 
 def _do_patch(team_id, challenge_id, server):
     patch_fname = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
