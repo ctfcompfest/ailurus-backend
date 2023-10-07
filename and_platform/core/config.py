@@ -80,11 +80,8 @@ def check_contest_is_finished():
     current_round = get_config("CURRENT_ROUND", 0)
     number_tick = get_config("NUMBER_TICK", 0)
     number_round = get_config("NUMBER_ROUND", 0)
-    return (
-        current_round >= number_round
-        and
-        current_tick >= number_tick
-    )
+    return current_round > number_round
+
 
 def check_contest_is_running():
     return check_contest_is_started() and not check_contest_is_finished()
