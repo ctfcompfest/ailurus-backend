@@ -5,6 +5,7 @@ load_dotenv()
 
 from and_platform.models import Teams, db, migrate
 from and_platform.api import api_blueprint
+from and_platform.logging import init_logs
 from and_platform.core.config import get_config, set_config
 from and_platform.checker import CheckerExecutor
 from and_platform.checker.utils import install_checker_dependencies
@@ -95,7 +96,7 @@ def create_app():
                 "http://127.0.0.1:3000",
                 "http://localhost:3000",
                 "http://localhost",
-		"https://and-frontend.vercel.app",
+		        "https://and-frontend.vercel.app",
             ],
         )
         
@@ -103,6 +104,7 @@ def create_app():
         migrate.init_app(app, db)
         cache.init_app(app)
         socketio.init_app(app)
+        init_logs(app)
         
         app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
         app.config["JWT_ALGORITHM"] = "HS512"
