@@ -45,7 +45,7 @@ Kirim GET-request ke endpoint `/api/v1/challenges`.
 
 Contoh request:
 ```
-curl http://localhost:5000/api/v1/challenges
+curl https://and-be.rorre.me/api/v1/challenges
 ```
 
 Contoh response:
@@ -72,7 +72,7 @@ Kirim GET-request ke endpoint `/api/v1/teams`.
 
 Contoh request:
 ```
-curl http://localhost:5000/api/v1/teams
+curl https://and-be.rorre.me/api/v1/teams
 ```
 
 Contoh response:
@@ -99,7 +99,7 @@ Kirim GET-request ke endpoint `/api/v1/services`.
 
 Contoh request:
 ```
-curl http://localhost:5000/api/v1/services
+curl https://and-be.rorre.me/api/v1/services
 ```
 
 Contoh response:

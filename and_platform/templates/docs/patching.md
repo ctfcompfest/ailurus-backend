@@ -7,7 +7,7 @@ tar cvf patch.tar [patch_dir]
 Platform akan melakukan file patching pada setiap container dengan command berikut:
 
 ```
-tar -xmv --strip-components=1 -f ${NAMA_PATCH_FILE} ${NAMA_CONTAINER}
+tar -xmv --strip-components=1 -f {NAMA_PATCH_FILE} {NAMA_CONTAINER}
 ```
 
 Melakukan patching memerlukan informasi berikut:
