@@ -1,0 +1,6 @@
+---
+- name: Machine provision
+  hosts: checker
+  become: true
+  roles:
+  - docker-install
