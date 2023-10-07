@@ -143,7 +143,7 @@ def calculate_score_tick(round: int, tick: int):
                         current_round=round,
                         current_tick=tick,
                     )
-                    current_score = max(math.sqrt(1 / total_stolen), 1)
+                    current_score = math.sqrt(1 / max(total_stolen, 1))
                     captured_pos = 1
                     for i, player in enumerate(current_leaderboard):
                         if player["team_id"] == captured:
@@ -169,7 +169,7 @@ def calculate_score_tick(round: int, tick: int):
                 chall,
                 {"faulty": 0, "valid": 0},
             )
-            sla_score = 0.0
+            sla_score = 1.0
             if service_sla["faulty"] + service_sla["valid"] > 0:
                 sla_score = service_sla["valid"] / (
                     service_sla["faulty"] + service_sla["valid"]
