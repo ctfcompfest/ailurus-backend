@@ -1234,6 +1234,20 @@ files = [
 ]
 
 [[package]]
+name = "py-gfm"
+version = "2.0.0"
+description = "An implementation of Github-Flavored Markdown written as an extension to the Python Markdown library."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "py-gfm-2.0.0.linux-x86_64.tar.gz", hash = "sha256:8768b31bbfda8e1d52e2f32b363c138eedf52b1a81c06036b60ece576b2a652f"},
+    {file = "py_gfm-2.0.0-py2.py3-none-any.whl", hash = "sha256:c49f43b584e15bdbe569141c92aefc00542289b6d88d95b38117e3359a35cdfe"},
+]
+
+[package.dependencies]
+markdown = ">=3.3,<4"
+
+[[package]]
 name = "pycodestyle"
 version = "2.11.0"
 description = "Python style guide checker"
@@ -1860,4 +1874,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "291feca5f4a074b0a5675472aaf7d15a28bf8286dff6609813d3816e6e3a4c05"
+content-hash = "53ba81e7e0feae2390db39cb289e0b0c18cde4beb77aec07a4c1bb397e10361d"
