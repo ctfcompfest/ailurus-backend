@@ -45,7 +45,6 @@ def run_webcelery(**kwargs):
  
 
 def run_checker(**kwargs):
-    celery_extra_opts = []
     celery_extra_opts = ['--loglevel', "INFO"]
     celery = create_checker()
     celery.start(["worker", "-E"] + celery_extra_opts)

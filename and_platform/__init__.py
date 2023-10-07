@@ -1,5 +1,4 @@
 from dotenv import load_dotenv
-from and_platform.core.contest import install_contest_entries
 
 load_dotenv()
 
@@ -18,7 +17,6 @@ from pathlib import Path
 
 import datetime
 import os
-import shelve
 import sqlalchemy
 
 
@@ -95,7 +93,7 @@ def create_app():
                 "http://127.0.0.1:3000",
                 "http://localhost:3000",
                 "http://localhost",
-		"https://and-frontend.vercel.app",
+		        "https://and-frontend.vercel.app",
             ],
         )
         
@@ -119,7 +117,6 @@ def create_app():
         # Blueprints
         app.register_blueprint(api_blueprint)
         
-
     return app
 
 
@@ -164,6 +161,8 @@ def create_contest_worker(flask_app: Flask):
 
 
 def create_scheduler(flask_app: Flask):
+    from and_platform.core.contest import install_contest_entries
+
     with flask_app.app_context():
         celery = create_celery(flask_app)
         celery.conf.beat_schedule = {
