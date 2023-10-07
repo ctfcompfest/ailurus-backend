@@ -37,6 +37,10 @@ def get_public_scoreboard():
         scoreboard.append(team_score)
 
     scoreboard_sort = sorted(scoreboard, key=lambda x: x["total_score"], reverse=True)
-    for i in range(len(scoreboard_sort)):
-        scoreboard_sort[i]["rank"] = i+1
+    scoreboard_sort[0]["rank"] = 1
+    for i in range(1, len(scoreboard_sort)):
+        scoreboard_sort[i]["rank"] = scoreboard_sort[i-1]["rank"]
+        if scoreboard_sort[i]["total_score"] != scoreboard_sort[i]["total_score"]:
+            scoreboard_sort[i]["rank"] += 1
+
     return jsonify(status="success", is_freeze=is_freeze, data=scoreboard_sort)
