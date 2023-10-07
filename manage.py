@@ -1,11 +1,12 @@
 from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker
 from and_platform.socket import socketio
-from multiprocessing import Process, cpu_count
+from multiprocessing import Process, cpu_count, set_start_method
 from wsgi import StandaloneApplication
 import sys
 import argparse
 
 args = sys.argv[1:]
+set_start_method("spawn")
 
 def help():
     print("Usage: python manage.py [module] [args]\n")
@@ -30,7 +31,7 @@ def run_beat(**kwargs):
         celery_extra_opts = ['--loglevel', "DEBUG"]
     else:
         celery_extra_opts = ['--loglevel', "INFO"]
-    celery_schedule.start((["beat"] + celery_extra_opts,)).start()
+    celery_schedule.start(["beat"] + celery_extra_opts)
         
 
 def run_webcelery(**kwargs):
@@ -41,8 +42,8 @@ def run_webcelery(**kwargs):
         celery_extra_opts = ['--loglevel', "DEBUG"]
     else:
         celery_extra_opts = ['--loglevel', "INFO"]    
-    celery_worker.start(["worker", "-E"] + celery_extra_opts).start()
- 
+    celery_worker.start(["worker", "-E"] + celery_extra_opts)
+
 
 def run_checker(**kwargs):
     celery_extra_opts = ['--loglevel', "INFO"]
