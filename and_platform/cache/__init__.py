@@ -19,5 +19,5 @@ def clear_public_team():
 def clear_config():
     from and_platform.core.config import _get_config
 
-    cache.delete_memoized(_get_config)
+    # cache.delete_memoized(_get_config)
     
