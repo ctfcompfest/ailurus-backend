@@ -30,7 +30,6 @@ def get_app_config(key: str, default=None):
         return _convert_config_value(value)
     return default
 
-@cache.memoize()
 def _get_config(key: str):
     config = db.session.execute(
         Configs.__table__.select().where(Configs.key == key)
