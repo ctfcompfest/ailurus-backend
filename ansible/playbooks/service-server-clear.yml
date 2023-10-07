@@ -1,0 +1,9 @@
+---
+- name: Machine provision
+  hosts: service_server
+  become: true
+  tasks:
+  - name: Docker prune
+    shell: docker system prune -a
+  - name: Clear service data
+    shell: rm -rf /opt/adce_data

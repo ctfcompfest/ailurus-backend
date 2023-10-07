@@ -6,7 +6,7 @@ import sys
 import argparse
 
 args = sys.argv[1:]
-set_start_method("spawn")
+# set_start_method("spawn")
 
 def help():
     print("Usage: python manage.py [module] [args]\n")
