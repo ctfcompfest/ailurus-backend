@@ -36,6 +36,15 @@ services:
     depends_on:
     - db
     - cache
+  beat:
+    build: .
+    command: beat
+    restart: always
+    volumes:
+    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    depends_on:
+    - db
+    - cache
   checker:
     build: .
     restart: always
