@@ -127,7 +127,7 @@ def calculate_score_tick(round: int, tick: int):
             )
 
             attack_score = 0.0
-            current_pos = 
+            current_pos = 1
             for i, player in enumerate(current_leaderboard):
                 if player["team_id"] == team.id:
                     current_pos = player["position"]
@@ -306,7 +306,9 @@ def get_overall_team_challenge_score(
 @cache.memoize()
 def get_overall_team_score(team_id: int, before: datetime | None = None) -> TeamScore:
     challs = Challenges.query.all()
-    team_score = TeamScore(team_id=team_id, position=-1, total_score=0, challenges=list())
+    team_score = TeamScore(
+        team_id=team_id, position=-1, total_score=0, challenges=list()
+    )
     for chall in challs:
         tmp = get_overall_team_challenge_score(team_id, chall.id, before)
         team_score["total_score"] += tmp["attack"] + tmp["defense"] + tmp["sla"]
@@ -324,7 +326,7 @@ def get_leaderboard():
     scoreboard_sort = sorted(scoreboard, key=lambda x: x["total_score"], reverse=True)
     scoreboard_sort[0]["position"] = 1
     for i in range(1, len(scoreboard_sort)):
-        scoreboard_sort[i]["position"] = scoreboard_sort[i-1]["position"]
-        if scoreboard_sort[i]["total_score"] != scoreboard_sort[i-1]["total_score"]:
+        scoreboard_sort[i]["position"] = scoreboard_sort[i - 1]["position"]
+        if scoreboard_sort[i]["total_score"] != scoreboard_sort[i - 1]["total_score"]:
             scoreboard_sort[i]["position"] += 1
     return scoreboard_sort
