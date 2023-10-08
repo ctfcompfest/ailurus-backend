@@ -14,7 +14,7 @@ def help():
 
 def run_web(**kwargs):
     flask_app = create_app()
-    celery = create_celery()
+    celery = create_celery(flask_app)
     flask_arg = {
         'debug': kwargs.get('debug') or False,
         'host': kwargs.get('host') or '0.0.0.0',
