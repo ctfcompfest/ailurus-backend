@@ -17,10 +17,8 @@ def get_public_scoreboard():
     teams = Teams.query.all()
     scoreboard = []
     for team in teams:
-        # TODO: REMOVE COMMENT
-        #team_score = get_overall_team_score(team.id, freeze_time)
-        team_score = get_overall_team_score(team.id)
-
+        team_score = get_overall_team_score(team.id, freeze_time)
+        
         tmp_chall = {}
         for chall in team_score["challenges"]:
             chall_id = chall["challenge_id"]

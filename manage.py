@@ -1,16 +1,12 @@
-from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker
+from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker, create_celery
 from and_platform.socket import socketio
-from multiprocessing import Process, cpu_count
+from multiprocessing import Process, cpu_count, set_start_method
 from wsgi import StandaloneApplication
 import sys
 import argparse
 
-WSGI_OPTS = {
-    "workers": (cpu_count()) + 1,
-    "worker_class": "sync",
-}
-
 args = sys.argv[1:]
+# set_start_method("spawn")
 
 def help():
     print("Usage: python manage.py [module] [args]\n")
@@ -18,7 +14,7 @@ def help():
 
 def run_web(**kwargs):
     flask_app = create_app()
-    
+    celery = create_celery()
     flask_arg = {
         'debug': kwargs.get('debug') or False,
         'host': kwargs.get('host') or '0.0.0.0',
@@ -27,25 +23,29 @@ def run_web(**kwargs):
     socketio.run(flask_app, **flask_arg)
 
 
-def run_webcelery(**kwargs):
+def run_beat(**kwargs):
     flask_app = create_app()
     celery_schedule = create_scheduler(flask_app)
+    
+    if kwargs['debug']:
+        celery_extra_opts = ['--loglevel', "DEBUG"]
+    else:
+        celery_extra_opts = ['--loglevel', "INFO"]
+    celery_schedule.start(["beat"] + celery_extra_opts)
+        
+
+def run_webcelery(**kwargs):
+    flask_app = create_app()
     celery_worker = create_contest_worker(flask_app)
 
     if kwargs['debug']:
         celery_extra_opts = ['--loglevel', "DEBUG"]
-
-        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
-        celery_worker.start(["worker"] + celery_extra_opts).start()
     else:
-        celery_extra_opts = ['--loglevel', "INFO"]
-        
-        Process(target=celery_schedule.start, args=(["beat"] + celery_extra_opts,)).start()
-        celery_worker.start(["worker", "-E"] + celery_extra_opts).start()
- 
+        celery_extra_opts = ['--loglevel', "INFO"]    
+    celery_worker.start(["worker", "-E"] + celery_extra_opts)
+
 
 def run_checker(**kwargs):
-    celery_extra_opts = []
     celery_extra_opts = ['--loglevel', "INFO"]
     celery = create_checker()
     celery.start(["worker", "-E"] + celery_extra_opts)
@@ -73,9 +73,10 @@ if __name__ == "__main__":
 
     webcelery_parser = subparser.add_parser('webcelery', help='web celery command help')
     webcelery_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
-    webcelery_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
-    webcelery_parser.add_argument('--port', type=int, help='the port web app will bind to.')
-
+    
+    beat_parser = subparser.add_parser('beat', help='beat command help')
+    beat_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
+    
     if len(args) < 1:
         parser.print_help()
         exit()
@@ -89,5 +90,7 @@ if __name__ == "__main__":
         run_web(**vars(user_arg))
     elif user_arg.command == "webcelery":
         run_webcelery(**vars(user_arg))
+    elif user_arg.command == "beat":
+        run_beat(**vars(user_arg))
     else:
         help()    

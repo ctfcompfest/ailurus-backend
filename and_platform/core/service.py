@@ -4,10 +4,11 @@ from and_platform.core.challenge import get_challenges_dir_fromid
 from and_platform.core.config import get_app_config, get_config
 from and_platform.core.ssh import copy_folder, create_ssh_from_server
 from fabric import Connection
-from multiprocessing import Pool
+from multiprocessing import Pool, get_context
 from shutil import copytree, ignore_patterns, move
 from secrets import token_hex
 
+import celery
 import os
 import yaml
 
@@ -87,8 +88,11 @@ def do_manage(action: str, team_id: int, challenge_id: int):
         Servers.get_server_by_mode(get_config("SERVER_MODE"), team_id, challenge_id)
     )
     
-
+@celery.shared_task
 def _do_patch(team_id, challenge_id, server):
+    if isinstance(server, int):
+        server = Servers.query.filter(Servers.id == server).first()
+
     patch_fname = os.path.join(get_service_path(team_id, challenge_id), "patch", "service.patch")
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
     
@@ -100,12 +104,14 @@ def _do_patch(team_id, challenge_id, server):
     
 
 def do_patch(team_id: int, challenge_id: int, server: Servers):
-    pool = Pool(processes=1)
-    pool.apply_async(_do_patch, args=(team_id, challenge_id, server))
-    pool.close()
+    _do_patch.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
 
 
+@celery.shared_task
 def _do_start(team_id, challenge_id, server):
+    if isinstance(server, int):
+        server = Servers.query.filter(Servers.id == server).first()
+
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
     
     with create_ssh_from_server(server) as ssh_conn:
@@ -115,12 +121,14 @@ def _do_start(team_id, challenge_id, server):
     
 
 def do_start(team_id: int, challenge_id: int, server: Servers):
-    pool = Pool(processes=1)
-    pool.apply_async(_do_start, args=(team_id, challenge_id, server))
-    pool.close()
+    _do_start.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
+    
 
-
+@celery.shared_task
 def _do_stop(team_id, challenge_id, server):
+    if isinstance(server, int):
+        server = Servers.query.filter(Servers.id == server).first()
+    
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
     
     with create_ssh_from_server(server) as ssh_conn:
@@ -130,12 +138,14 @@ def _do_stop(team_id, challenge_id, server):
     
 
 def do_stop(team_id: int, challenge_id: int, server: Servers):
-    pool = Pool(processes=1)
-    pool.apply_async(_do_stop, args=(team_id, challenge_id, server))
-    pool.close()
+    _do_stop.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
 
 
+@celery.shared_task
 def _do_restart(team_id, challenge_id, server):
+    if isinstance(server, int):
+        server = Servers.query.filter(Servers.id == server).first()
+    
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
     
     with create_ssh_from_server(server) as ssh_conn:
@@ -144,11 +154,14 @@ def _do_restart(team_id, challenge_id, server):
     cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
 
 def do_restart(team_id: int, challenge_id: int, server: Servers):
-    pool = Pool(processes=1)
-    pool.apply_async(_do_restart, args=(team_id, challenge_id, server))
-    pool.close()
+    _do_restart.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
 
+
+@celery.shared_task
 def _do_reset(team_id, challenge_id, server):
+    if isinstance(server, int):
+        server = Servers.query.filter(Servers.id == server).first()
+    
     svc_local_dir = get_service_path(team_id, challenge_id)
     svc_remote_dir = get_remote_service_path(team_id, challenge_id)
     
@@ -165,9 +178,8 @@ def _do_reset(team_id, challenge_id, server):
     cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
 
 def do_reset(team_id: int, challenge_id: int, server: Servers):
-    pool = Pool(processes=1)
-    pool.apply_async(_do_reset, args=(team_id, challenge_id, server))
-    pool.close()
+    _do_reset.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
+    
 
 def fetch_metainfo(ssh_conn: Connection, team_id: int, challenge_id: int):
     sftp_client = ssh_conn.sftp()

@@ -4,11 +4,11 @@ Host yang digunakan untuk mengakses API platform adalah `https://and-be.rorre.me
 ### Submit Flags
 API ini digunakan untuk melakukan submit atas flag yang berhasil dicuri dari diri sendiri ataupun tim lain. Perlu diingat kembali bahwa sebuah flag hanya berlaku pada tick tersebut.
 
-Kirim POST-request ke endpoint `/api/v1/submit`. Body dari request haruslah memiliki format sebuah entri `flags` yang berisi array dari flag yang akan disubmit. Perlu diperhatikan bahwa maksimal 100 flag yang dapat disubmit dalam sebuah request. Autentikasi melalui JWT team diperlukan untuk dapat mengaksek API ini.
+Kirim POST-request ke endpoint `/api/v1/submit`. Body dari request haruslah memiliki format sebuah entri `flags` yang berisi array dari flag yang akan disubmit. Perlu diperhatikan bahwa maksimal 100 flag yang dapat disubmit dalam sebuah request. Autorisasi melalui JWT team diperlukan untuk dapat mengaksek API ini.
 
 Contoh request:
 ```
-curl -H 'Content-Type: application/json' -H 'Authentication: Bearer <team JWT>' \
+curl -H 'Content-Type: application/json' -H 'Authorization: Bearer <team JWT>' \
     -X POST --data '{"flags": ["COMPFEST15{incorrect}", "COMPFEST15{expired}", "COMPFEST15{siwlzc8}", "COMPFEST15{siwlzc8}"]}' \
     https://and-be.rorre.me/api/v1/submit
 ```

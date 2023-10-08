@@ -1,0 +1,12 @@
+---
+- name: Machine provision
+  hosts: service_server
+  become: true
+  tasks:
+  - name: Stop all container
+    shell: docker rm -f $(docker ps -aq)
+    ignore_errors: yes
+  - name: Docker prune
+    shell: docker system prune -af
+  - name: Clear service data
+    shell: rm -rf /opt/adce_data

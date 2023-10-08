@@ -8,7 +8,7 @@ from mdx_gfm import GithubFlavoredMarkdownExtension
 public_docs_blueprint = Blueprint("public_docs_blueprint", __name__, url_prefix="/docs")
 
 @public_docs_blueprint.get("/<string:page>")
-# @cache.cached()
+@cache.cached()
 def get_docs(page):
     base_path = os.path.join(get_app_config("TEMPLATE_DIR"), "docs")
     ALLOWED_PAGE = [elm.replace(".md", "") for elm in os.listdir(base_path)]
