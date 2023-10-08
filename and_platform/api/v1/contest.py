@@ -17,7 +17,7 @@ def get_contest_config():
     current_tick = get_config("CURRENT_TICK", 0)
     logo_url = get_config("LOGO_URL", "")
 
-    if check_contest_is_started():
+    if not check_contest_is_started():
         event_status["state"] = "not started"
     elif check_contest_is_finished():
         event_status["state"] = "finished"
