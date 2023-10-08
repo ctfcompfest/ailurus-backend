@@ -1,4 +1,4 @@
-from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker
+from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker, create_celery
 from and_platform.socket import socketio
 from multiprocessing import Process, cpu_count, set_start_method
 from wsgi import StandaloneApplication
@@ -14,7 +14,7 @@ def help():
 
 def run_web(**kwargs):
     flask_app = create_app()
-    
+    celery = create_celery()
     flask_arg = {
         'debug': kwargs.get('debug') or False,
         'host': kwargs.get('host') or '0.0.0.0',

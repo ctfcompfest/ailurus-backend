@@ -61,8 +61,8 @@ def service_manage():
         not action or action not in ["start", "stop", "restart", "reset"]:
         return jsonify(status="failed", message="invalid body."), 400
     
-    teams_query = Teams.query
-    challs_query = Challenges.query
+    teams_query = db.session.query(Teams.id)
+    challs_query = db.session.query(Challenges.id)
     if isinstance(provision_teams, list):
         teams_query = teams_query.where(Teams.id.in_(provision_teams))
     if isinstance(provision_challs, list):
@@ -73,12 +73,15 @@ def service_manage():
     if (isinstance(provision_teams, list) and len(teams) != len(provision_teams)) \
         or (isinstance(provision_challs, list) and len(challenges) != len(provision_challs)):
         return jsonify(status="failed", message="challenge or team cannot be found."), 400
-    
-    for team in teams:
-        for chall in challenges:
-            do_manage(action, team.id, chall.id)
 
-    return jsonify(status="success", message="successfully provision all requested services.")
+    team_ids = [elm[0] for elm in teams]
+    chall_ids = [elm[0] for elm in challenges]
+
+    for team_id in team_ids:
+        for chall_id in chall_ids:
+            do_manage(action, team_id, chall_id)
+
+    return jsonify(status="success", message=f"successfully {action} all requested services.")
 
 
 @service_blueprint.get("/")

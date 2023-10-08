@@ -104,7 +104,7 @@ def _do_patch(team_id, challenge_id, server):
     
 
 def do_patch(team_id: int, challenge_id: int, server: Servers):
-    _do_patch.apply_async(args=[team_id, challenge_id, server.id])
+    _do_patch.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
 
 
 @celery.shared_task
@@ -121,7 +121,7 @@ def _do_start(team_id, challenge_id, server):
     
 
 def do_start(team_id: int, challenge_id: int, server: Servers):
-    _do_start.apply_async(args=[team_id, challenge_id, server.id])
+    _do_start.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
     
 
 @celery.shared_task
@@ -138,7 +138,7 @@ def _do_stop(team_id, challenge_id, server):
     
 
 def do_stop(team_id: int, challenge_id: int, server: Servers):
-    _do_stop.apply_async(args=[team_id, challenge_id, server.id])
+    _do_stop.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
 
 
 @celery.shared_task
@@ -154,7 +154,7 @@ def _do_restart(team_id, challenge_id, server):
     cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
 
 def do_restart(team_id: int, challenge_id: int, server: Servers):
-    _do_restart.apply_async(args=[team_id, challenge_id, server.id])
+    _do_restart.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
 
 
 @celery.shared_task
@@ -178,7 +178,7 @@ def _do_reset(team_id, challenge_id, server):
     cache.delete_memoized(get_service_metadata, team_id, challenge_id, server)
 
 def do_reset(team_id: int, challenge_id: int, server: Servers):
-    _do_reset.apply_async(args=[team_id, challenge_id, server.id])
+    _do_reset.apply_async(args=[team_id, challenge_id, server.id], queue="contest")
     
 
 def fetch_metainfo(ssh_conn: Connection, team_id: int, challenge_id: int):

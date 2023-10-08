@@ -84,6 +84,15 @@ def create_app():
 
     with app.app_context():
         app.config.from_prefixed_env()
+        redis_uri = app.config.get("REDIS_URI", os.getenv("REDIS_URI"))
+        app.config.from_mapping(
+            CELERY=dict(
+                broker_url=redis_uri,
+                broker_connection_retry_on_startup=True,
+                result_backend=redis_uri,
+                task_ignore_result=True,
+            ),
+        )
 
         # Extensions
         CORS(
@@ -93,7 +102,7 @@ def create_app():
                 "http://127.0.0.1:3000",
                 "http://localhost:3000",
                 "http://localhost",
-		        "https://and-frontend.vercel.app",
+                "https://and-frontend.vercel.app",
             ],
         )
         
@@ -123,15 +132,6 @@ def create_app():
 def create_celery(flask_app: Flask | None = None) -> Celery:
     if flask_app == None:
         flask_app = create_app()
-    redis_uri = flask_app.config.get("REDIS_URI", os.getenv("REDIS_URI"))
-    flask_app.config.from_mapping(
-        CELERY=dict(
-            broker_url=redis_uri,
-            broker_connection_retry_on_startup=True,
-            result_backend=redis_uri,
-            task_ignore_result=True,
-        ),
-    )
     return celery_init_app(flask_app)
 
 
