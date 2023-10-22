@@ -46,7 +46,6 @@ def init_contest():
     db.session.commit()
 
     generate_flag(current_round, current_tick)
-    rotate_flag(current_round, current_tick)
     cache.clear()
 
 @celery.shared_task
@@ -71,7 +70,6 @@ def move_tick():
     ).delete()
 
     generate_flag(current_round, current_tick)
-    rotate_flag(current_round, current_tick)
 
     set_config("CURRENT_TICK", current_tick)
     set_config("CURRENT_ROUND", current_round)
