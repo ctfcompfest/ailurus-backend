@@ -21,32 +21,30 @@ def generate_flag(current_round: int, current_tick: int) -> List[Flags]:
     flag_format = flag_format.replace("__ROUND__", str(current_round))
     
     teams = db.session.query(Teams.id).all()
-    visible_challs = db.session.query(Challenges.id, Challenges.num_flag).all()
+    visible_challs = db.session.query(Challenges.id).all()
 
     flags = list()
     for team in teams:
         for chall in visible_challs:
-            for subid in range(1, chall.num_flag + 1):
-                SUBRULE = {
-                    "__TEAM__": str(team.id),
-                    "__PROBLEM__": str(chall.id),
-                    "__RANDOM__": "".join([choice(CHARSET) for _ in range(flag_rndlen)]),
-                }
+            SUBRULE = {
+                "__TEAM__": str(team.id),
+                "__PROBLEM__": str(chall.id),
+                "__RANDOM__": "".join([choice(CHARSET) for _ in range(flag_rndlen)]),
+            }
 
-                new_flag = flag_format
-                for k, v in SUBRULE.items():
-                    new_flag = new_flag.replace(k, v)
-                
-                flag = Flags(
-                    team_id = team.id,
-                    challenge_id = chall.id,
-                    round = current_round,
-                    tick = current_tick,
-                    value = new_flag,
-                    subid = subid,
-                )
-                flags.append(flag)
-                db.session.add(flag)
+            new_flag = flag_format
+            for k, v in SUBRULE.items():
+                new_flag = new_flag.replace(k, v)
+            
+            flag = Flags(
+                team_id = team.id,
+                challenge_id = chall.id,
+                round = current_round,
+                tick = current_tick,
+                value = new_flag,
+            )
+            flags.append(flag)
+            db.session.add(flag)
     db.session.commit()
     return flags
 
