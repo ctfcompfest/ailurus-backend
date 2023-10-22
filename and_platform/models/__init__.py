@@ -73,6 +73,7 @@ class Challenges(db.Model):
     server_id = db.Column(db.Integer, db.ForeignKey("servers.id"))
     server_host = db.Column(db.String)
     server = db.relationship("Servers", foreign_keys="Challenges.server_id", lazy=True)
+    num_flag = db.Column(db.Integer, default=1)
 
 class Flags(db.Model):
     __tablename__ = "flags"
@@ -87,7 +88,7 @@ class Flags(db.Model):
     tick = db.Column(db.Integer)
     value = db.Column(db.Text, index=True)
     # To support one challenge with multi flag
-    subid = db.Column(db.Integer)
+    subid = db.Column(db.Integer, default=1)
     
 class Submissions(db.Model):
     __tablename__ = "submissions"
