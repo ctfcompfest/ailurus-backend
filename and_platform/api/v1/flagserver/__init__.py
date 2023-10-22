@@ -18,7 +18,7 @@ def get_flag_by_serverip(subid: int) -> str:
 
     team_id = db.session.query(Teams.id).join(Servers, Servers.id == Teams.server_id).filter(Servers.host == target_identifier).scalar()
     if team_id == None:
-        raise FlagNotFoundException(f"Team for '{target_identifier}' cannot be found.")
+        raise FlagNotFoundException(f"team for '{target_identifier}' cannot be found.")
 
     flag_value = (
         db.session.query(Flags.value).filter(
@@ -30,7 +30,7 @@ def get_flag_by_serverip(subid: int) -> str:
         ).scalar()
     )
     if flag_value == None:
-        raise FlagNotFoundException(f"Flag cannot be found.")
+        raise FlagNotFoundException(f"flag cannot be found.")
     return flag_value
 
 def get_flag_api_handler(subid):
@@ -48,6 +48,8 @@ def get_flag_api_handler(subid):
         data_resp["flag"] = flag_value
     except FlagNotFoundException as e:
         return jsonify(status="failed", message=str(e))
+    except:
+        return jsonify(status="failed", message="something went wrong.")
     return jsonify(status="ok", data=data_resp)
 
 @flagserverapi_blueprint.post("/user_flag")
