@@ -73,11 +73,12 @@ class Challenges(db.Model):
     server_id = db.Column(db.Integer, db.ForeignKey("servers.id"))
     server_host = db.Column(db.String)
     server = db.relationship("Servers", foreign_keys="Challenges.server_id", lazy=True)
+    num_flag = db.Column(db.Integer, default=1)
 
 class Flags(db.Model):
     __tablename__ = "flags"
     __table_args__ = (
-        db.UniqueConstraint("team_id", "challenge_id", "round", "tick"),
+        db.UniqueConstraint("team_id", "challenge_id", "subid", "round", "tick"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -86,6 +87,8 @@ class Flags(db.Model):
     round = db.Column(db.Integer)
     tick = db.Column(db.Integer)
     value = db.Column(db.Text, index=True)
+    # To support one challenge with multi flag
+    subid = db.Column(db.Integer, default=1)
     
 class Submissions(db.Model):
     __tablename__ = "submissions"
