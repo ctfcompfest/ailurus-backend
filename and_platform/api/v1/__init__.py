@@ -9,9 +9,11 @@ from and_platform.api.v1.service import public_service_blueprint
 from and_platform.api.v1.my import myapi_blueprint
 from and_platform.api.v1.scoreboard import public_scoreboard_blueprint
 from and_platform.api.v1.docs import public_docs_blueprint
+from and_platform.api.v1.flagserver import flagserverapi_blueprint
 
 apiv1_blueprint = Blueprint("apiv1", __name__, url_prefix="/v1")
 apiv1_blueprint.register_blueprint(adminapi_blueprint)
+apiv1_blueprint.register_blueprint(flagserverapi_blueprint)
 apiv1_blueprint.register_blueprint(submission_blueprint)
 apiv1_blueprint.register_blueprint(public_contest_blueprint)
 apiv1_blueprint.register_blueprint(public_teams_blueprint)

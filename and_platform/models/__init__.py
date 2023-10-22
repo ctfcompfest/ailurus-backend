@@ -77,7 +77,7 @@ class Challenges(db.Model):
 class Flags(db.Model):
     __tablename__ = "flags"
     __table_args__ = (
-        db.UniqueConstraint("team_id", "challenge_id", "round", "tick"),
+        db.UniqueConstraint("team_id", "challenge_id", "subid", "round", "tick"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -86,6 +86,8 @@ class Flags(db.Model):
     round = db.Column(db.Integer)
     tick = db.Column(db.Integer)
     value = db.Column(db.Text, index=True)
+    # To support one challenge with multi flag
+    subid = db.Column(db.Integer)
     
 class Submissions(db.Model):
     __tablename__ = "submissions"
