@@ -112,7 +112,7 @@ class ProvisionMachine(db.Model):
     credential: Mapped[str] = mapped_column(Text, doc="JSON format credential configuration.")
 
 
-class Services(db.Model):
+class Service(db.Model):
     __tablename__ = "service"
     __table_args__ = (
         UniqueConstraint("team_id", "challenge_id", "order"),
@@ -123,6 +123,7 @@ class Services(db.Model):
     team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
     challenge_id: Mapped[int] = mapped_column(ForeignKey("challenge.id"))
     order: Mapped[int]
+    secret: Mapped[str]
     detail: Mapped[str] = mapped_column(Text, doc="JSON format service detail configuration.")
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now(timezone.utc))
     
