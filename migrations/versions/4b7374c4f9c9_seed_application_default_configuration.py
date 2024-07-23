@@ -51,7 +51,7 @@ def upgrade():
         },
         {
             "key": "TICK_DURATION",
-            "value": "600"
+            "value": "5"
         },
         {
             "key": "FLAG_FORMAT",
