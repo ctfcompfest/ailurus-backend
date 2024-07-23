@@ -69,10 +69,9 @@
                   <div class="mb-3">
                     <label for="event-prov" class="form-label">Service Mode</label>
                     <select class="form-select" id="event-prov" name="SERVICE_MODE">
-                      <option value="container" selected>Container</option>
-                      <option value="machine">Machine</option>
-                      <option value="aws-k8s" disabled>AWS K8s</option>
-                      <option value="gcp-k8s" disabled>GCP K8s</option>
+                      {% for mode in service_modes %}
+                      <option value="{{mode.id}}">{{mode.display}}</option>
+                      {% endfor %}
                     </select>
                   </div>
                   <div class="mb-3">

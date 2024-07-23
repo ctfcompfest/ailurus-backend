@@ -4,6 +4,10 @@ from ailurus.models import db, Config, ManageServiceUnlockMode
 from flask import Blueprint, redirect, render_template, request, url_for
 from typing import List
 
+import ailurus.svcmodes
+import json
+import os
+
 app_routes = Blueprint("main", __name__)
 app_routes.register_blueprint(api_blueprint)
 
@@ -17,7 +21,21 @@ def index():
 def setup_page():
     if get_config("ADMIN_SECRET"):
         return redirect(url_for('main.index'))
-    return render_template("admin/setup.html", unlock_modes = ManageServiceUnlockMode)
+
+    svcmode_dir = os.path.dirname(ailurus.svcmodes.__file__)
+    service_modes = []
+    for elm in os.listdir(svcmode_dir):
+        realpath = os.path.join(svcmode_dir, elm)
+        cfgfile_path = os.path.join(realpath, "config.json")
+        if not os.path.isdir(realpath) or \
+            not os.path.exists(cfgfile_path): continue
+        with open(cfgfile_path) as cfgfile:
+            cfg = json.load(cfgfile)
+            service_modes.append({
+                "id": elm,
+                "display": cfg["display"],
+            })
+    return render_template("admin/setup.html", unlock_modes = ManageServiceUnlockMode, service_modes = service_modes)
 
 @app_routes.post("/setup")
 def setup_submit():
