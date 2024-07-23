@@ -76,10 +76,11 @@
                     </select>
                   </div>
                   <div class="mb-3">
-                    <label for="event-unlock" class="form-label">Unlock Mode</label>
+                    <label for="event-unlock" class="form-label">Manage Service Unlock Mode</label>
                     <select class="form-select" id="event-unlock" name="UNLOCK_MODE">
-                      <option value="nolock" selected>No Lock</option>
-                      <option value="solvefirst">Solve First</option>
+                      {% for mode in unlock_modes %}
+                      <option value="{{mode.value}}">{{mode.value}}</option>
+                      {% endfor %}
                     </select>
                   </div>
                   <div class="d-flex justify-content-between">

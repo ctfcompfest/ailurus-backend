@@ -11,6 +11,10 @@ import enum
 db = SQLAlchemy()
 migrate = Migrate()
 
+class ManageServiceUnlockMode(enum.Enum):
+    NO_LOCK = "nolock"
+    SOLVE_FIRST = "solvefirst"
+
 
 class Config(db.Model):
     __tablename__ = "config"
@@ -110,7 +114,6 @@ class ProvisionMachine(db.Model):
     host: Mapped[str]
     port: Mapped[int]
     credential: Mapped[str] = mapped_column(Text, doc="JSON format credential configuration.")
-
 
 class Service(db.Model):
     __tablename__ = "service"

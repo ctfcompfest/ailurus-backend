@@ -1,6 +1,6 @@
 from ailurus.utils.config import get_config
 from ailurus.routes.api import api_blueprint
-from ailurus.models import db, Config
+from ailurus.models import db, Config, ManageServiceUnlockMode
 from flask import Blueprint, redirect, render_template, request, url_for
 from typing import List
 
@@ -17,7 +17,7 @@ def index():
 def setup_page():
     if get_config("ADMIN_SECRET"):
         return redirect(url_for('main.index'))
-    return render_template("admin/setup.html")
+    return render_template("admin/setup.html", unlock_modes = ManageServiceUnlockMode)
 
 @app_routes.post("/setup")
 def setup_submit():
