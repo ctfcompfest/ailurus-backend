@@ -1,4 +1,4 @@
-from ailurus.models import Team
+from ailurus.models import Team, Submission
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow import pre_load
 from werkzeug.security import generate_password_hash
@@ -16,3 +16,8 @@ class TeamSchema(SQLAlchemyAutoSchema):
         if 'password' in data:
             data['password'] = generate_password_hash(data["password"])
         return data
+    
+class SubmissionSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Submission
+        load_instance = True
