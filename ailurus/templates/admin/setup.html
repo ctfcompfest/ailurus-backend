@@ -8,7 +8,7 @@
       </div>
       <div class="card-body">
         <div class="container">
-          <form id="settingsForm" method="POST">
+          <form id="settingsForm" method="POST" action="{{ url_for('main.setup_submit') }}">
             <div id="settingsCarousel" class="carousel slide">
               <div class="carousel-inner">
                 <!-- Step 1: Admin Secret -->
