@@ -2,7 +2,7 @@
 
 from ailurus.models import db, Config
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import current_app as app
 from enum import Enum
 import json
@@ -68,3 +68,17 @@ def set_config(key: str, value):
         key = str(key)
 
     return config
+
+def is_contest_started():
+    start_time: datetime = get_config("START_TIME")
+    time_now = datetime.now(timezone.utc)
+    return (start_time and time_now >= start_time)
+
+def is_contest_paused():
+    is_paused: bool = get_config("IS_CONTEST_PAUSED")
+    return is_paused
+
+def is_contest_finished():
+    current_round = get_config("CURRENT_ROUND", 0)
+    number_round = get_config("NUMBER_ROUND", 0)
+    return current_round > number_round

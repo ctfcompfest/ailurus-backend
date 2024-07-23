@@ -10,6 +10,16 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # RabbitMQ broker
+      - "15672:15672" # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    volumes:
+      - ./.rabbitmq_data:/var/lib/rabbitmq
   cache:
     image: redis:7.2.0-alpine
     restart: always

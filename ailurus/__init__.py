@@ -4,6 +4,7 @@ load_dotenv()
 
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
+from ailurus.worker.keeper import create_keeper
 from and_platform.api import api_blueprint
 from and_platform.cache import cache
 from and_platform.socket import socketio
@@ -15,6 +16,9 @@ import os
 import sqlalchemy
 
 def setup_jwt_app(app: Flask):
+    app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
+    app.config["JWT_ALGORITHM"] = "HS512"
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(hours=12)
     jwt = JWTManager(app)
 
     @jwt.user_lookup_loader
@@ -53,11 +57,8 @@ def create_app():
         cache.init_app(app)
 
         socketio.init_app(app)
-        
-        app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
-        app.config["JWT_ALGORITHM"] = "HS512"
-        app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(hours=12)
         setup_jwt_app(app)
+        create_keeper(app)
 
         try:
             init_data_dir(app)
