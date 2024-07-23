@@ -62,7 +62,7 @@ def upgrade():
             "value": "32"
         },
         {
-            "key": "PROVISION_MODE",
+            "key": "SERVICE_MODE",
             "value": "server"
         },
         {
