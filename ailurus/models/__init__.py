@@ -42,7 +42,7 @@ class Challenge(db.Model):
     description: Mapped[str]
     point: Mapped[float] = mapped_column(Double, default=1.0)
     num_service: Mapped[int] = mapped_column(default=1, doc="Number of exposed service(s).")
-    artifact_checksum: Mapped[str]
+    testcase_checksum: Mapped[str]
 
 
 class ChallengeRelease(db.Model):

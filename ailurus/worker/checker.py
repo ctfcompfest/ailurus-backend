@@ -17,14 +17,14 @@ def create_checker_task(current_tick: int, current_round: int, app: Flask, queue
             select(
                 ChallengeRelease.challenge_id,
                 Challenge.slug,
-                Challenge.artifact_checksum
+                Challenge.testcase_checksum
             ).join(
                 ChallengeRelease,
                 ChallengeRelease.challenge_id == Challenge.id
             ).where(ChallengeRelease.round == current_round)
         ).all()
 
-        for chall_id, chall_slug, artifact_chksum in release_challs:
+        for chall_id, chall_slug, testcase_chksum in release_challs:
             for team_id, in teams:
                 services: List[Tuple[Service]] = db.session.execute(
                     select(Service).where(
@@ -46,7 +46,7 @@ def create_checker_task(current_tick: int, current_round: int, app: Flask, queue
                         "team_id": team_id,
                         "challenge_id": chall_id,
                         "challenge_slug": chall_slug,
-                        "artifact_checksum": artifact_chksum,
+                        "testcase_checksum": testcase_chksum,
                         "services": services_data,
                         "time_created": time_now.isoformat(),
                         "round": current_round,
