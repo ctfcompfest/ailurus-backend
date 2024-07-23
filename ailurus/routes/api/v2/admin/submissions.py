@@ -4,7 +4,7 @@ from ailurus.utils.config import _convert_config_value
 from flask import Blueprint, jsonify, request
 from typing import List, Tuple
 
-submission_blueprint = Blueprint("submission", __name__, url_prefix="/submission")
+submission_blueprint = Blueprint("submission", __name__, url_prefix="/submissions")
 submission_schema = SubmissionSchema()
 
 @submission_blueprint.get('/')
