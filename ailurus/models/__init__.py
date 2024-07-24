@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Double, Enum, String, Text, TIMESTAMP
 from sqlalchemy import ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import List
+from typing import List, Optional
 
 import enum
 
@@ -81,8 +81,8 @@ class Submission(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
-    challenge_id: Mapped[int] = mapped_column(ForeignKey("challenge.id"))
-    flag_id: Mapped[int] = mapped_column(ForeignKey("flag.id"))
+    challenge_id: Mapped[Optional[int]] = mapped_column(ForeignKey("challenge.id"))
+    flag_id: Mapped[Optional[int]] = mapped_column(ForeignKey("flag.id"))
     round: Mapped[int]
     tick: Mapped[int]
     value: Mapped[str] = mapped_column(Text)
