@@ -38,6 +38,9 @@ def test_get_submissions(client: FlaskClient):
     response = client.get("/api/v2/admin/submissions/?page=2", headers={"X-ADCE-SECRET": "test"})
     assert response.status_code == 200
 
+    response = client.get("/api/v2/admin/submissions/?page=999", headers={"X-ADCE-SECRET": "test"})
+    assert response.status_code == 404
+
     response = client.get(f"/api/v2/admin/submissions/?team_id={teams[0].id}", headers={"X-ADCE-SECRET": "test"})
     assert len(response.get_json()['data']['submissions']) == Submission.query.filter(Submission.team_id == teams[0].id).count()
 
