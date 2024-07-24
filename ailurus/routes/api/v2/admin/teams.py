@@ -22,13 +22,15 @@ def get_all_teams():
 def create_bulk_teams():
     json_data = request.get_json()
     if not isinstance(json_data, list):
-        return jsonify({'message': 'Input data should be a list of users'}), 400
+        return jsonify(status="failed", message='input data should be a list of users.'), 400
     
     teams_data: List[Team] = team_schema.load(json_data, session=db.session, many=True)
     teams_email: List[str] = [team.email for team in teams_data]
-    
+    if len(set(teams_email)) != len(teams_email):
+        return jsonify(status="failed", message=f"e-mail duplication found."), 400
+
     server_email: Tuple[Team] | None = db.session.execute(
-        select(Team).where(Team.email == any_(teams_email))
+        select(Team).where(Team.email.in_(teams_email))
     ).first()
     if server_email is not None:
         return jsonify(status="failed", message=f"e-mail '{server_email[0].email}' has been registered."), 409

@@ -1,13 +1,10 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
 from ailurus.worker.keeper import create_keeper
 from and_platform.api import api_blueprint
 from and_platform.cache import cache
 from and_platform.socket import socketio
+from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
 
@@ -42,7 +39,9 @@ def init_data_dir(app):
         dirpath = os.path.join(app.config["DATA_DIR"], d)
         os.makedirs(dirpath, exist_ok=True)
 
-def create_app():
+def create_app(env_file=".env"):
+    load_dotenv(env_file, override=True)
+    
     app = Flask(
         __name__,
         static_url_path="/static",
