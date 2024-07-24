@@ -1,5 +1,6 @@
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
+from ailurus.utils.cors import CORS
 from ailurus.worker.keeper import create_keeper
 from and_platform.api import api_blueprint
 from and_platform.cache import cache
@@ -50,20 +51,21 @@ def create_app(env_file=".env"):
 
     with app.app_context():
         app.config.from_prefixed_env()
-        
+
         db.init_app(app)
         migrate.init_app(app, db)
         cache.init_app(app)
 
         socketio.init_app(app)
         setup_jwt_app(app)
-        create_keeper(app)
+        # create_keeper(app)
+        CORS(app)
 
         try:
             init_data_dir(app)
-        except sqlalchemy.exc.ProgrammingError:
+        except Exception as e:
             # To detect that the relation has not been created yet
-            app.logger.warning("Error calling some function while create_app")
+            app.logger.warning("Error calling some function while create_app %s", e)
 
         # Blueprints
         app.register_blueprint(api_blueprint)
