@@ -169,3 +169,6 @@ cython_debug/
 and_platform/.adce_data/**
 ansible/inventory
 .postgres-data/
+.rabbitmq_data
+migrations-old
+.adce_data
