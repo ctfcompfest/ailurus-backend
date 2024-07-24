@@ -1,23 +1,32 @@
 from ailurus.models import db, Team
 from flask.testing import FlaskClient
+from typing import List
+import json
+import pytest
 
-def test_get_teams(client: FlaskClient):
-    teams_data = [
-        {'name': 'John Doe', 'email': 'john1@example.com', 'password': 'secret'},
-        {'name': 'John Doe', 'email': 'john2@example.com', 'password': 'secret'}
+@pytest.fixture
+def data_fixtures() -> List[Team]:
+    teams = [
+        Team(name=f"team{i}", email=f"team{i}@example.com", password="test")
+        for i in range(2)
     ]
-    teams_email = [elm['email'] for elm in teams_data]
-
-    for team in teams_data: db.session.add(Team(**team))
+    db.session.add_all(teams)
     db.session.commit()
-    
+    return teams
+
+def test_get_teams(client: FlaskClient, data_fixtures: List[Team]):
     response = client.get('/api/v2/admin/teams/', headers={"X-ADCE-SECRET": "test"})
     assert response.status_code == 200
 
     response_data = response.get_json()
-    assert len(response_data['data']) == len(teams_data)
+    assert len(response_data['data']) == len(data_fixtures)
     for team in response_data['data']:
-        assert team['email'] in teams_email
+        team_db = Team.query.filter_by(id=team["id"]).first()
+        assert "password" not in team
+        for attr in ["id", "name", "email"]:
+            assert attr in team
+            assert team[attr] == getattr(team_db, attr)
+
 
 def test_create_teams(client: FlaskClient):
     # Simulate a POST request to create a new user
@@ -31,37 +40,33 @@ def test_create_teams(client: FlaskClient):
     
     data = response.get_json()
     assert len(data['data']) == 2
-    assert 'id' in data['data'][0]
-
+    for team in data['data']:
+        team_db = Team.query.filter_by(id=team["id"]).first()
+        assert "password" not in team
+        for attr in ["id", "name", "email"]:
+            assert attr in team
+            assert team[attr] == getattr(team_db, attr)
     assert Team.query.count() == 2
 
-def test_create_teams_failed(client: FlaskClient):
-    team_data = {'name': 'John Doe', 'email': 'john1@example.com', 'password': 'secret'}
+def test_fail_create_teams(client: FlaskClient, data_fixtures: List[Team]):
+    team_data = {'name': 'John Doe', 'email': 'team1@example.com', 'password': 'secret'}
     response = client.post('/api/v2/admin/teams/', headers={
             "X-ADCE-SECRET": "test"
         }, json=team_data)
     assert response.status_code == 400
-    
-    response = client.post('/api/v2/admin/teams/', headers={
-            "X-ADCE-SECRET": "test"
-        }, json=[team_data, team_data])
-    assert response.status_code == 400
-    assert response.get_json()['message'].find('duplication') != -1
+    assert response.get_json()['message'] == "input data should be a list of teams."
 
     response = client.post('/api/v2/admin/teams/', headers={
             "X-ADCE-SECRET": "test"
         }, json=[team_data, team_data])
     assert response.status_code == 400
-    assert response.get_json()['message'].find('duplication') != -1
+    assert response.get_json()['message'] == "e-mail duplication found."
     
-    db.session.add(Team(**team_data))
-    db.session.commit()
-
     response = client.post('/api/v2/admin/teams/', headers={
             "X-ADCE-SECRET": "test"
         }, json=[team_data])
     assert response.status_code == 409
-    assert response.get_json()['message'].find('registered') != -1
+    assert response.get_json()['message'] == "e-mail 'team1@example.com' has been registered."
 
 
 def test_get_teams_detail(client: FlaskClient):
