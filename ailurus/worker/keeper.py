@@ -56,7 +56,7 @@ def checker_keeper(app: Flask, queue_channel: Channel):
     return True
 
 def create_keeper(app):
-    if app.config.get("KEEPER_ENABLE", "false").lower() != "true":
+    if not app.config.get("KEEPER_ENABLE", False):
         return
 
     rabbitmq_conn = pika.BlockingConnection(

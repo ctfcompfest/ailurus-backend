@@ -5,14 +5,11 @@ import pytest
 
 @pytest.fixture
 def data_fixtures() -> Tuple[List[Team], List[Challenge], List[Submission]]:
-    team_datas = [{"name": f"team{i}", "email": f"team{i}@mail.com", "password": "test"} for i in range(3)]
-    challenge_datas = [
-        {"id": i, "slug": f"chall{i}", "title": f"Chall {i}", "description": "desc", "testcase_checksum":"test"}
+    teams = [Team(name=f"team{i}", email=f"team{i}@mail.com", password="test") for i in range(3)]
+    challenges = [
+        Challenge(id=i, slug=f"chall{i}", title=f"Chall {i}", description="desc", testcase_checksum="test")
         for i in range(3)
-    ]
-    
-    teams = [Team(**team) for team in team_datas]
-    challenges = [Challenge(**chall) for chall in challenge_datas]
+    ]    
     db.session.add_all(teams)
     db.session.add_all(challenges)
     db.session.commit()
