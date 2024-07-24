@@ -9,8 +9,9 @@ def app():
     with app.app_context():
         db.create_all()
 
-        cfg = Config(key="ADMIN_SECRET", value="test")
-        db.session.add(cfg)
+        cfg = [Config(key="ADMIN_SECRET", value="test"),
+                Config(key="CORS_WHITELIST", value="[\"https://localhost\"]")]
+        db.session.add_all(cfg)
         db.session.commit()
 
         yield app
