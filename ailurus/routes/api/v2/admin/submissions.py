@@ -8,7 +8,7 @@ submission_blueprint = Blueprint("submission", __name__, url_prefix="/submission
 submission_schema = SubmissionSchema()
 
 @submission_blueprint.get('/')
-def get_submission():
+def get_submissions():
     DATA_PER_PAGE = 50
     ALLOWED_QUERY = ["team_id", "challenge_id", "round", "tick", "verdict"]
 

@@ -1,7 +1,9 @@
-from ailurus.models import Team, Submission
+from ailurus.models import Team, Service, Submission
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
-from marshmallow import pre_load
+from marshmallow import pre_load, post_dump
 from werkzeug.security import generate_password_hash
+
+import json
 
 class TeamSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -21,3 +23,15 @@ class SubmissionSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Submission
         load_instance = True
+        include_fk = True
+
+class ServiceSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Service
+        load_instance = True
+        include_fk = True
+    
+    @post_dump
+    def parse_detail(self, data, **kwargs):
+        data['detail'] = json.loads(data['detail'])
+        return data
