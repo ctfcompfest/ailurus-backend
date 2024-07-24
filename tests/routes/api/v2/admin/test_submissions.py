@@ -1,7 +1,10 @@
 from ailurus.models import db, Challenge, Team, Submission
 from flask.testing import FlaskClient
+from typing import List, Tuple
+import pytest
 
-def test_get_submissions(client: FlaskClient):
+@pytest.fixture
+def data_fixtures() -> Tuple[List[Team], List[Challenge], List[Submission]]:
     team_datas = [{"name": f"team{i}", "email": f"team{i}@mail.com", "password": "test"} for i in range(3)]
     challenge_datas = [
         {"id": i, "slug": f"chall{i}", "title": f"Chall {i}", "description": "desc", "testcase_checksum":"test"}
@@ -14,7 +17,7 @@ def test_get_submissions(client: FlaskClient):
     db.session.add_all(challenges)
     db.session.commit()
     
-    submission_datas = []
+    submissions = []
     for team in teams:
         for chall in challenges:
             for verdict in [True, False]:
@@ -28,9 +31,14 @@ def test_get_submissions(client: FlaskClient):
                             value = "test",
                             verdict = verdict,
                         )
-                        submission_datas.append(subm)
-    db.session.add_all(submission_datas)
+                        submissions.append(subm)
+    db.session.add_all(submissions)
     db.session.commit()
+
+    return teams, challenges, submissions
+
+def test_get_submissions(client: FlaskClient, data_fixtures: Tuple[List[Team], List[Challenge], List[Submission]]):
+    teams, challenges, submissions = data_fixtures
 
     response = client.get("/api/v2/admin/submissions/", headers={"X-ADCE-SECRET": "test"})
     assert response.status_code == 200
