@@ -58,7 +58,7 @@ def create_app(env_file=".env"):
 
         socketio.init_app(app)
         setup_jwt_app(app)
-        # create_keeper(app)
+        create_keeper(app)
         CORS(app)
 
         try:
