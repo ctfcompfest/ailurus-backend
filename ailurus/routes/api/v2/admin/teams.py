@@ -2,7 +2,8 @@ from ailurus.models import db, Team
 from ailurus.schema import TeamSchema
 from flask import Blueprint, jsonify, request
 from typing import List, Tuple
-from sqlalchemy import select, any_
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 teams_blueprint = Blueprint("teams_blueprint", __name__, url_prefix="/teams")
 team_schema = TeamSchema()
@@ -22,9 +23,9 @@ def get_all_teams():
 def create_bulk_teams():
     json_data = request.get_json()
     if not isinstance(json_data, list):
-        return jsonify(status="failed", message='input data should be a list of users.'), 400
+        return jsonify(status="failed", message='input data should be a list of teams.'), 400
     
-    teams_data: List[Team] = team_schema.load(json_data, session=db.session, many=True)
+    teams_data: List[Team] = team_schema.load(json_data, transient=True, many=True)
     teams_email: List[str] = [team.email for team in teams_data]
     if len(set(teams_email)) != len(teams_email):
         return jsonify(status="failed", message=f"e-mail duplication found."), 400
@@ -68,10 +69,14 @@ def update_team(team_id):
         return jsonify(status="not found", message="team not found"), 404
 
     json_data = request.get_json()
-    _ = team_schema.load(json_data, session=db.session, instance=team, partial=True)
+    _ = team_schema.load(json_data, transient=True, instance=team, partial=True)
 
-    db.session.commit()
-    db.session.refresh(team)
+    try:
+        db.session.commit()
+        db.session.refresh(team)
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(status="failed", message=f"e-mail '{team.email}' has been registered."), 400
 
     return (
         jsonify(
@@ -93,6 +98,10 @@ def delete_team(team_id):
     db.session.commit()
     
     return (
-        jsonify(status="success", message="{} successfully deleted.".format(team_name)),
+        jsonify(
+            status="success",
+            message="{} successfully deleted.".format(team_name),
+            data=team_schema.dump(team)
+        ),
         200,
     )

@@ -102,10 +102,26 @@ def test_patch_teams_detail(client: FlaskClient):
     assert team.name == "Lolipop"
     assert team.email == team_data['email']
 
+def test_fail_teams_detail(client: FlaskClient):
+    team_datas = [
+        {'name': 'John Doe', 'email': 'john1@example.com', 'password': 'secret'},
+        {'name': 'John Doe', 'email': 'john2@example.com', 'password': 'secret'}
+    ]
+    teams = [Team(**team_data) for team_data in team_datas]
+    db.session.add_all(teams)
+    db.session.commit()
+    
+    team_id = teams[0].id
+    response = client.patch(f'/api/v2/admin/teams/{team_id}', headers={"X-ADCE-SECRET": "test"}, json={
+        "email": "john2@example.com"
+    })
+    assert response.status_code == 400
+    
     response = client.patch(f'/api/v2/admin/teams/9999', headers={"X-ADCE-SECRET": "test"}, json={
         "name": "Lolipop"
     })
     assert response.status_code == 404
+
 
 def test_delete_teams(client: FlaskClient):
     team_data = {'name': 'John Doe', 'email': 'john1@example.com', 'password': 'secret'}

@@ -113,7 +113,7 @@ class ProvisionMachine(db.Model):
     name: Mapped[str] = mapped_column(String(128), unique=True, index=True)
     host: Mapped[str]
     port: Mapped[int]
-    credential: Mapped[str] = mapped_column(Text, doc="JSON format credential configuration.")
+    detail: Mapped[str] = mapped_column(Text, doc="JSON format detail configuration such as credential.")
 
 class Service(db.Model):
     __tablename__ = "service"

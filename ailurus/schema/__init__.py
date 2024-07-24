@@ -1,4 +1,4 @@
-from ailurus.models import Team, Service, Submission
+from ailurus.models import Team, Service, Submission, ProvisionMachine
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow import pre_load, post_dump
 from werkzeug.security import generate_password_hash
@@ -31,6 +31,22 @@ class ServiceSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
     
+    @post_dump
+    def parse_detail(self, data, **kwargs):
+        data['detail'] = json.loads(data['detail'])
+        return data
+
+class ProvisionMachineSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = ProvisionMachine
+        load_instance = True
+    
+    @pre_load
+    def dumps_detail(self, data, **kwargs):
+        if 'detail' in data and isinstance(data['detail'], (dict, list)):
+            data['detail'] = json.dumps(data['detail'])
+        return data
+
     @post_dump
     def parse_detail(self, data, **kwargs):
         data['detail'] = json.loads(data['detail'])
