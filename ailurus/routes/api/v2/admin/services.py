@@ -8,6 +8,9 @@ service_schema = ServiceSchema()
 
 @service_blueprint.get("/")
 def get_services():
+    DATA_PER_PAGE = 50
+    page = request.args.get("page", 1, int)
+
     services: List[Tuple[Service, str, str]] = db.session.query(
             Service,
             Challenge.title,
@@ -16,7 +19,7 @@ def get_services():
             Challenge.id == Service.challenge_id
         ).join(Team,
             Team.id == Service.team_id
-        ).order_by(Service.id.desc())
+        ).order_by(Service.id.desc()).paginate(page=page, per_page=DATA_PER_PAGE)
 
     services_data = []
     for data in services:
@@ -26,5 +29,13 @@ def get_services():
             "team_name": team_name,
             **service_schema.dump(service)
         })
+    
+    pagination_resp = {
+        "current_page": page,
+    }
+    if services.has_next:
+        pagination_resp['next_page'] = services.next_num
+    if services.has_prev:
+        pagination_resp['prev_page'] = services.prev_num
 
-    return jsonify(status="success", data=services_data)
+    return jsonify(status="success", data=services_data, **pagination_resp)

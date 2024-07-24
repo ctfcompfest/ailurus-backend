@@ -38,14 +38,12 @@ def get_submissions():
             **submission_schema.dump(submission)
         })
     
-    response = {
-        "submissions": submissions_data,
+    pagination_resp = {
         "current_page": page,
     }
-
     if submissions.has_next:
-        response['next_page'] = submissions.next_num
+        pagination_resp['next_page'] = submissions.next_num
     if submissions.has_prev:
-        response['prev_page'] = submissions.prev_num
+        pagination_resp['prev_page'] = submissions.prev_num
     
-    return jsonify(status="success",data=response)
+    return jsonify(status="success",data=submissions_data,**pagination_resp)
