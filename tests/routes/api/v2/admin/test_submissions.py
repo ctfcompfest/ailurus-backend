@@ -38,13 +38,19 @@ def data_fixtures() -> Tuple[List[Team], List[Challenge], List[Submission]]:
     return teams, challenges, submissions
 
 def test_get_submissions(client: FlaskClient, data_fixtures: Tuple[List[Team], List[Challenge], List[Submission]]):
-    teams, challenges, submissions = data_fixtures
+    teams, challenges, _ = data_fixtures
 
     response = client.get("/api/v2/admin/submissions/", headers={"X-ADCE-SECRET": "test"})
     assert response.status_code == 200
+    response_data = response.get_json()['data']
+    assert "next_page" in response_data
+    assert "prev_page" not in response_data
 
     response = client.get("/api/v2/admin/submissions/?page=2", headers={"X-ADCE-SECRET": "test"})
     assert response.status_code == 200
+    response_data = response.get_json()['data']
+    assert "next_page" not in response_data
+    assert "prev_page" in response_data
 
     response = client.get("/api/v2/admin/submissions/?page=999", headers={"X-ADCE-SECRET": "test"})
     assert response.status_code == 404
