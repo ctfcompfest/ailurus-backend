@@ -35,6 +35,7 @@ py-gfm = "^2.0.0"
 apscheduler = "^3.10.4"
 pika = "^1.3.2"
 marshmallow-sqlalchemy = "^1.0.0"
+flask-limiter = "^3.8.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
