@@ -39,15 +39,25 @@ def test_failed_create_bulk_machines(client: FlaskClient, data_fixtures: List[Pr
     machine_data = {
         "name": data_fixtures[0].name, "host": "1.2.3.4", "port": 22, "detail": json.dumps({"username": "root", "password": "test"})
     }
+    invalid_machine_data = {
+        "name": "zozo", "host": "1.2.3.4", "detail": json.dumps({"username": "root", "password": "test"})
+    }
 
     response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=machine_data)
     assert response.status_code == 400
+    assert response.get_json()['message'] == "input data should be a list of provision machines."
     
     response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=[machine_data])
     assert response.status_code == 400
+    assert response.get_json()['message'] == "provision machine with name='machine0' has been registered."
 
     response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=[machine_data, machine_data])
     assert response.status_code == 400
+    assert response.get_json()['message'] == "provision machine name duplication found."
+    
+    response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=[invalid_machine_data])
+    assert response.status_code == 400
+    assert response.get_json()['message'] == "missing data for required field."
 
 def test_get_machine_detail(client: FlaskClient, data_fixtures: List[ProvisionMachine]):
     machine = data_fixtures[0]

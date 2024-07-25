@@ -1,4 +1,12 @@
-from ailurus.models import Team, Service, Submission, ProvisionMachine, CheckerResult
+from ailurus.models import (
+    Team,
+    Service,
+    Submission,
+    ProvisionMachine,
+    CheckerResult,
+    Challenge,
+    ChallengeRelease,
+)
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow import pre_load, post_dump
 from werkzeug.security import generate_password_hash
@@ -71,4 +79,23 @@ class CheckerResultSchema(SQLAlchemyAutoSchema):
     @post_dump
     def parse_detail(self, data, **kwargs):
         data['detail'] = json.loads(data['detail'])
+        return data
+
+class ChallengeSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Challenge
+        load_instance = True
+
+    @pre_load
+    def remove_generated_attributes(self, data, **kwargs):
+        exclude_attrs = ["visibility", "artifact_checksum", "testcase_checksum"]
+        for attr in exclude_attrs:
+            if attr in data:
+                del data[attr]
+        return data
+    
+    @post_dump
+    def add_visibility(self, data, **kwargs):
+        if "id" in data:
+            data['visibility'] = ChallengeRelease.get_rounds_from_challenge(data['id'])
         return data

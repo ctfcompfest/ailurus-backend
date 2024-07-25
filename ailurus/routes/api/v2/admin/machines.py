@@ -1,6 +1,7 @@
 from ailurus.models import db, ProvisionMachine
 from ailurus.schema import ProvisionMachineSchema
 from flask import Blueprint, jsonify, request
+from marshmallow.exceptions import ValidationError
 from sqlalchemy import select
 from typing import List, Tuple
 from sqlalchemy.exc import IntegrityError
@@ -18,8 +19,12 @@ def create_bulk_machines():
     machine_datas = request.get_json()
     if not isinstance(machine_datas, list):
         return jsonify(status="failed", message='input data should be a list of provision machines.'), 400
+    
+    try:
+        machines: List[ProvisionMachine] = machine_schema.load(machine_datas, transient=True, many=True)
+    except ValidationError:
+        return jsonify(status="failed", message=f"missing data for required field."), 400
 
-    machines: List[ProvisionMachine] = machine_schema.load(machine_datas, transient=True, many=True)
     machine_names: List[str] = [machine.name for machine in machines]
     if len(set(machine_names)) != len(machine_names):
         return jsonify(status="failed", message=f"provision machine name duplication found."), 400

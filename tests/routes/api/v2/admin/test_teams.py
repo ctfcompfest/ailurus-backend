@@ -68,6 +68,13 @@ def test_fail_create_teams(client: FlaskClient, data_fixtures: List[Team]):
     assert response.status_code == 409
     assert response.get_json()['message'] == "e-mail 'team1@example.com' has been registered."
 
+    invalid_team_data = {'name': 'John Doe', 'email': 'team1@example.com'}
+    response = client.post('/api/v2/admin/teams/', headers={
+            "X-ADCE-SECRET": "test"
+        }, json=[team_data, invalid_team_data])
+    assert response.status_code == 400
+    assert response.get_json()['message'] == "missing data for required field."
+
 
 def test_get_teams_detail(client: FlaskClient):
     team_data = {'name': 'John Doe', 'email': 'john1@example.com', 'password': 'secret'}
@@ -107,7 +114,7 @@ def test_patch_teams_detail(client: FlaskClient):
     assert team.name == "Lolipop"
     assert team.email == team_data['email']
 
-def test_fail_teams_detail(client: FlaskClient):
+def test_fail_patch_teams_detail(client: FlaskClient):
     team_datas = [
         {'name': 'John Doe', 'email': 'john1@example.com', 'password': 'secret'},
         {'name': 'John Doe', 'email': 'john2@example.com', 'password': 'secret'}

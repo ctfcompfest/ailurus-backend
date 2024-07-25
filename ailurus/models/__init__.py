@@ -42,7 +42,9 @@ class Challenge(db.Model):
     description: Mapped[str]
     point: Mapped[float] = mapped_column(Double, default=1.0)
     num_service: Mapped[int] = mapped_column(default=1, doc="Number of exposed service(s).")
-    testcase_checksum: Mapped[str]
+    num_flag: Mapped[int] = mapped_column(default=1, doc="Number of flag(s).")
+    testcase_checksum: Mapped[Optional[str]]
+    artifact_checksum: Mapped[Optional[str]]
 
 
 class ChallengeRelease(db.Model):
@@ -61,11 +63,17 @@ class ChallengeRelease(db.Model):
             .filter(cls.round == int(current_round)).all()
         return [elm[0] for elm in chall_release]
     
+    @classmethod
+    def get_rounds_from_challenge(cls, challenge_id: int) -> List:
+        chall_release = cls.query.with_entities(cls.round)\
+            .filter(cls.challenge_id == int(challenge_id)).all()
+        return [elm[0] for elm in chall_release]
+    
 
 class Flag(db.Model):
     __tablename__ = "flag"
     __table_args__ = (
-        UniqueConstraint("team_id", "challenge_id", "round", "tick"),
+        UniqueConstraint("team_id", "challenge_id", "round", "tick", "order"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -74,7 +82,7 @@ class Flag(db.Model):
     round: Mapped[int]
     tick: Mapped[int]
     value: Mapped[str] = mapped_column(Text)
-
+    order: Mapped[int] = mapped_column(default=0, doc="flag order number for challenge with multiple flag.")
 
 class Submission(db.Model):
     __tablename__ = "submission"

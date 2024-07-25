@@ -4,7 +4,7 @@ from ailurus.utils.config import _convert_config_value
 from flask import Blueprint, jsonify, request
 from typing import List, Tuple
 
-checkres_blueprint = Blueprint("checkerresult", __name__, url_prefix="/checkresults")
+checkres_blueprint = Blueprint("checkresult", __name__, url_prefix="/checkresults")
 checkres_schema = CheckerResultSchema()
 
 @checkres_blueprint.get('/')
