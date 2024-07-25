@@ -40,7 +40,7 @@ def create_bulk_challenges():
         return jsonify(status="failed", message="missing data for required field."), 400
     except IntegrityError:
         db.session.rollback()
-        return jsonify(status="failed", message="your update conflict with current data."), 400
+        return jsonify(status="failed", message="new data conflict with the existing."), 400
  
     chall_path = os.path.join(get_app_config("DATA_DIR"), "challenges")
     chall_data = json.loads(request.form.get("data"))

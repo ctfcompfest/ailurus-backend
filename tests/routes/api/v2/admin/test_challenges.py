@@ -265,6 +265,7 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
         }
     )
     assert response.status_code == 400
+    assert response.get_json()["message"] == "new data conflict with the existing."
 
     response = client.post(
         "/api/v2/admin/challenges/",
@@ -274,7 +275,7 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
         }
     )
     assert response.status_code == 400
-
+    assert response.get_json()["message"] == "new data conflict with the existing."
 
     incomplete_data = {"slug": "chall1", "description": "desc", "point": 1, "num_service": 1, "num_flag": 1, "visibility": [1, 2]} 
     response = client.post(
@@ -285,9 +286,11 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
         }
     )
     assert response.status_code == 400
+    assert response.get_json()["message"] == "missing data for required field."
 
     response = client.post(
         "/api/v2/admin/challenges/",
         headers={"X-ADCE-SECRET": "test"},
     )
     assert response.status_code == 400
+    assert response.get_json()["message"] == "missing 'data' field."
