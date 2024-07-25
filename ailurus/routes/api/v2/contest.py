@@ -1,12 +1,19 @@
-from ailurus.utils.config import get_config, is_contest_running, is_contest_finished, is_contest_paused
+from ailurus.utils.config import (
+    get_config,
+    is_contest_running,
+    is_contest_finished,
+    is_contest_paused,
+    is_contest_started
+)
 from flask import Blueprint, jsonify
 
 contestinfo_blueprint = Blueprint("contestinfo", __name__, url_prefix="/contest")
 
 @contestinfo_blueprint.get("/info")
 def get_contest_info():
-    event_status = "not started"
-    if is_contest_running():
+    if not is_contest_started():
+        event_status = "not started"
+    elif is_contest_running():
         event_status = "running"
     elif is_contest_finished():
         event_status = "finished"
