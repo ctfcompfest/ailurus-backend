@@ -4,14 +4,32 @@ from ailurus.models import (
     Submission,
     ProvisionMachine,
     CheckerResult,
+    CheckerStatus,
     Challenge,
     ChallengeRelease,
 )
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
-from marshmallow import pre_load, post_dump
+from marshmallow import pre_load, post_dump, fields
 from werkzeug.security import generate_password_hash
+from marshmallow.exceptions import ValidationError
 
 import json
+
+class EnumField(fields.Field):
+    def __init__(self, enum, *args, **kwargs):
+        self.enum = enum
+        super().__init__(*args, **kwargs)
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        if value is None:
+            return None
+        return value.value
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        try:
+            return self.enum(value)
+        except ValueError:
+            raise ValidationError(f"Invalid value for {self.enum.__name__}: {value}")
 
 class TeamSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -80,6 +98,8 @@ class CheckerResultSchema(SQLAlchemyAutoSchema):
         model = CheckerResult
         load_instance = True
         include_fk = True
+    
+    status = EnumField(CheckerStatus, required=True)
     
     @pre_load
     def dumps_detail(self, data, **kwargs):

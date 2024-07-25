@@ -10,6 +10,7 @@ def app():
         db.create_all()
 
         cfg = [Config(key="ADMIN_SECRET", value="test"),
+               Config(key="WORKER_SECRET", value="test"),
                 Config(key="CORS_WHITELIST", value="[\"https://localhost\"]")]
         db.session.add_all(cfg)
         db.session.commit()

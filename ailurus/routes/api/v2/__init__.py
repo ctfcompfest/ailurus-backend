@@ -6,6 +6,7 @@ from ailurus.routes.api.v2.contest import contestinfo_blueprint
 from ailurus.routes.api.v2.docs import public_docs_blueprint
 from ailurus.routes.api.v2.submit import submit_blueprint
 from ailurus.routes.api.v2.teams import public_team_blueprint
+from ailurus.routes.api.v2.worker import worker_blueprint
 
 apiv2_blueprint = Blueprint("apiv2", __name__, url_prefix="/v2")
 apiv2_blueprint.register_blueprint(adminapi_blueprint)
@@ -15,3 +16,4 @@ apiv2_blueprint.register_blueprint(public_challenge_blueprint)
 apiv2_blueprint.register_blueprint(public_docs_blueprint)
 apiv2_blueprint.register_blueprint(public_team_blueprint)
 apiv2_blueprint.register_blueprint(submit_blueprint)
+apiv2_blueprint.register_blueprint(worker_blueprint)
