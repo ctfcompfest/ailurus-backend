@@ -2,7 +2,11 @@ from ailurus.utils.config import get_config
 from ailurus.models import Team
 from flask import jsonify, request
 from flask_jwt_extended import current_user, verify_jwt_in_request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from typing import Optional
+
+limiter = Limiter(get_remote_address, default_limits=["60 per minute"])
 
 current_team: Optional[Team] = current_user
 
