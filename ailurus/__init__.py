@@ -52,23 +52,24 @@ def create_app(env_file=".env"):
     with app.app_context():
         app.config.from_prefixed_env()
 
+        # Data
         db.init_app(app)
         migrate.init_app(app, db)
         cache.init_app(app)
+        init_data_dir(app)
 
-        socketio.init_app(app)
+        # Security
         setup_jwt_app(app)
-        create_keeper(app)
         CORS(app)
 
-        try:
-            init_data_dir(app)
-        except Exception as e:
-            # To detect that the relation has not been created yet
-            app.logger.warning("Error calling some function while create_app %s", e)
+        # Socket
+        socketio.init_app(app)
 
-        # Blueprints
+        # API
         app.register_blueprint(api_blueprint)
         app.register_blueprint(app_routes)
+
+        # Keeper
+        create_keeper(app)
         
     return app
