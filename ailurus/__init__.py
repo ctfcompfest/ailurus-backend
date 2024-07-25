@@ -1,10 +1,9 @@
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
 from ailurus.utils.cors import CORS
+from ailurus.utils.security import limiter
+from ailurus.utils.socket import socketio
 from ailurus.worker.keeper import create_keeper
-from and_platform.api import api_blueprint
-from and_platform.cache import cache
-from and_platform.socket import socketio
 from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -55,18 +54,17 @@ def create_app(env_file=".env"):
         # Data
         db.init_app(app)
         migrate.init_app(app, db)
-        cache.init_app(app)
         init_data_dir(app)
 
         # Security
         setup_jwt_app(app)
         CORS(app)
-
+        limiter.init_app(app)
+        
         # Socket
         socketio.init_app(app)
 
         # API
-        app.register_blueprint(api_blueprint)
         app.register_blueprint(app_routes)
 
         # Keeper
