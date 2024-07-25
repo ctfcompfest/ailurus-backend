@@ -82,3 +82,11 @@ def is_contest_finished():
     current_round = get_config("CURRENT_ROUND", 0)
     number_round = get_config("NUMBER_ROUND", 0)
     return current_round > number_round
+
+def is_contest_running():
+    return not is_contest_paused() and not is_contest_finished() and is_contest_started()
+
+def is_scoreboard_freeze():
+    freeze_time: datetime = get_config("FREEZE_TIME")
+    time_now = datetime.now(timezone.utc)
+    return (freeze_time and time_now >= freeze_time)
