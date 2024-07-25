@@ -25,7 +25,18 @@ class TeamSchema(SQLAlchemyAutoSchema):
         if 'password' in data:
             data['password'] = generate_password_hash(data["password"])
         return data
+
+class TeamPublicSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Team
+
+    @post_dump
+    def delete_sensitive_data(self, data, **kwargs):
+        del data['password']
+        del data['email']
+        return data        
     
+
 class SubmissionSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Submission
