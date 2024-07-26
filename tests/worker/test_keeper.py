@@ -1,12 +1,11 @@
 from ailurus.models import db, Challenge, ChallengeRelease, Team, Flag
 from ailurus.utils.config import set_config, get_config
-from ailurus.worker.keeper.tick import tick_keeper
-from ailurus.worker.keeper.flagrotator import flag_keeper
-from ailurus.worker.keeper.checker import checker_keeper
+from ailurus.worker.keeper import tick_keeper, flag_keeper, checker_keeper
 from datetime import datetime, timezone, timedelta
 from flask import Flask
 from typing import List
 from unittest.mock import patch, Mock
+import pika
 import pytest
 
 @pytest.fixture
@@ -35,155 +34,139 @@ def team_fixture():
     db.session.commit()
     return teams
 
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_tick_keeper_when_contest_not_running(mock_isrun, app: Flask):
+    mock_isrun.return_value = False
+    set_config("TICK_DURATION", "4")
+    set_config("NUMBER_TICK", "5")
+    set_config("NUMBER_ROUND", "5")
+    resp = tick_keeper(app, Mock(return_value="callback called!"), [])
+    assert resp == False
+    assert get_config("CURRENT_TICK") == None
+    assert get_config("CURRENT_ROUND") == None
 
-def test_tick_keeper_when_contest_not_running(app: Flask):
-    with patch("ailurus.worker.keeper.tick.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = False
-        set_config("TICK_DURATION", "4")
-        set_config("NUMBER_TICK", "5")
-        set_config("NUMBER_ROUND", "5")
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_tick_keeper_when_initiate_tick_noparam_callback(mock_isrun, app: Flask):
+    mock_isrun.return_value = True
+    set_config("TICK_DURATION", "4")
+    set_config("NUMBER_TICK", "5")
+    set_config("NUMBER_ROUND", "5")
+    resp = tick_keeper(app, Mock(return_value="callback called!"), [])
+    assert resp == "callback called!"
+    assert get_config("CURRENT_TICK") == 1
+    assert get_config("CURRENT_ROUND") == 1
 
-        resp = tick_keeper(app, Mock(return_value="callback called!"), [])
-        assert resp == False
-        assert get_config("CURRENT_TICK") == None
-        assert get_config("CURRENT_ROUND") == None
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_tick_keeper_when_initiate_tick_param_callback(mock_isrun, app: Flask):
+    mock_isrun.return_value = True
+    set_config("TICK_DURATION", "4")
+    set_config("NUMBER_TICK", "5")
+    set_config("NUMBER_ROUND", "5")
+    resp = tick_keeper(app, (lambda x: x*2), [5])
+    assert resp == 10
+    assert get_config("CURRENT_TICK") == 1
+    assert get_config("CURRENT_ROUND") == 1
 
-def test_tick_keeper_when_initiate_tick_noparam_callback(app: Flask):
-    with patch("ailurus.worker.keeper.tick.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = True
-        set_config("TICK_DURATION", "4")
-        set_config("NUMBER_TICK", "5")
-        set_config("NUMBER_ROUND", "5")
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_tick_keeper_when_double_call_less_than_tick_duration(mock_isrun, app: Flask):
+    mock_isrun.return_value = True
+    set_config("TICK_DURATION", "4")
+    set_config("NUMBER_TICK", "5")
+    set_config("NUMBER_ROUND", "5")
 
-        resp = tick_keeper(app, Mock(return_value="callback called!"), [])
-        assert resp == "callback called!"
-        assert get_config("CURRENT_TICK") == 1
-        assert get_config("CURRENT_ROUND") == 1
+    resp = tick_keeper(app, (lambda x: x*2), [5])
+    assert resp == 10
+    assert get_config("CURRENT_TICK") == 1
+    assert get_config("CURRENT_ROUND") == 1
 
-def test_tick_keeper_when_initiate_tick_param_callback(app: Flask):
-    with patch("ailurus.worker.keeper.tick.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = True
-        set_config("TICK_DURATION", "4")
-        set_config("NUMBER_TICK", "5")
-        set_config("NUMBER_ROUND", "5")
+    resp = tick_keeper(app, (lambda x: x*2), [5])
+    assert resp == False
+    assert get_config("CURRENT_TICK") == 1
+    assert get_config("CURRENT_ROUND") == 1
 
-        resp = tick_keeper(app, (lambda x: x*2), [5])
-        assert resp == 10
-        assert get_config("CURRENT_TICK") == 1
-        assert get_config("CURRENT_ROUND") == 1
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_tick_keeper_when_tick_reach_max(mock_isrun, app: Flask):
+    mock_isrun.return_value = True
+    set_config("TICK_DURATION", "4")
+    set_config("NUMBER_ROUND", "5")
+    set_config("NUMBER_TICK", "5")
+    set_config("CURRENT_ROUND", "2")
+    set_config("CURRENT_TICK", "5")
 
-def test_tick_keeper_when_double_call_less_than_tick_duration(app: Flask):
-    with patch("ailurus.worker.keeper.tick.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = True
-        set_config("TICK_DURATION", "4")
-        set_config("NUMBER_TICK", "5")
-        set_config("NUMBER_ROUND", "5")
+    resp = tick_keeper(app, (lambda x: x*2), [5])
+    assert resp == 10
+    assert get_config("CURRENT_TICK") == 1
+    assert get_config("CURRENT_ROUND") == 3
 
-        resp = tick_keeper(app, (lambda x: x*2), [5])
-        assert resp == 10
-        assert get_config("CURRENT_TICK") == 1
-        assert get_config("CURRENT_ROUND") == 1
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_flag_keeper_when_contest_not_running(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+    mock_isrun.return_value = False
+    resp = flag_keeper(app, None)
+    assert resp == False
+    assert Flag.query.count() == 0
 
-        resp = tick_keeper(app, (lambda x: x*2), [5])
-        assert resp == False
-        assert get_config("CURRENT_TICK") == 1
-        assert get_config("CURRENT_ROUND") == 1
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_flag_keeper_when_lasttick_far(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+    mock_isrun.return_value = True
+    # No previous last tick
+    resp = flag_keeper(app, None)
+    assert resp == False
+    assert Flag.query.count() == 0
 
-def test_tick_keeper_when_tick_reach_max(app: Flask):
-    with patch("ailurus.worker.keeper.tick.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = True
-        set_config("TICK_DURATION", "4")
-        set_config("NUMBER_ROUND", "5")
-        set_config("NUMBER_TICK", "5")
-        set_config("CURRENT_ROUND", "2")
-        set_config("CURRENT_TICK", "5")
+    old_time = datetime.now(timezone.utc) - timedelta(days=1)
+    set_config("LAST_TICK_CHANGE", old_time.isoformat())
+    resp = flag_keeper(app, None)
+    assert resp == False
+    assert Flag.query.count() == 0
 
-        resp = tick_keeper(app, (lambda x: x*2), [5])
-        assert resp == 10
-        assert get_config("CURRENT_TICK") == 1
-        assert get_config("CURRENT_ROUND") == 3
+@patch("ailurus.worker.keeper.is_contest_running")
+@patch("ailurus.worker.keeper.get_svcmode_module")
+def test_flag_keeper_run_correctly(mock_svcmode, mock_isrun, app: Flask, challenge_fixture, team_fixture):
+    mock_import_module = Mock()
+    mock_import_module.generator_flagrotator_task_body.return_value = {}
+    mock_svcmode.side_effect = Mock(return_value=mock_import_module)
 
-def test_flag_keeper_when_contest_not_running(app: Flask, challenge_fixture, team_fixture):
-    with patch("ailurus.worker.keeper.flagrotator.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = False
-        resp = flag_keeper(app, None)
-        assert resp == False
-        assert Flag.query.count() == 0
 
-def test_flag_keeper_when_lasttick_far(app: Flask, challenge_fixture, team_fixture):
-    with patch("ailurus.worker.keeper.flagrotator.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = True
+    mock_queue = Mock(pika.channel.Channel)
+    mock_isrun.return_value = True
 
-        # No previous last tick
-        resp = flag_keeper(app, None)
-        assert resp == False
-        assert Flag.query.count() == 0
+    set_config("FLAG_FORMAT", "flag{aaa}")
+    set_config("LAST_TICK_CHANGE", datetime.now(timezone.utc).isoformat())
 
-        old_time = datetime.now(timezone.utc) - timedelta(days=1)
-        set_config("LAST_TICK_CHANGE", old_time.isoformat())
-        resp = flag_keeper(app, None)
-        assert resp == False
-        assert Flag.query.count() == 0
-
-def test_flag_keeper_run_correctly(app: Flask, challenge_fixture, team_fixture):
-    class MockFunction():
-        @classmethod
-        def basic_publish(cls, **kwargs):
-            return True
-        @classmethod
-        def generator_flagrotator_task_body(cls, **kwargs):
-            return {}
+    resp = flag_keeper(app, mock_queue)
+    assert resp == True
+    assert Flag.query.count() == 4
+    assert mock_svcmode.call_count == 1
+    assert mock_import_module.generator_flagrotator_task_body.call_count == 4
+    assert mock_queue.basic_publish.call_count == 4
     
-    def mock_get_svcmode_module(**kwargs):
-        return MockFunction
-
-    with patch("ailurus.worker.keeper.flagrotator.is_contest_running") as mock_isrun:
-        with patch("ailurus.worker.keeper.flagrotator.get_svcmode_module") as mock_svcmode:
-            mock_isrun.return_value = True
-            mock_svcmode.side_effect = mock_get_svcmode_module
-
-            set_config("FLAG_FORMAT", "flag{aaa}")
-            set_config("LAST_TICK_CHANGE", datetime.now(timezone.utc).isoformat())
-
-            resp = flag_keeper(app, MockFunction)
-            assert resp == True
-            assert Flag.query.count() == 4
-            assert mock_svcmode.call_count == 1
-
-            flags: List[Flag] = Flag.query.all()
-            for flag in flags:
-                assert flag.challenge_id in [1, 2]
-                assert flag.value == "flag{aaa}"
-                assert flag.round == 1
-                assert flag.tick == 1
+    flags: List[Flag] = Flag.query.all()
+    for flag in flags:
+        assert flag.challenge_id in [1, 2]
+        assert flag.value == "flag{aaa}"
+        assert flag.round == 1
+        assert flag.tick == 1
 
 
-def test_checker_keeper_when_contest_not_running(app: Flask, challenge_fixture, team_fixture):
-    with patch("ailurus.worker.keeper.checker.is_contest_running") as mock_isrun:
-        mock_isrun.return_value = False
-        resp = checker_keeper(app, None)
-        assert resp == False
+@patch("ailurus.worker.keeper.is_contest_running")
+def test_checker_keeper_when_contest_not_running(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+    mock_isrun.return_value = False
+    resp = checker_keeper(app, None)
+    assert resp == False
 
-def test_checker_keeper_run_correctly(app: Flask, challenge_fixture, team_fixture):
-    class MockFunction():
-        generate_task_counter = 0
+@patch("ailurus.worker.keeper.is_contest_running")
+@patch("ailurus.worker.keeper.get_svcmode_module")
+def test_checker_keeper_run_correctly(mock_svcmode, mock_isrun, app: Flask, challenge_fixture, team_fixture):
+    mock_import_module = Mock()
+    mock_import_module.generator_checker_task_body.return_value = {}
+    mock_svcmode.side_effect = Mock(return_value=mock_import_module)
 
-        @classmethod
-        def basic_publish(cls, **kwargs):
-            return True
-        @classmethod
-        def generator_checker_task_body(cls, **kwargs):
-            MockFunction.generate_task_counter += 1
-            return {}
+    mock_queue = Mock(pika.channel.Channel)
+    mock_isrun.return_value = True
+
+    resp = checker_keeper(app, mock_queue)
+    assert resp == True
+    assert mock_svcmode.call_count == 1
+    assert mock_import_module.generator_checker_task_body.call_count == 4
+    assert mock_queue.basic_publish.call_count == 4
     
-    def mock_get_svcmode_module(**kwargs):
-        return MockFunction
-
-    with patch("ailurus.worker.keeper.checker.is_contest_running") as mock_isrun:
-        with patch("ailurus.worker.keeper.checker.get_svcmode_module") as mock_svcmode:
-            mock_isrun.return_value = True
-            mock_svcmode.side_effect = mock_get_svcmode_module
-
-            resp = checker_keeper(app, MockFunction)
-            assert resp == True
-            assert MockFunction.generate_task_counter == 4

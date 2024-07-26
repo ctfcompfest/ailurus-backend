@@ -32,4 +32,9 @@ def handle_service_manager(challenge_id):
     ).count()
     is_solved = solve >= 1
 
-    return svcmodule.handler_svcmanager_request(challenge_id=challenge_id, request_json=request.get_json(), is_solved=is_solved)
+    return svcmodule.handler_svcmanager_request(
+        team_id=current_team.id,
+        challenge_id=challenge_id,
+        request_json=request.get_json(),
+        is_solved=is_solved
+    )
