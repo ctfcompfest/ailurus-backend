@@ -21,8 +21,15 @@ def get_my_solves():
 @myapi_blueprint.post("/challenges/<int:challenge_id>/service-manager")
 def handle_service_manager(challenge_id):
     svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
-    try:
-        response = svcmodule.handler_svcmanager_request(challenge_id=challenge_id, request_json=request.get_json())
-    except Exception as ex:
-        return jsonify(status="failed", message=str(ex)), 500
-    return jsonify(status="success", data=response)
+    
+    chall_releases = ChallengeRelease.get_rounds_from_challenge(get_config("CURRENT_ROUND"))
+    if challenge_id not in chall_releases:
+        return jsonify(status="not found", message="challenge not found."), 404
+    
+    solve = Solve.query.with_entities(Solve.challenge_id).filter(
+        Solve.team_id == current_team.id,
+        Solve.challenge_id == challenge_id,
+    ).count()
+    is_solved = solve >= 1
+
+    return svcmodule.handler_svcmanager_request(challenge_id=challenge_id, request_json=request.get_json(), is_solved=is_solved)
