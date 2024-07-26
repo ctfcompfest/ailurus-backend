@@ -54,7 +54,7 @@ def flag_keeper(app: Flask, queue_channel: Channel):
             
             for flag_order in range(chall.num_flag):
                 flag = generate_flag(current_round, current_tick, team, chall, flag_order)
-                taskbody = svcmodule.generate_flagrotator_task_body(
+                taskbody = svcmodule.generator_flagrotator_task_body(
                     flag=flag,
                     services=services,
                     provision_machines=provision_machines

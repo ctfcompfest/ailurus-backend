@@ -1,9 +1,9 @@
 from ailurus.models import Team, Challenge, Service, Flag, ProvisionMachine
-from typing import List, Dict
+from typing import List, Dict, Any
 import datetime
 import json
 
-def generate_checker_task_body(
+def generator_checker_task_body(
         team: Team,
         challenge: Challenge,
         services: List[Service],
@@ -28,10 +28,17 @@ def generate_checker_task_body(
         "tick": current_tick,
     }
 
-def generate_flagrotator_task_body(
+def generator_flagrotator_task_body(
         service_mode: str,
         flag: Flag,
         services: List[Service],
         provision_machines: List[ProvisionMachine]
     ) -> Dict:
     return {}
+
+
+def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
+    return "sample"
+
+def handler_svcmanager_request(**kwargs) -> Any:
+    return "success"

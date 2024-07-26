@@ -47,7 +47,7 @@ def checker_keeper(app: Flask, queue_channel: Channel):
                 )
             ).scalars().all()
             
-            task_body = svcmodule.generate_checker_task_body(
+            task_body = svcmodule.generator_checker_task_body(
                 team=team,
                 challenge=chall,
                 services=services,

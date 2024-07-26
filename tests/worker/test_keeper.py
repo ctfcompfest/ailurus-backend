@@ -131,7 +131,7 @@ def test_flag_keeper_run_correctly(app: Flask, challenge_fixture, team_fixture):
         def basic_publish(cls, **kwargs):
             return True
         @classmethod
-        def generate_flagrotator_task_body(cls, **kwargs):
+        def generator_flagrotator_task_body(cls, **kwargs):
             return {}
     
     def mock_get_svcmode_module(**kwargs):
@@ -172,7 +172,7 @@ def test_checker_keeper_run_correctly(app: Flask, challenge_fixture, team_fixtur
         def basic_publish(cls, **kwargs):
             return True
         @classmethod
-        def generate_checker_task_body(cls, **kwargs):
+        def generator_checker_task_body(cls, **kwargs):
             MockFunction.generate_task_counter += 1
             return {}
     
