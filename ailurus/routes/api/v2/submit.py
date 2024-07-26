@@ -1,6 +1,6 @@
 from ailurus.models import db, Challenge, ChallengeRelease, Flag, ManageServiceUnlockMode, Solve, Submission, Team
 from ailurus.utils.config import is_contest_running, is_scoreboard_freeze, get_config
-from ailurus.utils.score import calculate_submission_score
+from ailurus.utils.contest import calculate_submission_score
 from ailurus.utils.security import validteam_only, current_team, limiter
 from ailurus.utils.socket import send_attack_event
 from flask import Blueprint, jsonify, request
