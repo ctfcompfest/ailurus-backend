@@ -18,7 +18,7 @@ def get_my_solves():
 
     return jsonify(status="success", data=solves)
 
-@myapi_blueprint.body("/challenges/<int:challenge_id>/service-manager")
+@myapi_blueprint.post("/challenges/<int:challenge_id>/service-manager")
 def handle_service_manager(challenge_id):
     svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
     try:
