@@ -1,13 +1,14 @@
+import dotenv.parser
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
 from ailurus.utils.cors import CORS
 from ailurus.utils.security import limiter
 from ailurus.utils.socket import socketio
-from ailurus.worker.keeper import create_keeper
+from ailurus.worker import create_keeper, create_worker
 from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
-
+import dotenv
 import datetime
 import os
 import sqlalchemy
@@ -71,3 +72,7 @@ def create_app(env_file=".env"):
         create_keeper(app)
         
     return app
+
+def create_worker_daemon(env_file=".env.worker"):
+    configs = dotenv.dotenv_values(env_file)
+    create_worker(**configs)
