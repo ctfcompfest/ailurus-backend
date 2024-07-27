@@ -5,9 +5,9 @@ from ailurus.utils.cors import CORS
 from ailurus.utils.security import limiter
 from ailurus.utils.socket import socketio
 from ailurus.worker import create_keeper, create_worker
-from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
+
 import dotenv
 import datetime
 import os
@@ -41,7 +41,7 @@ def init_data_dir(app):
         os.makedirs(dirpath, exist_ok=True)
 
 def create_app(env_file=".env"):
-    load_dotenv(env_file, override=True)
+    env_var = dotenv.dotenv_values(env_file)
     
     app = Flask(
         __name__,
@@ -51,6 +51,7 @@ def create_app(env_file=".env"):
 
     with app.app_context():
         app.config.from_prefixed_env()
+        app.config.from_mapping(env_var)
 
         # Data
         db.init_app(app)
