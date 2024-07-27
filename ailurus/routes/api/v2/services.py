@@ -23,14 +23,14 @@ def get_all_services_status():
         CheckerResult,
     ).where(
         CheckerResult.challenge_id.in_(chall_release),
-        CheckerResult.result.in_([
+        CheckerResult.status.in_([
             CheckerStatus.FAULTY,
             CheckerStatus.VALID,
         ])
     ).group_by(
         CheckerResult.challenge_id,
         CheckerResult.team_id,
-        CheckerResult.result,
+        CheckerResult.status,
     ).order_by(latest_id.desc()).all()
     
     response = {}
@@ -64,14 +64,14 @@ def get_all_services_status_from_team(team_id):
     ).where(
         CheckerResult.team_id == team_id,
         CheckerResult.challenge_id.in_(chall_release),
-        CheckerResult.result.in_([
+        CheckerResult.status.in_([
             CheckerStatus.FAULTY,
             CheckerStatus.VALID,
         ])
     ).group_by(
         CheckerResult.challenge_id,
         CheckerResult.team_id,
-        CheckerResult.result,
+        CheckerResult.status,
     ).order_by(latest_id.desc()).all()
     
     response = {}
@@ -98,15 +98,15 @@ def get_all_services_status_from_challenge(challenge_id):
         latest_id,
         CheckerResult,
     ).where(
-        CheckerResult.challenge_id.in_(chall_release),
-        CheckerResult.result.in_([
+        CheckerResult.challenge_id == challenge_id,
+        CheckerResult.status.in_([
             CheckerStatus.FAULTY,
             CheckerStatus.VALID,
         ])
     ).group_by(
         CheckerResult.challenge_id,
         CheckerResult.team_id,
-        CheckerResult.result,
+        CheckerResult.status,
     ).order_by(latest_id.desc()).all()
     
     response = {}
