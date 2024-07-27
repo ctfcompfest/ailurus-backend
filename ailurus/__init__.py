@@ -42,7 +42,6 @@ def init_data_dir(app):
 
 def create_app(env_file=".env"):
     env_var = dotenv.dotenv_values(env_file)
-    
     app = Flask(
         __name__,
         static_url_path="/static",
@@ -52,10 +51,23 @@ def create_app(env_file=".env"):
     with app.app_context():
         app.config.from_prefixed_env()
         app.config.from_mapping(env_var)
-
+        
         # Data
         db.init_app(app)
         migrate.init_app(app, db)
+        
+    return app
+
+def create_worker_daemon(env_file=".env"):
+    configs = dotenv.dotenv_values(env_file)
+    app = create_app(env_file)
+
+    with app.app_context():
+        create_worker(**configs)
+
+def create_webapp_daemon(env_file=".env"):
+    app = create_app(env_file)
+    with app.app_context():
         init_data_dir(app)
 
         # Security
@@ -71,9 +83,4 @@ def create_app(env_file=".env"):
 
         # Keeper
         create_keeper(app)
-        
     return app
-
-def create_worker_daemon(env_file=".env.worker"):
-    configs = dotenv.dotenv_values(env_file)
-    create_worker(**configs)

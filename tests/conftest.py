@@ -1,11 +1,11 @@
-from ailurus import create_app
+from ailurus import create_webapp_daemon
 from ailurus.models import db, Config
 from flask import Flask
 import pytest
 
 @pytest.fixture
 def app():
-    app = create_app(env_file=".env.tests")
+    app = create_webapp_daemon(env_file=".env.tests")
     with app.app_context():
         db.create_all()
 

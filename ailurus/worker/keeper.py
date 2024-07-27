@@ -28,7 +28,7 @@ import json
 import pika
 
 def create_keeper(app):
-    if not app.config.get("KEEPER_ENABLE", False):
+    if not get_app_config("KEEPER_ENABLE", False):
         return
 
     rabbitmq_conn = pika.BlockingConnection(
