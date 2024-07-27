@@ -30,6 +30,12 @@ def data_fixture() -> List[Challenge]:
     return challenges
 
 def test_get_all_challenges(client: FlaskClient, data_fixture: List[Challenge]):
+    response = client.get("/api/v2/challenges/")
+    assert response.status_code == 200
+
+    datas = response.get_json()['data']
+    assert len(datas) == 0
+
     set_config("CURRENT_ROUND", 1)
     response = client.get("/api/v2/challenges/")
     assert response.status_code == 200
