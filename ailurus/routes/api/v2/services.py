@@ -4,7 +4,7 @@ from ailurus.utils.security import validteam_only
 from ailurus.utils.svcmode import get_svcmode_module
 from flask import Blueprint, jsonify
 from sqlalchemy import and_, select, func
-from typing import List
+from typing import List, Tuple, Any
 
 import itertools
 
@@ -16,12 +16,11 @@ public_services_blueprint = Blueprint("public_services", __name__)
 def get_all_services_status():
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
+    svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
     latest_id = func.max(CheckerResult.id).label("latest_id")
-    checker_results = db.session.query(
+    checker_results: List[Tuple[Any, CheckerResult]] = db.session.query(
         latest_id,
-        CheckerResult.challenge_id,
-        CheckerResult.team_id,
-        CheckerResult.result,
+        CheckerResult,
     ).where(
         CheckerResult.challenge_id.in_(chall_release),
         CheckerResult.result.in_([
@@ -35,13 +34,15 @@ def get_all_services_status():
     ).order_by(latest_id.desc()).all()
     
     response = {}
-    for row in checker_results:
-        _, chall_id, team_id, result = row
-        chall_data = response.get(chall_id, {})
-        if team_id in chall_data: continue
+    for _, checker_result in checker_results:
+        chall_data = response.get(checker_result.challenge_id, {})
+        if checker_result.team_id in chall_data: continue
 
-        chall_data[team_id] = result.value
-        response[chall_id] = chall_data
+        chall_data[checker_result.team_id] = {
+            "status": checker_result.status.value,
+            "detail": svcmode.generator_public_services_status_detail(checker_result),
+        }
+        response[checker_result.challenge_id] = chall_data
 
     return jsonify(status="success", data=response)
 
@@ -55,12 +56,11 @@ def get_all_services_status_from_team(team_id):
 
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
+    svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
     latest_id = func.max(CheckerResult.id).label("latest_id")
-    checker_results = db.session.query(
+    checker_results: List[Tuple[Any, CheckerResult]] = db.session.query(
         latest_id,
-        CheckerResult.challenge_id,
-        CheckerResult.team_id,
-        CheckerResult.result,
+        CheckerResult,
     ).where(
         CheckerResult.team_id == team_id,
         CheckerResult.challenge_id.in_(chall_release),
@@ -75,9 +75,12 @@ def get_all_services_status_from_team(team_id):
     ).order_by(latest_id.desc()).all()
     
     response = {}
-    for row in checker_results:
-        _, chall_id, _, result = row
-        response[chall_id] = result.value
+    for _, checker_result in checker_results:
+        if checker_result.challenge_id in response: continue
+        response[checker_result.challenge_id] = {
+            "status": checker_result.status.value,
+            "detail": svcmode.generator_public_services_status_detail(checker_result),
+        }
 
     return jsonify(status="success", data=response)
 
@@ -89,14 +92,13 @@ def get_all_services_status_from_challenge(challenge_id):
     if challenge_id not in chall_release:
         return jsonify(status="not found.", message="challenge not found."), 404
 
+    svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
     latest_id = func.max(CheckerResult.id).label("latest_id")
-    checker_results = db.session.query(
+    checker_results: List[Tuple[Any, CheckerResult]] = db.session.query(
         latest_id,
-        CheckerResult.challenge_id,
-        CheckerResult.team_id,
-        CheckerResult.result,
+        CheckerResult,
     ).where(
-        CheckerResult.challenge_id == challenge_id,
+        CheckerResult.challenge_id.in_(chall_release),
         CheckerResult.result.in_([
             CheckerStatus.FAULTY,
             CheckerStatus.VALID,
@@ -108,9 +110,12 @@ def get_all_services_status_from_challenge(challenge_id):
     ).order_by(latest_id.desc()).all()
     
     response = {}
-    for row in checker_results:
-        _, _, team_id, result = row
-        response[team_id] = result.value
+    for _, checker_result in checker_results:
+        if checker_result.team_id in response: continue
+        response[checker_result.team_id] = {
+            "status": checker_result.status.value,
+            "detail": svcmode.generator_public_services_status_detail(checker_result),
+        }
 
     return jsonify(status="success", data=response)
 
