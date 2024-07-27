@@ -4,11 +4,7 @@ import flask
 import json
 
 def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
-    return {
-        "challenge_id": challenge.id,
-        "team_id": team.id,
-        "services": [json.loads(service.detail) for service in services]
-    }
+    return [json.loads(service.detail) for service in services]
 
 def generator_public_services_status_detail(checker_result: CheckerResult) -> Dict | List | str:
     return json.loads(checker_result.detail)

@@ -182,9 +182,7 @@ def get_all_services_from_team(team_id):
         ).scalars().all()
         
         svcinfo = svcmodule.generator_public_services_info(team=team, challenge=chall, services=services)
-        chall_data = response.get(chall.id, {})
-        chall_data[team.id] = svcinfo
-        response[chall.id] = chall_data
+        response[chall.id] = svcinfo
 
     return jsonify(status="success", data=response)
 
@@ -199,7 +197,7 @@ def get_all_services_from_challenge(challenge_id):
                 ChallengeRelease.challenge_id == Challenge.id
             ).where(
                 ChallengeRelease.round == get_config("CURRENT_ROUND", 0),
-                Challenge.challenge_id == challenge_id
+                Challenge.id == challenge_id
             )
         ).scalars().first()
     if not chall:
@@ -220,8 +218,6 @@ def get_all_services_from_challenge(challenge_id):
         ).scalars().all()
         
         svcinfo = svcmodule.generator_public_services_info(team=team, challenge=chall, services=services)
-        chall_data = response.get(chall.id, {})
-        chall_data[team.id] = svcinfo
-        response[chall.id] = chall_data
+        response[team.id] = svcinfo
 
     return jsonify(status="success", data=response)
