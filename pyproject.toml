@@ -45,7 +45,6 @@ types-pyyaml = "^6.0.12.11"
 pytest = "^8.3.1"
 pytest-rabbitmq = "^3.1.0"
 pytest-cov = "^5.0.0"
-pytest-mock = "^3.14.0"
 
 [build-system]
 requires = ["poetry-core"]
