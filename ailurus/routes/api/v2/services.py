@@ -47,7 +47,6 @@ def get_all_services_status():
     return jsonify(status="success", data=response)
 
 
-
 @public_services_blueprint.get("/teams/<int:team_id>/services-status")
 def get_all_services_status_from_team(team_id):
     team = Team.query.filter_by(id=team_id).first()
@@ -116,6 +115,42 @@ def get_all_services_status_from_challenge(challenge_id):
             "status": checker_result.status.value,
             "detail": svcmode.generator_public_services_status_detail(checker_result),
         }
+
+    return jsonify(status="success", data=response)
+
+
+@public_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services-status")
+def get_all_services_status_from_team_and_chall(team_id, challenge_id):
+    team = Team.query.filter_by(id=team_id).first()
+    if not team:
+        return jsonify(status="not found.", message="team not found."), 404
+
+    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    if challenge_id not in chall_release:
+        return jsonify(status="not found.", message="challenge not found."), 404
+
+    svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
+    latest_id = func.max(CheckerResult.id).label("latest_id")
+    _, checker_result = db.session.query(
+        latest_id,
+        CheckerResult,
+    ).where(
+        CheckerResult.team_id == team_id,
+        CheckerResult.challenge_id == challenge_id,
+        CheckerResult.status.in_([
+            CheckerStatus.FAULTY,
+            CheckerStatus.VALID,
+        ])
+    ).group_by(
+        CheckerResult.challenge_id,
+        CheckerResult.team_id,
+        CheckerResult.status,
+    ).order_by(latest_id.desc()).first()
+    
+    response = {
+        "status": checker_result.status.value,
+        "detail": svcmode.generator_public_services_status_detail(checker_result),
+    }
 
     return jsonify(status="success", data=response)
 
@@ -221,3 +256,38 @@ def get_all_services_from_challenge(challenge_id):
         response[team.id] = svcinfo
 
     return jsonify(status="success", data=response)
+
+
+@auth_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services")
+def get_all_services_from_team_and_chall(team_id, challenge_id):
+    team: Team = Team.query.filter_by(id=team_id).first()
+    if not team:
+        return jsonify(status="not found", message="team not found."), 404
+    
+    chall: Challenge = db.session.execute(
+            select(
+                Challenge
+            ).join(
+                ChallengeRelease,
+                ChallengeRelease.challenge_id == Challenge.id,
+            ).where(
+                ChallengeRelease.round == get_config("CURRENT_ROUND", 0),
+                Challenge.id == challenge_id,
+            )
+        ).scalars().first()
+    if not chall:
+        return jsonify(status="not found", message="challenge not found."), 404
+    
+    services: List[Service] = db.session.execute(
+        select(Service).where(
+            and_(
+                Service.challenge_id == challenge_id,
+                Service.team_id == team_id
+            )
+        )
+    ).scalars().all()
+        
+    svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
+    svcinfo = svcmodule.generator_public_services_info(team=team, challenge=chall, services=services)
+    return jsonify(status="success", data=svcinfo)
+
