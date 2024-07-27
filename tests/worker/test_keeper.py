@@ -120,13 +120,7 @@ def test_flag_keeper_when_lasttick_far(mock_isrun, app: Flask, challenge_fixture
     assert Flag.query.count() == 0
 
 @patch("ailurus.worker.keeper.is_contest_running")
-@patch("ailurus.worker.keeper.get_svcmode_module")
-def test_flag_keeper_run_correctly(mock_svcmode, mock_isrun, app: Flask, challenge_fixture, team_fixture):
-    mock_import_module = Mock()
-    mock_import_module.generator_flagrotator_task_body.return_value = {}
-    mock_svcmode.side_effect = Mock(return_value=mock_import_module)
-
-
+def test_flag_keeper_run_correctly(mock_isrun, app: Flask, challenge_fixture, team_fixture):
     mock_queue = Mock(pika.channel.Channel)
     mock_isrun.return_value = True
 
@@ -136,8 +130,6 @@ def test_flag_keeper_run_correctly(mock_svcmode, mock_isrun, app: Flask, challen
     resp = flag_keeper(app, mock_queue)
     assert resp == True
     assert Flag.query.count() == 4
-    assert mock_svcmode.call_count == 1
-    assert mock_import_module.generator_flagrotator_task_body.call_count == 4
     assert mock_queue.basic_publish.call_count == 4
     
     flags: List[Flag] = Flag.query.all()
@@ -155,18 +147,11 @@ def test_checker_keeper_when_contest_not_running(mock_isrun, app: Flask, challen
     assert resp == False
 
 @patch("ailurus.worker.keeper.is_contest_running")
-@patch("ailurus.worker.keeper.get_svcmode_module")
-def test_checker_keeper_run_correctly(mock_svcmode, mock_isrun, app: Flask, challenge_fixture, team_fixture):
-    mock_import_module = Mock()
-    mock_import_module.generator_checker_task_body.return_value = {}
-    mock_svcmode.side_effect = Mock(return_value=mock_import_module)
-
+def test_checker_keeper_run_correctly(mock_isrun, app: Flask, challenge_fixture, team_fixture):
     mock_queue = Mock(pika.channel.Channel)
     mock_isrun.return_value = True
 
     resp = checker_keeper(app, mock_queue)
     assert resp == True
-    assert mock_svcmode.call_count == 1
-    assert mock_import_module.generator_checker_task_body.call_count == 4
     assert mock_queue.basic_publish.call_count == 4
     

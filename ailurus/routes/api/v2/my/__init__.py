@@ -35,6 +35,6 @@ def handle_service_manager(challenge_id):
     return svcmodule.handler_svcmanager_request(
         team_id=current_team.id,
         challenge_id=challenge_id,
-        request_json=request.get_json(),
+        request=request,
         is_solved=is_solved
     )

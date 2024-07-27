@@ -3,14 +3,11 @@ from ailurus.models import (
     Team,
     Challenge,
     ChallengeRelease,
-    Service,
-    ProvisionMachine,
     Flag,
 )
 from ailurus.utils.config import get_app_config, get_config, set_config
 from ailurus.utils.config import is_contest_running
 from ailurus.utils.contest import generate_flag
-from ailurus.utils.svcmode import get_svcmode_module
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -18,7 +15,7 @@ from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timezone, timedelta
 from flask import Flask
 from pika.channel import Channel
-from sqlalchemy import select, and_
+from sqlalchemy import select
 from typing import List, Any, Callable
 
 import atexit
@@ -89,9 +86,6 @@ def checker_keeper(app: Flask, queue_channel: Channel):
             app.logger.info("[checker-keeper] contest is not running.")
             return False
 
-        service_mode = get_config("SERVICE_MODE")
-        svcmodule = get_svcmode_module(service_mode=service_mode)
-    
         current_tick = get_config("CURRENT_TICK")
         current_round = get_config("CURRENT_ROUND")
         app.logger.info(f"[checker-keeper] execute for tick = {current_tick}, round = {current_round}.")
@@ -109,23 +103,13 @@ def checker_keeper(app: Flask, queue_channel: Channel):
         ).scalars().all()
 
         for chall, team in itertools.product(release_challs, teams):
-            services: List[Service] = db.session.execute(
-                select(Service).where(
-                    and_(
-                        Service.challenge_id == chall.id,
-                        Service.team_id == team.id
-                    )
-                )
-            ).scalars().all()
-            
-            task_body = svcmodule.generator_checker_task_body(
-                team=team,
-                challenge=chall,
-                services=services,
-                current_tick=current_tick,
-                current_round=current_round,
-                current_time=time_now
-            )
+            task_body = {
+                "challenge_id": chall.id,
+                "team_id": team.id,
+                "testcase_checksum": chall.testcase_checksum,
+                "artifact_checksum": chall.artifact_checksum,
+                "time_created": time_now.isoformat(),
+            }
             
             queue_channel.basic_publish(
                 exchange='',
@@ -152,10 +136,6 @@ def flag_keeper(app: Flask, queue_channel: Channel):
 
         current_tick: int = get_config("CURRENT_TICK")
         current_round: int = get_config("CURRENT_ROUND")
-
-        service_mode = get_config("SERVICE_MODE")
-        provision_machines: List[ProvisionMachine] = ProvisionMachine.query.all()
-        svcmodule = get_svcmode_module(service_mode=service_mode)
         
         teams: List[Team] = Team.query.all()
         release_challs: List[Challenge] = db.session.execute(
@@ -170,22 +150,14 @@ def flag_keeper(app: Flask, queue_channel: Channel):
         flags: List[Flag] = []
         taskbodys = []
         for team, chall in itertools.product(teams, release_challs):
-            services: List[Service] = db.session.execute(
-                select(Service).where(
-                    and_(
-                        Service.challenge_id == chall.id,
-                        Service.team_id == team.id
-                    )
-                )
-            ).scalars().all()
-            
             for flag_order in range(chall.num_flag):
                 flag = generate_flag(current_round, current_tick, team, chall, flag_order)
-                taskbody = svcmodule.generator_flagrotator_task_body(
-                    flag=flag,
-                    services=services,
-                    provision_machines=provision_machines
-                )
+                taskbody = {
+                    "flag_value": flag.value,
+                    "challenge_id": chall.id,
+                    "team_id": team.id,
+                    "time_created": time_now.isoformat(),
+                }
 
                 flags.append(flag)
                 taskbodys.append(taskbody)
