@@ -4,7 +4,7 @@ from flask import Flask
 import pytest
 
 @pytest.fixture
-def app():
+def webapp():
     app = create_webapp_daemon(env_file=".env.tests")
     with app.app_context():
         db.create_all()
@@ -21,5 +21,5 @@ def app():
         db.drop_all()
 
 @pytest.fixture
-def client(app: Flask):
-    return app.test_client()
+def client(webapp: Flask):
+    return webapp.test_client()

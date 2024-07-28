@@ -1,8 +1,9 @@
 from ailurus.models import db, Config
 from ailurus.utils.config import is_contest_finished, is_contest_paused, is_contest_started, is_contest_running
 from datetime import datetime, timezone, timedelta
+from flask import Flask
 
-def test_contest_paused_properly(app):
+def test_contest_paused_properly(webapp: Flask):
     cfg = Config(key="IS_CONTEST_PAUSED", value="true")
     db.session.add(cfg)
     db.session.commit()
@@ -13,7 +14,7 @@ def test_contest_paused_properly(app):
     assert is_contest_paused() == False
 
 
-def test_contest_finished(app):
+def test_contest_finished(webapp: Flask):
     # Round counting start from 1
     current_round = Config(key="CURRENT_ROUND", value="2")
     number_round = Config(key="NUMBER_ROUND", value="2")
@@ -25,7 +26,7 @@ def test_contest_finished(app):
     db.session.commit()
     assert is_contest_finished() == True
 
-def test_contest_started(app):
+def test_contest_started(webapp: Flask):
     # Round counting start from 1
     start_time = Config(key="START_TIME", value="3020-01-01T01:00:00+00:00")
     db.session.add(start_time)
@@ -38,7 +39,7 @@ def test_contest_started(app):
     db.session.commit()
     assert is_contest_started() == True
 
-def test_contest_running(app):
+def test_contest_running(webapp: Flask):
     current_round = Config(key="CURRENT_ROUND", value="1")
     number_round = Config(key="NUMBER_ROUND", value="2")
     is_paused = Config(key="IS_CONTEST_PAUSED", value="false")

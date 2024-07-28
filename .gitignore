@@ -172,3 +172,4 @@ ansible/inventory
 .rabbitmq_data
 migrations-old
 .adce_data
+.data

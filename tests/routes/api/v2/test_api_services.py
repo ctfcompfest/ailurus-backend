@@ -1,5 +1,6 @@
 from ailurus.models import db, Team, Challenge, Service, CheckerResult, ChallengeRelease, CheckerStatus
 from ailurus.utils.config import set_config
+from flask import Flask
 from flask.testing import FlaskClient
 from flask_jwt_extended import create_access_token
 import pytest
@@ -63,7 +64,7 @@ def services_data():
     db.session.commit()
 
 @pytest.fixture
-def auth_headers(app):
+def auth_headers(webapp: Flask):
     acc_token = create_access_token(identity={"team": {"id": 1}})
     return {"Authorization": f"Bearer {acc_token}"}
 

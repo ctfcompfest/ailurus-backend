@@ -35,57 +35,57 @@ def team_fixture():
     return teams
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_tick_keeper_when_contest_not_running(mock_isrun, app: Flask):
+def test_tick_keeper_when_contest_not_running(mock_isrun, webapp: Flask):
     mock_isrun.return_value = False
     set_config("TICK_DURATION", "4")
     set_config("NUMBER_TICK", "5")
     set_config("NUMBER_ROUND", "5")
-    resp = tick_keeper(app, Mock(return_value="callback called!"), [])
+    resp = tick_keeper(webapp, Mock(return_value="callback called!"), [])
     assert resp == False
     assert get_config("CURRENT_TICK") == None
     assert get_config("CURRENT_ROUND") == None
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_tick_keeper_when_initiate_tick_noparam_callback(mock_isrun, app: Flask):
+def test_tick_keeper_when_initiate_tick_noparam_callback(mock_isrun, webapp: Flask):
     mock_isrun.return_value = True
     set_config("TICK_DURATION", "4")
     set_config("NUMBER_TICK", "5")
     set_config("NUMBER_ROUND", "5")
-    resp = tick_keeper(app, Mock(return_value="callback called!"), [])
+    resp = tick_keeper(webapp, Mock(return_value="callback called!"), [])
     assert resp == "callback called!"
     assert get_config("CURRENT_TICK") == 1
     assert get_config("CURRENT_ROUND") == 1
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_tick_keeper_when_initiate_tick_param_callback(mock_isrun, app: Flask):
+def test_tick_keeper_when_initiate_tick_param_callback(mock_isrun, webapp: Flask):
     mock_isrun.return_value = True
     set_config("TICK_DURATION", "4")
     set_config("NUMBER_TICK", "5")
     set_config("NUMBER_ROUND", "5")
-    resp = tick_keeper(app, (lambda x: x*2), [5])
+    resp = tick_keeper(webapp, (lambda x: x*2), [5])
     assert resp == 10
     assert get_config("CURRENT_TICK") == 1
     assert get_config("CURRENT_ROUND") == 1
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_tick_keeper_when_double_call_less_than_tick_duration(mock_isrun, app: Flask):
+def test_tick_keeper_when_double_call_less_than_tick_duration(mock_isrun, webapp: Flask):
     mock_isrun.return_value = True
     set_config("TICK_DURATION", "4")
     set_config("NUMBER_TICK", "5")
     set_config("NUMBER_ROUND", "5")
 
-    resp = tick_keeper(app, (lambda x: x*2), [5])
+    resp = tick_keeper(webapp, (lambda x: x*2), [5])
     assert resp == 10
     assert get_config("CURRENT_TICK") == 1
     assert get_config("CURRENT_ROUND") == 1
 
-    resp = tick_keeper(app, (lambda x: x*2), [5])
+    resp = tick_keeper(webapp, (lambda x: x*2), [5])
     assert resp == False
     assert get_config("CURRENT_TICK") == 1
     assert get_config("CURRENT_ROUND") == 1
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_tick_keeper_when_tick_reach_max(mock_isrun, app: Flask):
+def test_tick_keeper_when_tick_reach_max(mock_isrun, webapp: Flask):
     mock_isrun.return_value = True
     set_config("TICK_DURATION", "4")
     set_config("NUMBER_ROUND", "5")
@@ -93,41 +93,41 @@ def test_tick_keeper_when_tick_reach_max(mock_isrun, app: Flask):
     set_config("CURRENT_ROUND", "2")
     set_config("CURRENT_TICK", "5")
 
-    resp = tick_keeper(app, (lambda x: x*2), [5])
+    resp = tick_keeper(webapp, (lambda x: x*2), [5])
     assert resp == 10
     assert get_config("CURRENT_TICK") == 1
     assert get_config("CURRENT_ROUND") == 3
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_flag_keeper_when_contest_not_running(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+def test_flag_keeper_when_contest_not_running(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_isrun.return_value = False
-    resp = flag_keeper(app, None)
+    resp = flag_keeper(webapp, None)
     assert resp == False
     assert Flag.query.count() == 0
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_flag_keeper_when_lasttick_far(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+def test_flag_keeper_when_lasttick_far(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_isrun.return_value = True
     # No previous last tick
-    resp = flag_keeper(app, None)
+    resp = flag_keeper(webapp, None)
     assert resp == False
     assert Flag.query.count() == 0
 
     old_time = datetime.now(timezone.utc) - timedelta(days=1)
     set_config("LAST_TICK_CHANGE", old_time.isoformat())
-    resp = flag_keeper(app, None)
+    resp = flag_keeper(webapp, None)
     assert resp == False
     assert Flag.query.count() == 0
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_flag_keeper_run_correctly(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+def test_flag_keeper_run_correctly(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_queue = Mock(pika.channel.Channel)
     mock_isrun.return_value = True
 
     set_config("FLAG_FORMAT", "flag{aaa}")
     set_config("LAST_TICK_CHANGE", datetime.now(timezone.utc).isoformat())
 
-    resp = flag_keeper(app, mock_queue)
+    resp = flag_keeper(webapp, mock_queue)
     assert resp == True
     assert Flag.query.count() == 4
     assert mock_queue.basic_publish.call_count == 4
@@ -141,17 +141,17 @@ def test_flag_keeper_run_correctly(mock_isrun, app: Flask, challenge_fixture, te
 
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_checker_keeper_when_contest_not_running(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+def test_checker_keeper_when_contest_not_running(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_isrun.return_value = False
-    resp = checker_keeper(app, None)
+    resp = checker_keeper(webapp, None)
     assert resp == False
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_checker_keeper_run_correctly(mock_isrun, app: Flask, challenge_fixture, team_fixture):
+def test_checker_keeper_run_correctly(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_queue = Mock(pika.channel.Channel)
     mock_isrun.return_value = True
 
-    resp = checker_keeper(app, mock_queue)
+    resp = checker_keeper(webapp, mock_queue)
     assert resp == True
     assert mock_queue.basic_publish.call_count == 4
     
