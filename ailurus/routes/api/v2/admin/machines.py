@@ -47,7 +47,7 @@ def create_bulk_machines():
         200,
     )
 
-@machine_blueprint.get("/<int:machine_id>")
+@machine_blueprint.get("/<int:machine_id>/")
 def get_machine_detail(machine_id):
     machine = ProvisionMachine.query.filter_by(id=machine_id).first()
 
@@ -61,7 +61,7 @@ def get_machine_detail(machine_id):
         200,
     )
 
-@machine_blueprint.patch("/<int:machine_id>")
+@machine_blueprint.patch("/<int:machine_id>/")
 def update_machine(machine_id):
     machine: ProvisionMachine | None = ProvisionMachine.query.filter_by(id=machine_id).first()
     if machine is None:
@@ -85,7 +85,7 @@ def update_machine(machine_id):
         200,
     )
 
-@machine_blueprint.delete("/<int:machine_id>")
+@machine_blueprint.delete("/<int:machine_id>/")
 def delete_machine(machine_id):
     machine = ProvisionMachine.query.filter_by(id=machine_id).first()
     if machine is None:

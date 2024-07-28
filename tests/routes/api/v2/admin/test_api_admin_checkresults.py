@@ -40,14 +40,14 @@ def test_get_checkerresults(client: FlaskClient, data_fixtures: Tuple[List[Team]
     accum_data_len = 0
     teams, challenges, _ = data_fixtures
 
-    response = client.get("/api/v2/admin/checkresults/", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/checkresults/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()
     accum_data_len += len(response_data['data'])
     assert "next_page" in response_data
     assert "prev_page" not in response_data
 
-    response = client.get("/api/v2/admin/checkresults/?page=2", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/checkresults/?page=2", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()
     accum_data_len += len(response_data['data'])
@@ -56,28 +56,28 @@ def test_get_checkerresults(client: FlaskClient, data_fixtures: Tuple[List[Team]
 
     assert accum_data_len == CheckerResult.query.count()
 
-    response = client.get("/api/v2/admin/checkresults/?page=999", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/checkresults/?page=999", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 404
 
-    response = client.get(f"/api/v2/admin/checkresults/?team_id={teams[0].id}", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/checkresults/?team_id={teams[0].id}", headers={"X-ADMIN-SECRET": "test"})
     assert len(response.get_json()['data']) == CheckerResult.query.filter(CheckerResult.team_id == teams[0].id).count()
 
-    response = client.get(f"/api/v2/admin/checkresults/?challenge_id={challenges[0].id}", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/checkresults/?challenge_id={challenges[0].id}", headers={"X-ADMIN-SECRET": "test"})
     assert len(response.get_json()['data']) == CheckerResult.query.filter(CheckerResult.challenge_id == challenges[0].id).count()
 
-    response = client.get(f"/api/v2/admin/checkresults/?round=1", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/checkresults/?round=1", headers={"X-ADMIN-SECRET": "test"})
     assert len(response.get_json()['data']) == CheckerResult.query.filter(CheckerResult.round == 1).count()
 
-    response = client.get(f"/api/v2/admin/checkresults/?tick=1", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/checkresults/?tick=1", headers={"X-ADMIN-SECRET": "test"})
     assert len(response.get_json()['data']) == CheckerResult.query.filter(CheckerResult.tick == 1).count()
 
-    response = client.get(f"/api/v2/admin/checkresults/?status=0", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/checkresults/?status=0", headers={"X-ADMIN-SECRET": "test"})
     assert len(response.get_json()['data']) == CheckerResult.query.filter(CheckerResult.status == CheckerStatus.FAULTY).count()
 
-    response = client.get(f"/api/v2/admin/checkresults/?status=1", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/checkresults/?status=1", headers={"X-ADMIN-SECRET": "test"})
     assert len(response.get_json()['data']) == CheckerResult.query.filter(CheckerResult.status == CheckerStatus.VALID).count()
 
-    response = client.get(f"/api/v2/admin/checkresults/?round=1&status=1", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/checkresults/?round=1&status=1", headers={"X-ADMIN-SECRET": "test"})
     assert len(response.get_json()['data']) == CheckerResult.query.filter(
             CheckerResult.status == CheckerStatus.VALID,
             CheckerResult.round == 1

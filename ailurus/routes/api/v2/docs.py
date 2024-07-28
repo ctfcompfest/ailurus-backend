@@ -9,7 +9,7 @@ import os
 public_docs_blueprint = Blueprint("public_docs_blueprint", __name__, url_prefix="/docs")
 public_docs_blueprint.before_request(validteam_only)
 
-@public_docs_blueprint.get("/<string:page>")
+@public_docs_blueprint.get("/<string:page>/")
 def get_docs(page):
     base_path = os.path.join(get_app_config("TEMPLATE_DIR"), "docs")
     ALLOWED_PAGE = [elm.replace(".md", "") for elm in os.listdir(base_path)]

@@ -12,7 +12,7 @@ __all__ = ["public_services_blueprint", "auth_services_blueprint"]
 
 public_services_blueprint = Blueprint("public_services", __name__)
 
-@public_services_blueprint.get("/services-status")
+@public_services_blueprint.get("/services-status/")
 def get_all_services_status():
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
@@ -47,7 +47,7 @@ def get_all_services_status():
     return jsonify(status="success", data=response)
 
 
-@public_services_blueprint.get("/teams/<int:team_id>/services-status")
+@public_services_blueprint.get("/teams/<int:team_id>/services-status/")
 def get_all_services_status_from_team(team_id):
     team = Team.query.filter_by(id=team_id).first()
     if not team:
@@ -84,7 +84,7 @@ def get_all_services_status_from_team(team_id):
     return jsonify(status="success", data=response)
 
 
-@public_services_blueprint.get("/challenges/<int:challenge_id>/services-status")
+@public_services_blueprint.get("/challenges/<int:challenge_id>/services-status/")
 def get_all_services_status_from_challenge(challenge_id):
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
@@ -119,7 +119,7 @@ def get_all_services_status_from_challenge(challenge_id):
     return jsonify(status="success", data=response)
 
 
-@public_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services-status")
+@public_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services-status/")
 def get_all_services_status_from_team_and_chall(team_id, challenge_id):
     team = Team.query.filter_by(id=team_id).first()
     if not team:
@@ -158,7 +158,7 @@ def get_all_services_status_from_team_and_chall(team_id, challenge_id):
 auth_services_blueprint = Blueprint("auth_services", __name__)
 auth_services_blueprint.before_request(validteam_only)
 
-@auth_services_blueprint.get("/services")
+@auth_services_blueprint.get("/services/")
 def get_all_services():
     svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
     release_challs: List[Challenge] = db.session.execute(
@@ -189,7 +189,7 @@ def get_all_services():
 
     return jsonify(status="success", data=response)
 
-@auth_services_blueprint.get("/teams/<int:team_id>/services")
+@auth_services_blueprint.get("/teams/<int:team_id>/services/")
 def get_all_services_from_team(team_id):
     team: Team = Team.query.filter_by(id=team_id).first()
     if not team:
@@ -222,7 +222,7 @@ def get_all_services_from_team(team_id):
     return jsonify(status="success", data=response)
 
 
-@auth_services_blueprint.get("/challenges/<int:challenge_id>/services")
+@auth_services_blueprint.get("/challenges/<int:challenge_id>/services/")
 def get_all_services_from_challenge(challenge_id):
     chall: Challenge = db.session.execute(
             select(
@@ -258,7 +258,7 @@ def get_all_services_from_challenge(challenge_id):
     return jsonify(status="success", data=response)
 
 
-@auth_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services")
+@auth_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services/")
 def get_all_services_from_team_and_chall(team_id, challenge_id):
     team: Team = Team.query.filter_by(id=team_id).first()
     if not team:

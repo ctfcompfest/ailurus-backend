@@ -23,7 +23,7 @@ def test_get_all_teams(client: FlaskClient, team_data: List[Team]):
         assert "password" not in data
 
 def test_get_detail_team(client: FlaskClient, team_data: List[Team]):
-    response = client.get("/api/v2/teams/1")
+    response = client.get("/api/v2/teams/1/")
     assert response.status_code == 200
     response_data = response.get_json()['data']
     assert response_data["id"] == 1
@@ -33,6 +33,6 @@ def test_get_detail_team(client: FlaskClient, team_data: List[Team]):
 
 
 def test_fail_get_detail_team(client: FlaskClient, team_data: List[Team]):
-    response = client.get("/api/v2/teams/100")
+    response = client.get("/api/v2/teams/100/")
     assert response.status_code == 404
     assert response.get_json()["message"] == "team not found."

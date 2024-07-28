@@ -38,8 +38,8 @@ def team_fixture():
 def test_get_testcase_challenge(client: FlaskClient, challenge_fixture):
     zip_buffer = create_zip_file('test.txt', b'testing')
     response = client.post(
-        "/api/v2/admin/challenges/1/testcase",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/testcase/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "testcase": (zip_buffer, "test.zip")
         }
@@ -47,7 +47,7 @@ def test_get_testcase_challenge(client: FlaskClient, challenge_fixture):
     assert response.status_code == 200
 
     response = client.get(
-        "/api/v2/worker/testcase/1",
+        "/api/v2/worker/testcase/1/",
         headers={"X-WORKER-SECRET": "test"},
     )
     assert response.status_code == 200
@@ -55,14 +55,14 @@ def test_get_testcase_challenge(client: FlaskClient, challenge_fixture):
 
 def test_fail_get_testcase_challenge(client: FlaskClient, challenge_fixture):
     response = client.get(
-        "/api/v2/worker/testcase/1",
+        "/api/v2/worker/testcase/1/",
         headers={"X-WORKER-SECRET": "test"},
     )
     assert response.status_code == 400
     assert response.get_json()["message"] == "testcase not found."
 
     response = client.get(
-        "/api/v2/worker/testcase/999",
+        "/api/v2/worker/testcase/999/",
         headers={"X-WORKER-SECRET": "test"},
     )
     assert response.status_code == 404
@@ -71,8 +71,8 @@ def test_fail_get_testcase_challenge(client: FlaskClient, challenge_fixture):
 def test_get_artifact_challenge(client: FlaskClient, challenge_fixture):
     zip_buffer = create_zip_file('test.txt', b'testing')
     response = client.post(
-        "/api/v2/admin/challenges/1/artifact",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/artifact/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "artifact": (zip_buffer, "test.zip")
         }
@@ -80,7 +80,7 @@ def test_get_artifact_challenge(client: FlaskClient, challenge_fixture):
     assert response.status_code == 200
 
     response = client.get(
-        "/api/v2/worker/artifact/1",
+        "/api/v2/worker/artifact/1/",
         headers={"X-WORKER-SECRET": "test"},
     )
     assert response.status_code == 200
@@ -88,14 +88,14 @@ def test_get_artifact_challenge(client: FlaskClient, challenge_fixture):
 
 def test_fail_get_artifact_challenge(client: FlaskClient, challenge_fixture):
     response = client.get(
-        "/api/v2/worker/artifact/1",
+        "/api/v2/worker/artifact/1/",
         headers={"X-WORKER-SECRET": "test"},
     )
     assert response.status_code == 400
     assert response.get_json()["message"] == "artifact not found."
 
     response = client.get(
-        "/api/v2/worker/artifact/999",
+        "/api/v2/worker/artifact/999/",
         headers={"X-WORKER-SECRET": "test"},
     )
     assert response.status_code == 404
@@ -103,7 +103,7 @@ def test_fail_get_artifact_challenge(client: FlaskClient, challenge_fixture):
 
 def test_invalid_field_submit_checker_result(client: FlaskClient, challenge_fixture, team_fixture):
     response = client.post(
-        "/api/v2/worker/checkresults",
+        "/api/v2/worker/checkresults/",
         headers={"X-WORKER-SECRET": "test"},
         json={
             "team_id": 100,
@@ -118,7 +118,7 @@ def test_invalid_field_submit_checker_result(client: FlaskClient, challenge_fixt
     assert CheckerResult.query.count() == 0
 
     response = client.post(
-        "/api/v2/worker/checkresults",
+        "/api/v2/worker/checkresults/",
         headers={"X-WORKER-SECRET": "test"},
         json={
             "team_id": 100,
@@ -134,7 +134,7 @@ def test_invalid_field_submit_checker_result(client: FlaskClient, challenge_fixt
     assert response.get_json()["message"] == "team not found."
 
     response = client.post(
-        "/api/v2/worker/checkresults",
+        "/api/v2/worker/checkresults/",
         headers={"X-WORKER-SECRET": "test"},
         json={
             "team_id": 1,
@@ -152,7 +152,7 @@ def test_invalid_field_submit_checker_result(client: FlaskClient, challenge_fixt
 
 def test_submit_checker_result(client: FlaskClient, challenge_fixture, team_fixture):
     response = client.post(
-        "/api/v2/worker/checkresults",
+        "/api/v2/worker/checkresults/",
         headers={"X-WORKER-SECRET": "test"},
         json={
             "team_id": 1,

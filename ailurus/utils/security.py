@@ -14,7 +14,7 @@ def admin_only():
     # Preflight
     if request.method == "OPTIONS":
         return
-    req_secret = request.headers.get("x-adce-secret", None)
+    req_secret = request.headers.get("x-admin-secret", None)
 
     # If server admin forgot to set ADMIN_SECRET, all request to the admin API are forbid
     if get_config("ADMIN_SECRET") == None or req_secret != get_config("ADMIN_SECRET"):

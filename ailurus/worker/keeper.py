@@ -32,8 +32,8 @@ def create_keeper(app):
         pika.URLParameters(get_app_config("RABBITMQ_URI"))
     )
     rabbitmq_channel = rabbitmq_conn.channel()
-    rabbitmq_channel.queue_declare(get_app_config("QUEUE_CHECKER_TASK", "checker_task"))
-    rabbitmq_channel.queue_declare(get_app_config("QUEUE_FLAG_TASK", "flag_task"))
+    rabbitmq_channel.queue_declare(get_app_config("QUEUE_CHECKER_TASK", "checker_task"), durable=True)
+    rabbitmq_channel.queue_declare(get_app_config("QUEUE_FLAG_TASK", "flag_task"), durable=True)
     
     scheduler = BackgroundScheduler()
     cron_trigger = CronTrigger(minute="*")

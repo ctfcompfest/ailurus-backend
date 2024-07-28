@@ -53,7 +53,7 @@ def create_bulk_teams():
         200,
     )
 
-@team_blueprint.get("/<int:team_id>")
+@team_blueprint.get("/<int:team_id>/")
 def get_team_detail(team_id):
     team = Team.query.filter_by(id=team_id).first()
     if team is None:
@@ -67,7 +67,7 @@ def get_team_detail(team_id):
     )
 
 
-@team_blueprint.patch("/<int:team_id>")
+@team_blueprint.patch("/<int:team_id>/")
 def update_team(team_id):
     team: Team | None = Team.query.filter_by(id=team_id).first()
     if team is None:
@@ -92,7 +92,7 @@ def update_team(team_id):
         200,
     )
 
-@team_blueprint.delete("/<int:team_id>")
+@team_blueprint.delete("/<int:team_id>/")
 def delete_team(team_id):
     team = Team.query.filter_by(id=team_id).first()
     if team is None:

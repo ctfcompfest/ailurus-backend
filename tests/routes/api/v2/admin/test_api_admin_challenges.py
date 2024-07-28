@@ -37,41 +37,41 @@ def data_fixtures() -> List[Challenge]:
     return challenges
 
 def test_get_all_challenges(client: FlaskClient, data_fixtures: List[Challenge]):
-    response = client.get("/api/v2/admin/challenges/", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/challenges/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert len(response_data) == len(data_fixtures)
 
 def test_get_challenge_detail(client: FlaskClient, data_fixtures: List[Challenge]):
-    response = client.get("/api/v2/admin/challenges/1", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/challenges/1/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data["slug"] == "chall1"
     assert response_data["testcase_checksum"] == None
     assert response_data["visibility"] == [1, 2, 3]
 
-    response = client.get("/api/v2/admin/challenges/2", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/challenges/2/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data["slug"] == "chall2"
     assert response_data["testcase_checksum"] == "test"
     assert response_data["visibility"] == [1, 2]
 
-    response = client.get("/api/v2/admin/challenges/3", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/challenges/3/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data["slug"] == "chall3"
     assert response_data["testcase_checksum"] == None
     assert response_data["visibility"] == []
 
-    response = client.get("/api/v2/admin/challenges/9999", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/challenges/9999/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 404
     assert response.get_json()["message"] == "challenge not found."
 
 def test_patch_challenge_detail(client: FlaskClient, data_fixtures: List[Challenge]):
     response = client.patch(
-        "/api/v2/admin/challenges/1",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"testcase_checksum": "hahaha", "slug": "challxx", "artifact_checksum": "yoyoyo"}
     )
     assert response.status_code == 200
@@ -82,16 +82,16 @@ def test_patch_challenge_detail(client: FlaskClient, data_fixtures: List[Challen
     assert response_data["visibility"] == [1, 2, 3]
 
     response = client.patch(
-        "/api/v2/admin/challenges/1",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"visibility": [4, 6]}
     )
     assert response.status_code == 200
     assert ChallengeRelease.get_rounds_from_challenge(1) == [4, 6]
 
     response = client.patch(
-        "/api/v2/admin/challenges/1",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"visibility": []}
     )
     assert response.status_code == 200
@@ -99,8 +99,8 @@ def test_patch_challenge_detail(client: FlaskClient, data_fixtures: List[Challen
 
 def test_fail_patch_challenge_detail(client: FlaskClient, data_fixtures: List[Challenge]):
     response = client.patch(
-        "/api/v2/admin/challenges/1",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"slug": "chall2", "visibility": [1, 2, 3, 4, 5]}
     )
     assert response.status_code == 400
@@ -108,8 +108,8 @@ def test_fail_patch_challenge_detail(client: FlaskClient, data_fixtures: List[Ch
     assert ChallengeRelease.get_rounds_from_challenge(1) == [1, 2, 3]
 
     response = client.patch(
-        "/api/v2/admin/challenges/999",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/999/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"testcase_checksum": "hahaha"}
     )
     assert response.status_code == 404
@@ -118,8 +118,8 @@ def test_fail_patch_challenge_detail(client: FlaskClient, data_fixtures: List[Ch
 def test_post_testcase(client: FlaskClient, data_fixtures: List[Challenge]):
     zip_buffer = create_zip_file('test.txt', b'testing')
     response = client.post(
-        "/api/v2/admin/challenges/1/testcase",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/testcase/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "testcase": (zip_buffer, "test.zip")
         }
@@ -133,8 +133,8 @@ def test_post_testcase(client: FlaskClient, data_fixtures: List[Challenge]):
 
 def test_fail_post_testcase(client: FlaskClient, data_fixtures: List[Challenge]):
     response = client.post(
-        "/api/v2/admin/challenges/999/testcase",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/999/testcase/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "testcase": (io.BytesIO(b"a"), "test.zip")
         }
@@ -143,8 +143,8 @@ def test_fail_post_testcase(client: FlaskClient, data_fixtures: List[Challenge])
     assert response.get_json()["message"] == "challenge not found."
 
     response = client.post(
-        "/api/v2/admin/challenges/1/testcase",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/testcase/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "testcase": (io.BytesIO(b"a"), "test.zip")
         }
@@ -153,8 +153,8 @@ def test_fail_post_testcase(client: FlaskClient, data_fixtures: List[Challenge])
     assert response.get_json()["message"] == "invalid testcase zip file."
     
     response = client.post(
-        "/api/v2/admin/challenges/1/testcase",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/testcase/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "file": (io.BytesIO(b"a"), "test.zip")
         }
@@ -166,8 +166,8 @@ def test_fail_post_testcase(client: FlaskClient, data_fixtures: List[Challenge])
 def test_post_artifact(client: FlaskClient, data_fixtures: List[Challenge]):
     zip_buffer = create_zip_file('pop.txt', b'file test')
     response = client.post(
-        "/api/v2/admin/challenges/1/artifact",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/artifact/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "artifact": (zip_buffer, "test.zip")
         }
@@ -182,8 +182,8 @@ def test_post_artifact(client: FlaskClient, data_fixtures: List[Challenge]):
 
 def test_fail_post_artifact(client: FlaskClient, data_fixtures: List[Challenge]):
     response = client.post(
-        "/api/v2/admin/challenges/999/artifact",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/999/artifact/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "artifact": (io.BytesIO(b"a"), "test.zip")
         }
@@ -192,8 +192,8 @@ def test_fail_post_artifact(client: FlaskClient, data_fixtures: List[Challenge])
     assert response.get_json()["message"] == "challenge not found."
 
     response = client.post(
-        "/api/v2/admin/challenges/1/artifact",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/artifact/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "artifact": (io.BytesIO(b"a"), "test.zip")
         }
@@ -202,8 +202,8 @@ def test_fail_post_artifact(client: FlaskClient, data_fixtures: List[Challenge])
     assert response.get_json()["message"] == "invalid artifact zip file."
     
     response = client.post(
-        "/api/v2/admin/challenges/1/artifact",
-        headers={"X-ADCE-SECRET": "test"},
+        "/api/v2/admin/challenges/1/artifact/",
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "file": (io.BytesIO(b"a"), "test.zip")
         }
@@ -220,7 +220,7 @@ def test_create_bulk_challs(client: FlaskClient):
     ]
     response = client.post(
         "/api/v2/admin/challenges/",
-        headers={"X-ADCE-SECRET": "test"},
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "data": json.dumps(data),
             "testcase[0]": (create_zip_file('pop.txt', b'file test'), "test.zip"),
@@ -259,7 +259,7 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
     data = {"slug": "chall1", "title": "Chall 1", "description": "desc", "point": 1, "num_service": 1, "num_flag": 1, "visibility": [1, 2]}
     response = client.post(
         "/api/v2/admin/challenges/",
-        headers={"X-ADCE-SECRET": "test"},
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "data": json.dumps([data]),
         }
@@ -269,7 +269,7 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
 
     response = client.post(
         "/api/v2/admin/challenges/",
-        headers={"X-ADCE-SECRET": "test"},
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "data": json.dumps([data, data]),
         }
@@ -280,7 +280,7 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
     incomplete_data = {"slug": "chall1", "description": "desc", "point": 1, "num_service": 1, "num_flag": 1, "visibility": [1, 2]} 
     response = client.post(
         "/api/v2/admin/challenges/",
-        headers={"X-ADCE-SECRET": "test"},
+        headers={"X-ADMIN-SECRET": "test"},
         data={
             "data": json.dumps([incomplete_data]),
         }
@@ -290,7 +290,7 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
 
     response = client.post(
         "/api/v2/admin/challenges/",
-        headers={"X-ADCE-SECRET": "test"},
+        headers={"X-ADMIN-SECRET": "test"},
     )
     assert response.status_code == 400
     assert response.get_json()["message"] == "missing 'data' field."

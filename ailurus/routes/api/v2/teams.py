@@ -11,7 +11,7 @@ def get_all_teams():
     teams: List[Team] = Team.query.all()
     return jsonify(status="success", data=team_schema.dump(teams, many=True))
 
-@public_team_blueprint.get("/<int:team_id>")
+@public_team_blueprint.get("/<int:team_id>/")
 def get_team_detail(team_id):
     team: Team | None = Team.query.filter_by(id=team_id).first()
     if not team:

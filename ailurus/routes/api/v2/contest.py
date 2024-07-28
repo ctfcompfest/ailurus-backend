@@ -9,7 +9,7 @@ from flask import Blueprint, jsonify
 
 contestinfo_blueprint = Blueprint("contestinfo", __name__, url_prefix="/contest")
 
-@contestinfo_blueprint.get("/info")
+@contestinfo_blueprint.get("/info/")
 def get_contest_info():
     if not is_contest_started():
         event_status = "not started"

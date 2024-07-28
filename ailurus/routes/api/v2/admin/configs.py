@@ -14,7 +14,7 @@ def get_configs():
         config_datas[config.key] = config.value
     return jsonify(status="success", data=config_datas)
 
-@config_blueprint.patch("/<string:config_key>")
+@config_blueprint.patch("/<string:config_key>/")
 def update_config(config_key: str):
     config: Config | None = Config.query.filter_by(key=config_key).first()
     if config == None:

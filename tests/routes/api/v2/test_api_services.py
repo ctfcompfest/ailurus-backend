@@ -71,12 +71,12 @@ def auth_headers(webapp: Flask):
 def test_get_all_service_status_correct(client: FlaskClient, service_status):
     set_config("SERVICE_MODE", "sample")
 
-    response = client.get("/api/v2/services-status")
+    response = client.get("/api/v2/services-status/")
     assert response.status_code == 200
     assert response.get_json()["data"] == {}
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/services-status")
+    response = client.get("/api/v2/services-status/")
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data["1"] == {"1": {"detail": {"test": "3"}, "status": 0}}
@@ -86,15 +86,15 @@ def test_get_all_service_status_correct(client: FlaskClient, service_status):
 def test_get_service_status_by_teamid_correct(client: FlaskClient, service_status):
     set_config("SERVICE_MODE", "sample")
 
-    response = client.get("/api/v2/teams/999/services-status")
+    response = client.get("/api/v2/teams/999/services-status/")
     assert response.status_code == 404
 
-    response = client.get("/api/v2/teams/1/services-status")
+    response = client.get("/api/v2/teams/1/services-status/")
     assert response.status_code == 200
     assert response.get_json()["data"] == {}
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/teams/1/services-status")
+    response = client.get("/api/v2/teams/1/services-status/")
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data["1"] == {"detail": {"test": "3"}, "status": 0}
@@ -104,22 +104,22 @@ def test_get_service_status_by_teamid_correct(client: FlaskClient, service_statu
 def test_get_service_status_by_teamid_and_challid_correct(client: FlaskClient, service_status):
     set_config("SERVICE_MODE", "sample")
 
-    response = client.get("/api/v2/teams/999/challenges/1/services-status")
+    response = client.get("/api/v2/teams/999/challenges/1/services-status/")
     assert response.status_code == 404
 
-    response = client.get("/api/v2/teams/1/challenges/999/services-status")
+    response = client.get("/api/v2/teams/1/challenges/999/services-status/")
     assert response.status_code == 404
 
-    response = client.get("/api/v2/teams/1/challenges/1/services-status")
+    response = client.get("/api/v2/teams/1/challenges/1/services-status/")
     assert response.status_code == 404
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/teams/1/challenges/1/services-status")
+    response = client.get("/api/v2/teams/1/challenges/1/services-status/")
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"detail": {"test": "3"}, "status": 0}
 
-    response = client.get("/api/v2/teams/1/challenges/2/services-status")
+    response = client.get("/api/v2/teams/1/challenges/2/services-status/")
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"status": 0, "detail": {"test": "6"}}
@@ -127,20 +127,20 @@ def test_get_service_status_by_teamid_and_challid_correct(client: FlaskClient, s
 def test_get_service_status_by_challid_correct(client: FlaskClient, service_status):
     set_config("SERVICE_MODE", "sample")
 
-    response = client.get("/api/v2/challenges/999/services-status")
+    response = client.get("/api/v2/challenges/999/services-status/")
     assert response.status_code == 404
 
-    response = client.get("/api/v2/challenges/1/services-status")
+    response = client.get("/api/v2/challenges/1/services-status/")
     assert response.status_code == 404
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/challenges/1/services-status")
+    response = client.get("/api/v2/challenges/1/services-status/")
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"1": {"detail": {"test": "3"}, "status": 0}}
     assert len(response_data.keys()) == 1
 
-    response = client.get("/api/v2/challenges/2/services-status")
+    response = client.get("/api/v2/challenges/2/services-status/")
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"2": {"status": 1, "detail": {"test": "7"}}, "1": {"status": 0, "detail": {"test": "6"}}}
@@ -149,15 +149,15 @@ def test_get_service_status_by_challid_correct(client: FlaskClient, service_stat
 def test_get_all_service_correct(client: FlaskClient, services_data, auth_headers):
     set_config("SERVICE_MODE", "sample")
     
-    response = client.get("/api/v2/services")
+    response = client.get("/api/v2/services/")
     assert response.status_code == 401
     
-    response = client.get("/api/v2/services", headers=auth_headers)
+    response = client.get("/api/v2/services/", headers=auth_headers)
     assert response.status_code == 200
     assert response.get_json()["data"] == {}
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/services", headers=auth_headers)
+    response = client.get("/api/v2/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data["1"] == {"1": [{"test": "1"}, {"test": "2"}], "2": []}
@@ -167,19 +167,19 @@ def test_get_all_service_correct(client: FlaskClient, services_data, auth_header
 def test_get_service_from_challid(client: FlaskClient, services_data, auth_headers):
     set_config("SERVICE_MODE", "sample")
 
-    response = client.get("/api/v2/challenges/1/services")
+    response = client.get("/api/v2/challenges/1/services/")
     assert response.status_code == 401
 
-    response = client.get("/api/v2/challenges/1/services", headers=auth_headers)
+    response = client.get("/api/v2/challenges/1/services/", headers=auth_headers)
     assert response.status_code == 404
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/challenges/1/services", headers=auth_headers)
+    response = client.get("/api/v2/challenges/1/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"1": [{"test": "1"}, {"test": "2"}], "2": []}
 
-    response = client.get("/api/v2/challenges/2/services", headers=auth_headers)
+    response = client.get("/api/v2/challenges/2/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"1": [{"test": "3"}], "2": [{"test": "4"}]}
@@ -188,24 +188,24 @@ def test_get_service_from_challid(client: FlaskClient, services_data, auth_heade
 def test_get_service_from_teamid(client: FlaskClient, services_data, auth_headers):
     set_config("SERVICE_MODE", "sample")
 
-    response = client.get("/api/v2/teams/999/services")
+    response = client.get("/api/v2/teams/999/services/")
     assert response.status_code == 401
 
-    response = client.get("/api/v2/teams/999/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/999/services/", headers=auth_headers)
     assert response.status_code == 404
 
-    response = client.get("/api/v2/teams/1/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/1/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {}
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/teams/1/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/1/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"1": [{"test": "1"}, {"test": "2"}], "2": [{"test": "3"}]}
 
-    response = client.get("/api/v2/teams/2/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/2/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == {"1": [], "2": [{"test": "4"}]}
@@ -213,30 +213,30 @@ def test_get_service_from_teamid(client: FlaskClient, services_data, auth_header
 def test_get_service_from_teamid_and_challid(client: FlaskClient, services_data, auth_headers):
     set_config("SERVICE_MODE", "sample")
 
-    response = client.get("/api/v2/teams/1/challenges/1/services")
+    response = client.get("/api/v2/teams/1/challenges/1/services/")
     assert response.status_code == 401
 
-    response = client.get("/api/v2/teams/999/challenges/1/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/999/challenges/1/services/", headers=auth_headers)
     assert response.status_code == 404
 
-    response = client.get("/api/v2/teams/1/challenges/999/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/1/challenges/999/services/", headers=auth_headers)
     assert response.status_code == 404
 
-    response = client.get("/api/v2/teams/1/challenges/1/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/1/challenges/1/services/", headers=auth_headers)
     assert response.status_code == 404
 
     set_config("CURRENT_ROUND", "1")
-    response = client.get("/api/v2/teams/1/challenges/1/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/1/challenges/1/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == [{"test": "1"}, {"test": "2"}]
 
-    response = client.get("/api/v2/teams/1/challenges/2/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/1/challenges/2/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == [{"test": "3"}]
 
-    response = client.get("/api/v2/teams/2/challenges/1/services", headers=auth_headers)
+    response = client.get("/api/v2/teams/2/challenges/1/services/", headers=auth_headers)
     assert response.status_code == 200
     response_data = response.get_json()["data"]
     assert response_data == []

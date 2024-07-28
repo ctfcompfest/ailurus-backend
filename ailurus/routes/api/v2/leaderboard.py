@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify
 
 leaderboard_blueprint = Blueprint("leaderboard", __name__)
 
-@leaderboard_blueprint.get("/leaderboard")
+@leaderboard_blueprint.get("/leaderboard/")
 def get_admin_leaderboard():
     if not is_contest_started():
         return jsonify(status="success", data=[])

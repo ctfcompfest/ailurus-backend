@@ -29,7 +29,7 @@ def login():
 
     return jsonify(status="forbidden", message="email or password is wrong."), 403
 
-@authenticate_blueprint.post("/token_check")
+@authenticate_blueprint.post("/token-check/")
 def token_check():
     verify_jwt_in_request()
     return jsonify(status="success", message="token is valid.")

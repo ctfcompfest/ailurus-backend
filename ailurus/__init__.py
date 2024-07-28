@@ -12,6 +12,7 @@ import dotenv
 import datetime
 import os
 import sqlalchemy
+import time
 
 def setup_jwt_app(app: Flask):
     app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
@@ -58,13 +59,31 @@ def create_app(env_file=".env"):
         
     return app
 
+def create_keeper_daemon(env_file=".env"):
+    app = create_app(env_file)
+
+    with app.app_context():
+        # Overwrite configuration from env file
+        app.config["KEEPER_ENABLE"] = "true"
+        create_keeper(app)
+    
+    print('Keeper is running. To exit press CTRL+C')
+    try:
+        while True:
+            time.sleep(30)
+    except KeyboardInterrupt:
+        return
+
 def create_worker_daemon(env_file=".env"):
     configs = dotenv.dotenv_values(env_file)
     app = create_app(env_file)
 
     with app.app_context():
-        create_worker(**configs)
-
+        try:
+            create_worker(**configs)
+        except KeyboardInterrupt:
+            return
+    
 def create_webapp_daemon(env_file=".env"):
     app = create_app(env_file)
     with app.app_context():

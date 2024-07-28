@@ -22,12 +22,12 @@ def solves_data():
     set_config("CURRENT_ROUND", "1")
 
 def test_unauthorized_get_my_solves(client: FlaskClient):
-    resp = client.get("/api/v2/my/solves")
+    resp = client.get("/api/v2/my/solves/")
     assert resp.status_code == 401
 
 def test_get_my_solves(client: FlaskClient, solves_data):
     access_token = create_access_token(identity={"team":{"id": 1}})
-    resp = client.get("/api/v2/my/solves", headers={"Authorization": f"Bearer {access_token}"})
+    resp = client.get("/api/v2/my/solves/", headers={"Authorization": f"Bearer {access_token}"})
     assert resp.status_code == 200
     assert resp.get_json()["data"] == [1]
 
@@ -35,13 +35,13 @@ def test_handle_service_manager(client: FlaskClient, solves_data):
     set_config("SERVICE_MODE", "sample")
     access_token = create_access_token(identity={"team":{"id": 1}})
     
-    resp = client.post("/api/v2/my/challenges/1/service-manager", headers={"Authorization": f"Bearer {access_token}"})
+    resp = client.post("/api/v2/my/challenges/1/service-manager/", headers={"Authorization": f"Bearer {access_token}"})
     assert resp.status_code == 200
     assert resp.get_json()['message'] == "success"
 
-    resp = client.post("/api/v2/my/challenges/2/service-manager", headers={"Authorization": f"Bearer {access_token}"})
+    resp = client.post("/api/v2/my/challenges/2/service-manager/", headers={"Authorization": f"Bearer {access_token}"})
     assert resp.status_code == 404
 
-    resp = client.post("/api/v2/my/challenges/3/service-manager", headers={"Authorization": f"Bearer {access_token}"})
+    resp = client.post("/api/v2/my/challenges/3/service-manager/", headers={"Authorization": f"Bearer {access_token}"})
     assert resp.status_code == 403
     assert resp.get_json()['message'] == "failed"

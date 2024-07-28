@@ -15,7 +15,7 @@ app_routes.register_blueprint(api_blueprint)
 def index():
     if not get_config("ADMIN_SECRET"):
         return redirect(url_for("main.setup_page"))
-    return redirect(url_for('api.ping'))
+    return redirect(url_for('main.api.ping'))
 
 @app_routes.get("/setup")
 def setup_page():

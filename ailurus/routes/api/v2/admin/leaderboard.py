@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 
 leaderboard_blueprint = Blueprint("admin_leaderboard", __name__)
 
-@leaderboard_blueprint.get("/leaderboard")
+@leaderboard_blueprint.get("/leaderboard/")
 def get_admin_leaderboard():
     freeze_time = get_config("FREEZE_TIME")
     is_admin_version = not request.args.get("freeze")

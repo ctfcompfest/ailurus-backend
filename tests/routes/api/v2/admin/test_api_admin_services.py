@@ -34,14 +34,14 @@ def data_fixtures() -> Tuple[List[Team], List[Challenge], List[Service]]:
 def test_get_services(client: FlaskClient, data_fixtures: Tuple[List[Team], List[Challenge], List[Service]]):
     accum_data_len = 0
 
-    response = client.get("/api/v2/admin/services/", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/services/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()
     accum_data_len += len(response_data['data'])
     assert "next_page" in response_data
     assert "prev_page" not in response_data
 
-    response = client.get("/api/v2/admin/services/?page=2", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/services/?page=2", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()
     accum_data_len += len(response_data['data'])

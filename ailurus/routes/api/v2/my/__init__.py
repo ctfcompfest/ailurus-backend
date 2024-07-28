@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request
 myapi_blueprint = Blueprint("myapi", __name__, url_prefix="/my")
 myapi_blueprint.before_request(validteam_only)
 
-@myapi_blueprint.get("/solves")
+@myapi_blueprint.get("/solves/")
 def get_my_solves():
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
     solves = Solve.query.with_entities(Solve.challenge_id).filter(
@@ -18,7 +18,7 @@ def get_my_solves():
 
     return jsonify(status="success", data=solves)
 
-@myapi_blueprint.post("/challenges/<int:challenge_id>/service-manager")
+@myapi_blueprint.post("/challenges/<int:challenge_id>/service-manager/")
 def handle_service_manager(challenge_id):
     chall_releases = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND"))
     if challenge_id not in chall_releases:

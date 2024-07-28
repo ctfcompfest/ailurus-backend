@@ -15,7 +15,7 @@ def data_fixtures() -> List[ProvisionMachine]:
     return machines
 
 def test_get_machines(client: FlaskClient, data_fixtures: List[ProvisionMachine]):
-    response = client.get("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"})
+    response = client.get("/api/v2/admin/machines/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     response_data = response.get_json()
     assert len(response_data['data']) == len(data_fixtures)
@@ -28,7 +28,7 @@ def test_create_bulk_machines(client: FlaskClient, data_fixtures: List[Provision
         "name": "machine100", "host": "1.2.3.4", "port": 22, "detail": json.dumps({"username": "root", "password": "test"})
     }
 
-    response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=[machine_data])
+    response = client.post("/api/v2/admin/machines/", headers={"X-ADMIN-SECRET": "test"}, json=[machine_data])
     response_data = response.get_json()
     assert response.status_code == 200
     assert len(response_data['data']) == 1
@@ -43,37 +43,37 @@ def test_failed_create_bulk_machines(client: FlaskClient, data_fixtures: List[Pr
         "name": "zozo", "host": "1.2.3.4", "detail": json.dumps({"username": "root", "password": "test"})
     }
 
-    response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=machine_data)
+    response = client.post("/api/v2/admin/machines/", headers={"X-ADMIN-SECRET": "test"}, json=machine_data)
     assert response.status_code == 400
     assert response.get_json()['message'] == "input data should be a list of provision machines."
     
-    response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=[machine_data])
+    response = client.post("/api/v2/admin/machines/", headers={"X-ADMIN-SECRET": "test"}, json=[machine_data])
     assert response.status_code == 400
     assert response.get_json()['message'] == "provision machine with name='machine0' has been registered."
 
-    response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=[machine_data, machine_data])
+    response = client.post("/api/v2/admin/machines/", headers={"X-ADMIN-SECRET": "test"}, json=[machine_data, machine_data])
     assert response.status_code == 400
     assert response.get_json()['message'] == "provision machine name duplication found."
     
-    response = client.post("/api/v2/admin/machines/", headers={"X-ADCE-SECRET": "test"}, json=[invalid_machine_data])
+    response = client.post("/api/v2/admin/machines/", headers={"X-ADMIN-SECRET": "test"}, json=[invalid_machine_data])
     assert response.status_code == 400
     assert response.get_json()['message'] == "missing data for required field."
 
 def test_get_machine_detail(client: FlaskClient, data_fixtures: List[ProvisionMachine]):
     machine = data_fixtures[0]
-    response = client.get(f"/api/v2/admin/machines/{machine.id}", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/machines/{machine.id}/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     assert response.get_json()['data']['name'] == machine.name
 
-    response = client.get(f"/api/v2/admin/machines/999", headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f"/api/v2/admin/machines/999/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 404
 
 def test_patch_machine(client: FlaskClient, data_fixtures: List[ProvisionMachine]):
     machine = data_fixtures[0]
     patch_detail = {"haha": "hihi"}
     response = client.patch(
-        f"/api/v2/admin/machines/{machine.id}",
-        headers={"X-ADCE-SECRET": "test"},
+        f"/api/v2/admin/machines/{machine.id}/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"name": "Mymachine", "detail": patch_detail}
     )
 
@@ -85,8 +85,8 @@ def test_patch_machine(client: FlaskClient, data_fixtures: List[ProvisionMachine
     assert json.loads(machine_db.detail) == patch_detail
     
     response = client.patch(
-        f"/api/v2/admin/machines/{machine.id}",
-        headers={"X-ADCE-SECRET": "test"},
+        f"/api/v2/admin/machines/{machine.id}/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"name": "anotherName"}
     )
     machine_db = ProvisionMachine.query.filter_by(id=machine.id).first()
@@ -97,26 +97,26 @@ def test_patch_machine(client: FlaskClient, data_fixtures: List[ProvisionMachine
 
 def test_fail_patch_machine(client: FlaskClient, data_fixtures: List[ProvisionMachine]):
     response = client.patch(
-        f"/api/v2/admin/machines/9999",
-        headers={"X-ADCE-SECRET": "test"},
+        f"/api/v2/admin/machines/9999/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"name": "Mymachine"}
     )
     assert response.status_code == 404
     
     response = client.patch(
-        f"/api/v2/admin/machines/{data_fixtures[0].id}",
-        headers={"X-ADCE-SECRET": "test"},
+        f"/api/v2/admin/machines/{data_fixtures[0].id}/",
+        headers={"X-ADMIN-SECRET": "test"},
         json={"name": data_fixtures[1].name}
     )
     assert response.status_code == 400
 
 def test_delete_machine(client: FlaskClient, data_fixtures: List[ProvisionMachine]):
     machine = data_fixtures[0]
-    response = client.delete(f"/api/v2/admin/machines/{machine.id}", headers={"X-ADCE-SECRET": "test"})
+    response = client.delete(f"/api/v2/admin/machines/{machine.id}/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     assert response.get_json()['data']['name'] == machine.name
     assert ProvisionMachine.query.count() == 1
 
-    response = client.delete(f"/api/v2/admin/machines/999", headers={"X-ADCE-SECRET": "test"})
+    response = client.delete(f"/api/v2/admin/machines/999/", headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 404
 

@@ -57,7 +57,7 @@ def test_get_all_challenges(client: FlaskClient, data_fixture: List[Challenge]):
 
 def test_public_get_detail_challenge(client: FlaskClient, data_fixture: List[Challenge]):
     set_config("CURRENT_ROUND", 1)
-    response = client.get("/api/v2/challenges/2")
+    response = client.get("/api/v2/challenges/2/")
     assert response.status_code == 200
     data = response.get_json()['data']
     assert data["id"] == 2
@@ -65,14 +65,14 @@ def test_public_get_detail_challenge(client: FlaskClient, data_fixture: List[Cha
     assert "description_raw" not in data
 
     set_config("CURRENT_ROUND", 3)
-    response = client.get("/api/v2/challenges/2")
+    response = client.get("/api/v2/challenges/2/")
     assert response.status_code == 404
 
 def test_auth_team_get_detail_challenge(client: FlaskClient, data_fixture: List[Challenge]):
     access_token = create_access_token(identity={"team": {"id": 1, "name": "team 1"}})
 
     set_config("CURRENT_ROUND", 1)
-    response = client.get("/api/v2/challenges/2", headers={"Authorization": f"Bearer {access_token}"})
+    response = client.get("/api/v2/challenges/2/", headers={"Authorization": f"Bearer {access_token}"})
     assert response.status_code == 200
     data = response.get_json()['data']
     assert data["id"] == 2
@@ -80,26 +80,26 @@ def test_auth_team_get_detail_challenge(client: FlaskClient, data_fixture: List[
     assert "description_raw" in data
 
     set_config("CURRENT_ROUND", 3)
-    response = client.get("/api/v2/challenges/2", headers={"Authorization": f"Bearer {access_token}"})
+    response = client.get("/api/v2/challenges/2/", headers={"Authorization": f"Bearer {access_token}"})
     assert response.status_code == 404
 
 def test_invalid_token_team_get_detail_challenge(client: FlaskClient, data_fixture: List[Challenge]):
     team_not_exist = create_access_token(identity={"team": {"id": 999, "name": "team 1"}})
 
     set_config("CURRENT_ROUND", 1)
-    response = client.get("/api/v2/challenges/2", headers={"Authorization": f"Bearer {team_not_exist}"})
+    response = client.get("/api/v2/challenges/2/", headers={"Authorization": f"Bearer {team_not_exist}"})
     assert response.status_code == 401
 
     set_config("CURRENT_ROUND", 3)
-    response = client.get("/api/v2/challenges/2", headers={"Authorization": f"Bearer {team_not_exist}"})
+    response = client.get("/api/v2/challenges/2/", headers={"Authorization": f"Bearer {team_not_exist}"})
     assert response.status_code == 401
 
     expired_token = create_access_token(identity={"team": {"id": 999, "name": "team 1"}}, expires_delta=timedelta(days=-1))
 
     set_config("CURRENT_ROUND", 1)
-    response = client.get("/api/v2/challenges/2", headers={"Authorization": f"Bearer {expired_token}"})
+    response = client.get("/api/v2/challenges/2/", headers={"Authorization": f"Bearer {expired_token}"})
     assert response.status_code == 401
 
     set_config("CURRENT_ROUND", 3)
-    response = client.get("/api/v2/challenges/2", headers={"Authorization": f"Bearer {expired_token}"})
+    response = client.get("/api/v2/challenges/2/", headers={"Authorization": f"Bearer {expired_token}"})
     assert response.status_code == 401

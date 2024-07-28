@@ -15,7 +15,7 @@ def data_fixtures() -> List[Team]:
     return teams
 
 def test_get_teams(client: FlaskClient, data_fixtures: List[Team]):
-    response = client.get('/api/v2/admin/teams/', headers={"X-ADCE-SECRET": "test"})
+    response = client.get('/api/v2/admin/teams/', headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
 
     response_data = response.get_json()
@@ -31,7 +31,7 @@ def test_get_teams(client: FlaskClient, data_fixtures: List[Team]):
 def test_create_teams(client: FlaskClient):
     # Simulate a POST request to create a new user
     response = client.post('/api/v2/admin/teams/', headers={
-            "X-ADCE-SECRET": "test"
+            "X-ADMIN-SECRET": "test"
         }, json=[
             {'name': 'John Doe', 'email': 'john1@example.com', 'password': 'secret'},
             {'name': 'John Doe', 'email': 'john2@example.com', 'password': 'secret'}
@@ -51,26 +51,26 @@ def test_create_teams(client: FlaskClient):
 def test_fail_create_teams(client: FlaskClient, data_fixtures: List[Team]):
     team_data = {'name': 'John Doe', 'email': 'team1@example.com', 'password': 'secret'}
     response = client.post('/api/v2/admin/teams/', headers={
-            "X-ADCE-SECRET": "test"
+            "X-ADMIN-SECRET": "test"
         }, json=team_data)
     assert response.status_code == 400
     assert response.get_json()['message'] == "input data should be a list of teams."
 
     response = client.post('/api/v2/admin/teams/', headers={
-            "X-ADCE-SECRET": "test"
+            "X-ADMIN-SECRET": "test"
         }, json=[team_data, team_data])
     assert response.status_code == 400
     assert response.get_json()['message'] == "e-mail duplication found."
     
     response = client.post('/api/v2/admin/teams/', headers={
-            "X-ADCE-SECRET": "test"
+            "X-ADMIN-SECRET": "test"
         }, json=[team_data])
     assert response.status_code == 409
     assert response.get_json()['message'] == "e-mail 'team1@example.com' has been registered."
 
     invalid_team_data = {'name': 'John Doe', 'email': 'team1@example.com'}
     response = client.post('/api/v2/admin/teams/', headers={
-            "X-ADCE-SECRET": "test"
+            "X-ADMIN-SECRET": "test"
         }, json=[team_data, invalid_team_data])
     assert response.status_code == 400
     assert response.get_json()['message'] == "missing data for required field."
@@ -83,14 +83,14 @@ def test_get_teams_detail(client: FlaskClient):
     db.session.commit()
 
     team_id = team.id
-    response = client.get(f'/api/v2/admin/teams/{team_id}', headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f'/api/v2/admin/teams/{team_id}/', headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     
     response_data = response.get_json()['data']
     assert response_data['name'] == team_data['name']
     assert response_data['email'] == team_data['email']
 
-    response = client.get(f'/api/v2/admin/teams/9999', headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f'/api/v2/admin/teams/9999/', headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 404
 
 def test_patch_teams_detail(client: FlaskClient):
@@ -100,12 +100,12 @@ def test_patch_teams_detail(client: FlaskClient):
     db.session.commit()
     
     team_id = team.id
-    response = client.patch(f'/api/v2/admin/teams/{team_id}', headers={"X-ADCE-SECRET": "test"}, json={
+    response = client.patch(f'/api/v2/admin/teams/{team_id}/', headers={"X-ADMIN-SECRET": "test"}, json={
         "name": "Lolipop"
     })
     assert response.status_code == 200
     
-    response = client.get(f'/api/v2/admin/teams/{team_id}', headers={"X-ADCE-SECRET": "test"})
+    response = client.get(f'/api/v2/admin/teams/{team_id}/', headers={"X-ADMIN-SECRET": "test"})
     response_data = response.get_json()['data']
     assert response_data['name'] == "Lolipop"
     assert response_data['email'] == team_data['email']
@@ -124,12 +124,12 @@ def test_fail_patch_teams_detail(client: FlaskClient):
     db.session.commit()
     
     team_id = teams[0].id
-    response = client.patch(f'/api/v2/admin/teams/{team_id}', headers={"X-ADCE-SECRET": "test"}, json={
+    response = client.patch(f'/api/v2/admin/teams/{team_id}/', headers={"X-ADMIN-SECRET": "test"}, json={
         "email": "john2@example.com"
     })
     assert response.status_code == 400
     
-    response = client.patch(f'/api/v2/admin/teams/9999', headers={"X-ADCE-SECRET": "test"}, json={
+    response = client.patch(f'/api/v2/admin/teams/9999/', headers={"X-ADMIN-SECRET": "test"}, json={
         "name": "Lolipop"
     })
     assert response.status_code == 404
@@ -141,12 +141,12 @@ def test_delete_teams(client: FlaskClient):
     db.session.add(team)
     db.session.commit()
     
-    response = client.delete(f'/api/v2/admin/teams/9999', headers={"X-ADCE-SECRET": "test"})
+    response = client.delete(f'/api/v2/admin/teams/9999/', headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 404
     assert Team.query.count() == 1
 
     team_id = team.id
-    response = client.delete(f'/api/v2/admin/teams/{team_id}', headers={"X-ADCE-SECRET": "test"})
+    response = client.delete(f'/api/v2/admin/teams/{team_id}/', headers={"X-ADMIN-SECRET": "test"})
     assert response.status_code == 200
     assert Team.query.count() == 0
     

@@ -10,7 +10,7 @@ import os
 worker_blueprint = Blueprint("worker", __name__, url_prefix="/worker")
 worker_blueprint.before_request(worker_only)
 
-@worker_blueprint.get("/testcase/<int:challenge_id>")
+@worker_blueprint.get("/testcase/<int:challenge_id>/")
 def get_testcase_challenge(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
     if not chall:
@@ -24,7 +24,7 @@ def get_testcase_challenge(challenge_id):
         download_name=f"testcase-{chall.id}.zip"
     )
 
-@worker_blueprint.get("/artifact/<int:challenge_id>")
+@worker_blueprint.get("/artifact/<int:challenge_id>/")
 def get_artifact_challenge(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
     if not chall:
@@ -38,7 +38,7 @@ def get_artifact_challenge(challenge_id):
         download_name=f"artifact-{chall.id}.zip"
     )
 
-@worker_blueprint.post("/checkresults")
+@worker_blueprint.post("/checkresults/")
 def submit_checker_result():
     checker_schema = CheckerResultSchema()
     request_data = request.get_json()

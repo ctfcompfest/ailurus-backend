@@ -25,7 +25,7 @@ def get_all_visible_challenges():
 
     return jsonify(status="success", data=challs_data)
 
-@public_challenge_blueprint.get("/<int:challenge_id>")
+@public_challenge_blueprint.get("/<int:challenge_id>/")
 def get_detail_challenges(challenge_id):
     verify_jwt_in_request(optional=True)
 

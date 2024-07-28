@@ -20,7 +20,7 @@ def get_all_challenges():
     challs: List[Challenge] = Challenge.query.all()
     return jsonify(status="success", data=challenge_schema.dump(challs, many=True))
 
-@challenge_blueprint.get("/<int:challenge_id>")
+@challenge_blueprint.get("/<int:challenge_id>/")
 def get_detail_challenge(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
     if chall is None:
@@ -48,7 +48,6 @@ def create_bulk_challenges():
     for i in range(len(challs)):
         chall = challs[i]
         visibility_data = chall_data[i].get("visibility")
-        print(i, chall_data[i])
         artifactzip = request.files.get(f"artifact[{i}]")
         testcasezip = request.files.get(f"testcase[{i}]")
         if artifactzip and is_zipfile(artifactzip):
@@ -73,7 +72,7 @@ def create_bulk_challenges():
     return jsonify(status="success", data=challenge_schema.dump(challs, many=True))
 
 
-@challenge_blueprint.patch("/<int:challenge_id>")
+@challenge_blueprint.patch("/<int:challenge_id>/")
 def patch_detail_challenge(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
     if chall is None:
@@ -98,7 +97,7 @@ def patch_detail_challenge(challenge_id):
 
     return jsonify(status="success", data=challenge_schema.dump(chall))
 
-@challenge_blueprint.post("/<int:challenge_id>/testcase")
+@challenge_blueprint.post("/<int:challenge_id>/testcase/")
 def upload_testcase_challenge(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
     if chall is None:
@@ -121,7 +120,7 @@ def upload_testcase_challenge(challenge_id):
     return jsonify(status="success", data=challenge_schema.dump(chall))
 
 
-@challenge_blueprint.post("/<int:challenge_id>/artifact")
+@challenge_blueprint.post("/<int:challenge_id>/artifact/")
 def upload_artifact_challenge(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
     if chall is None:
