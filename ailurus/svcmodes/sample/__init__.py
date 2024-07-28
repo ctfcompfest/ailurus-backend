@@ -2,6 +2,7 @@ from ailurus.models import Team, Challenge, Service,CheckerResult
 from ailurus.utils.config import get_config, get_app_config
 from typing import List, Dict, Mapping, Any
 
+import datetime
 import flask
 import json
 import os
@@ -12,6 +13,9 @@ def generator_public_services_info(team: Team, challenge: Challenge, services: L
 
 def generator_public_services_status_detail(checker_result: CheckerResult) -> Dict | List | str:
     return json.loads(checker_result.detail)
+
+def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
+    return []
 
 def handler_svcmanager_request(**kwargs) -> flask.Response:
     is_solved = kwargs['is_solved']
