@@ -1,4 +1,5 @@
 from ailurus.models import db, Config
+from ailurus.utils.contest import update_paused_status
 from flask import Blueprint, request, jsonify
 from typing import List
 
@@ -23,6 +24,9 @@ def update_config(config_key: str):
     new_value = request.get_json().get("value")
     if new_value == None:
         return jsonify(status="not found", message="missing 'value' key in body request."), 400
+    
+    if config_key == "IS_CONTEST_PAUSED":
+        update_paused_status(str)
 
     if not isinstance(new_value, str):
         new_value = json.dumps(new_value)

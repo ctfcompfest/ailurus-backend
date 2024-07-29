@@ -141,3 +141,26 @@ def upload_artifact_challenge(challenge_id):
 
     db.session.commit()
     return jsonify(status="success", data=challenge_schema.dump(chall))
+
+
+@challenge_blueprint.delete("/<int:challenge_id>/")
+def patch_detail_challenge(challenge_id):
+    chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
+    if chall is None:
+        return jsonify(status="not found", message=f"challenge not found."), 404
+    
+    for fname in ["testcase", "artifact"]:
+        destpath = os.path.join(get_app_config("DATA_DIR"), "challenges", f"{fname}-{challenge_id}.zip")
+        try:
+            os.remove(destpath)
+        except:
+            pass
+
+    db.session.execute(
+        delete(ChallengeRelease).where(ChallengeRelease.challenge_id == challenge_id)
+    )
+    db.session.execute(
+        delete(Challenge).where(Challenge.id == challenge_id)
+    )
+
+    return jsonify(status="success", message="successfully delete challenge.", data=challenge_schema.dump(chall))

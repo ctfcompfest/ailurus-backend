@@ -4,8 +4,31 @@ from ailurus.models import (
     Challenge,
 )
 from ailurus.utils.config import get_config
+from datetime import datetime, timezone
 from secrets import choice
 from string import ascii_lowercase, digits
+
+import json
+
+def update_paused_status(newvalue: bool | str):
+    if isinstance(newvalue, str):
+        newvalue = json.loads(newvalue)
+        
+    if get_config("IS_CONTEST_PAUSED") and not newvalue:
+        tick_duration = get_config("TICK_DURATION")
+        last_tick_change = get_config("LAST_TICK_CHANGE")
+        last_paused = get_config("LAST_PAUSED")
+        
+        if last_tick_change != None and last_paused != None:
+            diff_minutes = last_paused - last_tick_change
+            pivot_last_tick_change = datetime.now(timezone.utc).replace(microseconds=0, seconds=0) - diff_minutes
+            set_config("LAST_TICK_CHANGE", pivot_last_tick_change.isoformat())
+
+        set_config("IS_CONTEST_PAUSED", "false")
+    elif not get_config("IS_CONTEST_PAUSED") and newvalue:
+        time_now = datetime.now(timezone.utc).replace(microseconds=0, seconds=0)
+        set_config("LAST_PAUSED", time_now.isoformat())
+        set_config("IS_CONTEST_PAUSED", "true")
 
 def calculate_submission_score(attacker: Team, defender: Team, challenge: Challenge, flag: Flag):
     return 1.0
