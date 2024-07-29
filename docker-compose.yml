@@ -27,6 +27,34 @@ services:
     - 6379:6379
     command: >
       --requirepass P@ssw0rd
+  webapp:
+    build: .
+    restart: always
+    ports:
+    - "5000:5000"
+    volumes:
+    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    depends_on:
+    - db
+    - rabbitmq
+    - cache
+  keeper:
+    build: .
+    command: keeper
+    restart: always
+    volumes:
+    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    depends_on:
+    - webapp
+  worker:
+    build: .
+    command: worker
+    restart: always
+    volumes:
+    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    depends_on:
+    - webapp
+  
   # sample_server:
   #   privileged: true
   #   build:
