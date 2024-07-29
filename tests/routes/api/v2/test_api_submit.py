@@ -185,3 +185,17 @@ def test_double_submit_correct_flags(client: FlaskClient, request_headers, data_
         assert result['verdict'] == "flag already submitted."
     assert Submission.query.count() == 1
     assert Solve.query.count() == 1
+
+def test_submit_single_flag(client: FlaskClient, request_headers, data_fixture, contest_started):
+    set_config("UNLOCK_MODE", "nolock")
+    assert is_contest_running()
+
+    resp = client.post("/api/v2/submit/", headers=request_headers, json={"flag": "flag122"})
+    assert resp.status_code == 200
+    resp_data = resp.get_json()
+    assert resp_data["message"] == "flag is correct."
+
+    resp = client.post("/api/v2/submit/", headers=request_headers, json={"flag": "missing"})
+    assert resp.status_code == 400
+    resp_data = resp.get_json()
+    assert resp_data["message"] == "flag is wrong or expired."

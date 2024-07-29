@@ -144,7 +144,7 @@ def get_all_services_status_from_team_and_chall(team_id, challenge_id):
     svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
 
     latest_id = func.max(CheckerResult.id).label("latest_id")
-    checker_result: Tuple[int, CheckerStatus, str] = db.session.query(
+    checker_result: Tuple[int, CheckerStatus, str] | None = db.session.query(
         latest_id,
         CheckerResult.status,
         CheckerResult.detail,
@@ -161,6 +161,9 @@ def get_all_services_status_from_team_and_chall(team_id, challenge_id):
         CheckerResult.status,
         CheckerResult.detail,
     ).order_by(latest_id.desc()).first()
+    
+    if checker_result == None:
+        return jsonify(status="success", data={"status": CheckerStatus.VALID, "detail": {}})
 
     _, checker_result_status, checker_result_detail = checker_result
     response = {

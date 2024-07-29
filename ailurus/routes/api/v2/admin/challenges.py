@@ -162,5 +162,6 @@ def delete_challenge_by_id(challenge_id):
     db.session.execute(
         delete(Challenge).where(Challenge.id == challenge_id)
     )
-
+    db.session.commit()
+    
     return jsonify(status="success", message="successfully delete challenge.", data=challenge_schema.dump(chall))

@@ -294,3 +294,50 @@ def test_fail_create_bulk_challs(client: FlaskClient, data_fixtures: List[Challe
     )
     assert response.status_code == 400
     assert response.get_json()["message"] == "missing 'data' field."
+
+def test_success_delete_chall_byid(client: FlaskClient):
+    data = [
+        {"slug": "chall1", "title": "Chall 1", "description": "desc", "point": 1, "num_service": 1, "num_flag": 1, "visibility": [1, 2]},
+        {"slug": "chall2", "title": "Chall 2", "description": "desc", "point": 1, "num_service": 1, "num_flag": 1, "visibility": [1, 2, 3]},
+        {"slug": "chall3", "title": "Chall 3", "description": "desc", "point": 1, "num_service": 1, "num_flag": 1, "visibility": [3]},
+        {"slug": "chall4", "title": "Chall 3", "description": "desc", "point": 1, "num_service": 1, "num_flag": 1},
+    ]
+    response = client.post(
+        "/api/v2/admin/challenges/",
+        headers={"X-ADMIN-SECRET": "test"},
+        data={
+            "data": json.dumps(data),
+            "testcase[0]": (create_zip_file('pop.txt', b'file test'), "test.zip"),
+            "artifact[0]": (create_zip_file('pop.txt', b'file test'), "test.zip"),
+            "testcase[1]": (create_zip_file('pop.txt', b'file test'), "test.zip"),
+            "artifact[2]": (create_zip_file('pop.txt', b'file test'), "test.zip"),
+        }
+    )
+    assert response.status_code == 200
+    
+    response = client.delete("/api/v2/admin/challenges/1/",headers={"X-ADMIN-SECRET": "test"})    
+    assert response.status_code == 200
+    assert Challenge.query.filter_by(id=1).count() == 0
+    assert ChallengeRelease.query.filter_by(challenge_id=1).count() == 0
+    assert os.path.exists(os.path.join(current_app.config["DATA_DIR"], "challenges", "artifact-1.zip")) == False
+    assert os.path.exists(os.path.join(current_app.config["DATA_DIR"], "challenges", "testcase-1.zip")) == False
+
+    response = client.delete("/api/v2/admin/challenges/2/",headers={"X-ADMIN-SECRET": "test"})    
+    assert response.status_code == 200
+    assert Challenge.query.filter_by(id=2).count() == 0
+    assert ChallengeRelease.query.filter_by(challenge_id=2).count() == 0
+    assert os.path.exists(os.path.join(current_app.config["DATA_DIR"], "challenges", "testcase-2.zip")) == False
+
+    response = client.delete("/api/v2/admin/challenges/3/",headers={"X-ADMIN-SECRET": "test"})    
+    assert response.status_code == 200
+    assert Challenge.query.filter_by(id=3).count() == 0
+    assert ChallengeRelease.query.filter_by(challenge_id=3).count() == 0
+    assert os.path.exists(os.path.join(current_app.config["DATA_DIR"], "challenges", "artifact-3.zip")) == False
+
+    response = client.delete("/api/v2/admin/challenges/4/",headers={"X-ADMIN-SECRET": "test"})    
+    assert response.status_code == 200
+    assert Challenge.query.filter_by(id=4).count() == 0
+    assert ChallengeRelease.query.filter_by(challenge_id=4).count() == 0
+
+    response = client.delete("/api/v2/admin/challenges/999/",headers={"X-ADMIN-SECRET": "test"})
+    assert response.status_code == 404
