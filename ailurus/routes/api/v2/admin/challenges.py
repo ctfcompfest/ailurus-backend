@@ -144,7 +144,7 @@ def upload_artifact_challenge(challenge_id):
 
 
 @challenge_blueprint.delete("/<int:challenge_id>/")
-def patch_detail_challenge(challenge_id):
+def delete_challenge_by_id(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
     if chall is None:
         return jsonify(status="not found", message=f"challenge not found."), 404
