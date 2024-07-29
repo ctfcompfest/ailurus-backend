@@ -13,6 +13,18 @@ import datetime
 import os
 import sqlalchemy
 import time
+import logging
+
+def create_logger(logname):
+    logging.basicConfig(
+        level=logging.INFO, # Set the logging level
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', # Log message format
+        datefmt='%Y-%m-%d %H:%M:%S', # Date format
+        handlers=[
+            logging.FileHandler(logname), # Log to a file
+            logging.StreamHandler() # Log to the console
+        ]
+    )
 
 def setup_jwt_app(app: Flask):
     app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
@@ -37,7 +49,7 @@ def init_data_dir(app):
             os.path.dirname(os.path.abspath(__file__)), ".adce_data"
         )
 
-    for d in ["challenges", "services"]:
+    for d in ["challenges", "services", "logs"]:
         dirpath = os.path.join(app.config["DATA_DIR"], d)
         os.makedirs(dirpath, exist_ok=True)
 
@@ -57,6 +69,7 @@ def create_app(env_file=".env"):
         # Data
         db.init_app(app)
         migrate.init_app(app, db)
+        init_data_dir(app)
         
     return app
 
@@ -64,11 +77,14 @@ def create_keeper_daemon(env_file=".env"):
     app = create_app(env_file)
 
     with app.app_context():
+        create_logger(os.path.join(app.config["DATA_DIR"], "logs", "keeper.log"))
+
         # Overwrite configuration from env file
         app.config["KEEPER_ENABLE"] = "true"
         create_keeper(app)
-    
-    print('Keeper is running. To exit press CTRL+C')
+
+    log = logging.getLogger(__name__)
+    log.info('Keeper is running. To exit press CTRL+C')
     try:
         while True:
             time.sleep(30)
@@ -80,6 +96,10 @@ def create_worker_daemon(env_file=".env"):
     app = create_app(env_file)
 
     with app.app_context():
+        create_logger(os.path.join(app.config["DATA_DIR"], "logs", "worker.log"))
+
+        configs["flask_app"] = app
+
         try:
             create_worker(**configs)
         except KeyboardInterrupt:
@@ -88,8 +108,6 @@ def create_worker_daemon(env_file=".env"):
 def create_webapp_daemon(env_file=".env"):
     app = create_app(env_file)
     with app.app_context():
-        init_data_dir(app)
-
         # Security
         setup_jwt_app(app)
         CORS(app)

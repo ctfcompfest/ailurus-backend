@@ -1,49 +1,68 @@
-import pika.channel
+from ailurus.utils.config import get_config
 from ailurus.utils.svcmode import get_svcmode_module
 from pika.adapters.blocking_connection import BlockingChannel
+
 import base64
 import json
+import logging
 import pika
+import pika.channel
+
+log = logging.getLogger(__name__)
 
 def create_worker(**kwargs):
     rabbitmq_conn = pika.BlockingConnection(
         pika.URLParameters(kwargs.get("RABBITMQ_URI"))
     )
-
-    queue_datas = [
-        (kwargs.get("QUEUE_CHECKER_TASK", "checker_task"), handle_checker_task),
-        (kwargs.get("QUEUE_FLAG_TASK", "flag_task"), handle_flagrotator_task),
-        (kwargs.get("QUEUE_SVCMANAGER_TASK", "svcmanager_task"), handle_svcmanager_task),
-    ]
-
     rabbitmq_channel = rabbitmq_conn.channel()
-    for queue_data in queue_datas:
-        queue_name, queue_callback = queue_data
-        rabbitmq_channel.queue_declare(queue=queue_name, durable=True)
-        rabbitmq_channel.basic_consume(
-            queue=queue_name,
-            on_message_callback=(
-                lambda ch, method, prop, body: queue_callback(ch, method, prop, body, **kwargs)
-            )
-        )
+    rabbitmq_channel.basic_qos(prefetch_count=1)
 
-    print('Waiting for messages. To exit press CTRL+C')
+    log.info("Successfully connect to RabbitMQ.")
+    
+    queue_checker = kwargs.get("QUEUE_CHECKER_TASK", "checker_task")
+    rabbitmq_channel.queue_declare(queue=queue_checker, durable=True)
+    rabbitmq_channel.basic_consume(
+        queue=queue_checker,
+        on_message_callback=(
+            lambda ch, method, prop, body: callback_task(queue_checker, ch, method, prop, body, **kwargs)
+        )
+    )
+
+    queue_flag = kwargs.get("QUEUE_FLAG_TASK", "flag_task")
+    rabbitmq_channel.queue_declare(queue=queue_flag, durable=True)
+    rabbitmq_channel.basic_consume(
+        queue=queue_flag,
+        on_message_callback=(
+            lambda ch, method, prop, body: callback_task(queue_flag, ch, method, prop, body, **kwargs)
+        )
+    )
+
+    queue_svcmanager = kwargs.get("QUEUE_SVCMANAGER_TASK", "svcmanager_task")
+    rabbitmq_channel.queue_declare(queue=queue_svcmanager, durable=True)
+    rabbitmq_channel.basic_consume(
+        queue=queue_svcmanager,
+        on_message_callback=(
+            lambda ch, method, prop, body: callback_task(queue_svcmanager, ch, method, prop, body, **kwargs)
+        )
+    )
+
+    log.info('Waiting for messages. To exit press CTRL+C')
     rabbitmq_channel.start_consuming()
 
+def callback_task(queue_name: str, ch: BlockingChannel, method, properties, body: bytes, **kwargs):
+    with kwargs['flask_app'].app_context():
+        body_json = json.loads(base64.b64decode(body))
+        log.info(f"Receive new task from {queue_name}: {body_json}.")
+        body_json['delivery_tag'] = method.delivery_tag
+        svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
+    
+        if queue_name == kwargs.get("QUEUE_CHECKER_TASK", "checker_task"):
+            svcmodule.handler_checker_task(body_json, **kwargs)
+        elif queue_name == kwargs.get("QUEUE_FLAG_TASK", "flag_task"):
+            svcmodule.handler_flagrotator_task(body_json, **kwargs)
+        elif queue_name == kwargs.get("QUEUE_SVCMANAGER_TASK", "svcmanager_task"):
+            svcmodule.handler_svcmanager_task(body_json, **kwargs)
 
-def handle_checker_task(ch: BlockingChannel, method, properties, body: bytes, **kwargs):
-    body_json = json.loads(base64.b64decode(body))
-    svcmodule = get_svcmode_module(kwargs.get("SERVICE_MODE"))
-    svcmodule.handler_checker_task(body_json, **kwargs)
-
-
-def handle_flagrotator_task(ch, method, properties, body, **kwargs):
-    body_json = json.loads(base64.b64decode(body))
-    svcmodule = get_svcmode_module(kwargs.get("SERVICE_MODE"))
-    svcmodule.handler_flagrotator_task(body_json, **kwargs)
-
-
-def handle_svcmanager_task(ch, method, properties, body, **kwargs):
-    body_json = json.loads(base64.b64decode(body))
-    svcmodule = get_svcmode_module(kwargs.get("SERVICE_MODE"))
-    svcmodule.handler_svcmanager_task(body_json, **kwargs)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        ch._message_acknowledged = True
+    log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")
