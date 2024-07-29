@@ -83,6 +83,20 @@ def test_get_all_service_status_correct(client: FlaskClient, service_status):
     assert response_data["2"] == {"2": {"status": 1, "detail": {"test": "7"}}, "1": {"status": 0, "detail": {"test": "6"}}}
     assert len(response_data.keys()) == 2
 
+
+def test_get_service_status_when_db_empty(client: FlaskClient):
+    set_config("SERVICE_MODE", "sample")
+
+    response = client.get("/api/v2/services-status/")
+    assert response.status_code == 200
+    assert response.get_json()["data"] == {}
+
+    set_config("CURRENT_ROUND", "1")
+    response = client.get("/api/v2/services-status/")
+    assert response.status_code == 200
+    assert response.get_json()["data"] == {}
+
+
 def test_get_service_status_by_teamid_correct(client: FlaskClient, service_status):
     set_config("SERVICE_MODE", "sample")
 

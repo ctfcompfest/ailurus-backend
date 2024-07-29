@@ -52,6 +52,7 @@ def create_app(env_file=".env"):
     with app.app_context():
         app.config.from_prefixed_env()
         app.config.from_mapping(env_var)
+        app.url_map.strict_slashes = False
         
         # Data
         db.init_app(app)

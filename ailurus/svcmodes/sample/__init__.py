@@ -11,15 +11,15 @@ import secrets
 def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
     return [json.loads(service.detail) for service in services]
 
-def generator_public_services_status_detail(checker_result: CheckerResult) -> Dict | List | str:
-    return json.loads(checker_result.detail)
+def generator_public_services_status_detail(result_detail: Mapping[str, Any]) -> Dict | List | str:
+    return result_detail
 
 def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
     return []
 
 def handler_svcmanager_request(**kwargs) -> flask.Response:
-    is_solved = kwargs['is_solved']
-    if is_solved:
+    is_allow_manage = kwargs['is_allow_manage']
+    if is_allow_manage:
         return flask.jsonify(status="success", message="success")
     return flask.jsonify(status="failed", message="failed"), 403
 

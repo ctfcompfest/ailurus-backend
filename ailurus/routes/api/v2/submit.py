@@ -77,13 +77,20 @@ def bulk_submit_flag():
     if not is_contest_running():
         return jsonify(status="failed", message="contest is not running."), 400
     
-    flags = request.get_json().get("flags")
-    if not flags:
-        return jsonify(status="failed", message="missing 'flags' field."), 400
+    if "flags" in request.json:
+        flags = request.get_json().get("flags")
+        max_submit = get_config("MAX_BULK_SUBMIT", 100)
+        if len(flags) > max_submit:
+            return jsonify(status="failed", message=f"maximum {max_submit} flags at a time."), 400
+        
+        response = submit_flags(current_team, flags)
+        return jsonify(status="success", data=response)
+    elif "flag" in request.json:
+        flag = request.get_json().get("flag")
+        response = submit_flag(current_team, flag)
+        if response["verdict"] == "flag is correct.":
+            return jsonify(status="success", message=response['verdict'], data=response)
+        else:
+            return jsonify(status="failed", message=response['verdict'], data=response), 400
     
-    max_submit = get_config("MAX_BULK_SUBMIT", 100)
-    if len(flags) > max_submit:
-        return jsonify(status="failed", message=f"maximum {max_submit} flags at a time."), 400
-    
-    response = submit_flags(current_team, flags)
-    return jsonify(status="success", data=response)
+    return jsonify(status="failed", message="missing 'flags' field."), 400
