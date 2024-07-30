@@ -1,5 +1,7 @@
-from ailurus.models import db, Team
+from ailurus.models import db, Team, Challenge
 from ailurus.schema import TeamSchema
+from ailurus.utils.config import get_config
+from ailurus.utils.svcmode import get_svcmode_module
 from flask import Blueprint, jsonify, request
 from marshmallow.exceptions import ValidationError
 from typing import List, Tuple
@@ -11,7 +13,7 @@ team_schema = TeamSchema()
 
 @team_blueprint.get("/")
 def get_all_teams():
-    teams = Team.query.all()
+    teams = Team.query.order_by(Team.id).all()
     return (
         jsonify(
             status="success",
@@ -109,4 +111,23 @@ def delete_team(team_id):
             data=team_schema.dump(team)
         ),
         200,
+    )
+
+@team_blueprint.route("/<int:team_id>/challenges/<int:challenge_id>/service-manager/", methods=["GET", "POST"])
+def handle_service_manager(team_id, challenge_id):
+    team = Team.query.filter_by(id=team_id).first()
+    if team is None:
+        return jsonify(status="not found", message="team not found"), 404
+    
+    chall: Challenge = Challenge.query.filter_by(id=challenge_id).first()
+    if not chall:
+        return jsonify(status="not found", message="challenge not found."), 404
+    
+    svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
+    return svcmodule.handler_svcmanager_request(
+        team_id=team.id,
+        challenge_id=challenge_id,
+        request=request,
+        is_allow_manage=True,
+        is_admin=True,
     )

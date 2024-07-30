@@ -17,7 +17,7 @@ challenge_schema = ChallengeSchema()
 
 @challenge_blueprint.get("/")
 def get_all_challenges():
-    challs: List[Challenge] = Challenge.query.all()
+    challs: List[Challenge] = Challenge.query.order_by(Challenge.id).all()
     return jsonify(status="success", data=challenge_schema.dump(challs, many=True))
 
 @challenge_blueprint.get("/<int:challenge_id>/")

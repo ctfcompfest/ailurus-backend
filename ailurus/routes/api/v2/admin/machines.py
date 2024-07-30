@@ -11,7 +11,7 @@ machine_schema = ProvisionMachineSchema()
 
 @machine_blueprint.get("/")
 def get_all_machines():
-    machines = ProvisionMachine.query.all()
+    machines = ProvisionMachine.query.order_by(ProvisionMachine.id).all()
     return jsonify(status="success", data=machine_schema.dump(machines, many=True))
 
 @machine_blueprint.post("/")
