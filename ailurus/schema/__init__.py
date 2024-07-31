@@ -3,6 +3,7 @@ from ailurus.models import (
     Service,
     Submission,
     ProvisionMachine,
+    Flag,
     CheckerResult,
     CheckerStatus,
     Challenge,
@@ -130,3 +131,7 @@ class ChallengeSchema(SQLAlchemyAutoSchema):
         if "id" in data:
             data['visibility'] = ChallengeRelease.get_rounds_from_challenge(data['id'])
         return data
+
+class FlagSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Flag
