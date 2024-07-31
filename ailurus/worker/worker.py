@@ -52,8 +52,8 @@ def create_worker(**kwargs):
 def callback_task(queue_name: str, ch: BlockingChannel, method, properties, body: bytes, **kwargs):
     with kwargs['flask_app'].app_context():
         body_json = json.loads(base64.b64decode(body))
-        log.info(f"Receive new task from {queue_name}: {body_json}.")
-        body_json['delivery_tag'] = method.delivery_tag
+        log.info(f"Receive new task from {queue_name}.")
+        log.debug(f"Task body: {body_json}.")
         svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
     
         if queue_name == kwargs.get("QUEUE_CHECKER_TASK", "checker_task"):
