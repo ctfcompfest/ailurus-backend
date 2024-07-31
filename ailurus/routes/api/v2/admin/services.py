@@ -10,7 +10,7 @@ import itertools
 service_blueprint = Blueprint("service", __name__)
 service_schema = ServiceSchema()
 
-@service_blueprint.get(".services/")
+@service_blueprint.get("/services/")
 def get_services():
     DATA_PER_PAGE = 50
     page = request.args.get("page", 1, int)
@@ -81,6 +81,7 @@ def handle_services_manager():
             is_admin=True,
         )
 
+    return jsonify(status="success", message="provisioning successfully scheduled.")
 
 @service_blueprint.route("/teams/<int:team_id>/challenges/<int:challenge_id>/service-manager/", methods=["GET", "POST"])
 def handle_service_manager(team_id, challenge_id):
