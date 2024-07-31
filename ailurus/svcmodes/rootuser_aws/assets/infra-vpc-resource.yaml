@@ -1,0 +1,194 @@
+Parameters:
+  EventSlug:
+    Type: String
+    Default: Ailurus
+    Description: A friendly environment name that will be used for namespacing all
+      cluster resources.
+  CidrBlock:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: The CIDR block for the VPC.
+  PublicCidrBlock:
+    Type: String
+    Default: 10.0.0.0/18
+    Description: The CIDR block for the public subnet.
+  PrivateCidrBlock:
+    Type: String
+    Default: 10.0.64.0/18
+    Description: The CIDR block for the private subnet.
+Resources:
+  Vpc:
+    Type: "AWS::EC2::VPC"
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      CidrBlock: !Ref CidrBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: "default"
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      CidrBlock: !Ref PublicCidrBlock
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PublicRouteTableToInternetGateway:
+    Type: "AWS::EC2::Route"
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PublicRouteTableToLocal:
+    Type: "AWS::EC2::Route"
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: !GetAtt Vpc.CidrBlock
+      GatewayId: "local"
+      VpcEndpointId: "local"
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      CidrBlock: !Ref PrivateCidrBlock
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PrivateRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  NATGatewayEIP:
+    Type: AWS::EC2::EIP
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties: 
+      Domain: vpc
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties: 
+      AllocationId: !GetAtt NATGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PrivateRouteTableToNatGateway:
+    Type: AWS::EC2::Route
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  PrivateRouteTableToLocal:
+    Type: "AWS::EC2::Route"
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: !GetAtt Vpc.CidrBlock
+      GatewayId: "local"
+      VpcEndpointId: "local"
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+  MachineSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    UpdateReplacePolicy: "Delete"
+    DeletionPolicy: "Delete"
+    Properties:
+      GroupDescription: Security Group for team machine
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: udp
+          FromPort: 0
+          ToPort: 65535
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+      Tags:
+        - Key: ManagedBy
+          Value: !Ref EventSlug
+Outputs:
+  MachineSecurityGroupId:
+    Value: !Ref MachineSecurityGroup
+    Description: Security group ID created for all teams instances.
+  MachineSubnetId:
+    Value: !Ref PrivateSubnet
+    Description: Subnet ID created for all teams instances.
