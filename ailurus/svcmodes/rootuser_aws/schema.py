@@ -1,5 +1,5 @@
 
-from typing import TypedDict
+from typing import TypedDict, Dict
 
 class CheckerTask(TypedDict):
     time_limit: int
@@ -27,3 +27,17 @@ class ServiceManagerTask(TypedDict):
     challenge_id: int
     team_id: int
     time_created: str
+
+class TeamChallengeLeaderboardEntry(TypedDict):
+    flag_captured: int
+    flag_stolen: int
+    attack: float
+    defend: float
+    sla: float
+
+class TeamLeaderboardEntry(TypedDict):
+    id: int
+    name: str
+    rank: int
+    total_score: float
+    challenges: Dict[int, TeamChallengeLeaderboardEntry]
