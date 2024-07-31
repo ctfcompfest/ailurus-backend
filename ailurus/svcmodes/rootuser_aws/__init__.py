@@ -1,9 +1,8 @@
-from types import ModuleType
-from typing import List, Dict, Mapping, Any
-from ailurus.models import db, Team, Challenge, Service, CheckerResult, CheckerStatus
-from ailurus.schema import ServiceSchema
+from ailurus.models import db, Team, Challenge, Service, CheckerResult, CheckerStatus, Flag
+from ailurus.schema import ServiceSchema, FlagSchema
 from ailurus.utils.config import get_config, get_app_config
 from sqlalchemy import select
+from typing import List, Dict, Mapping, Any
 
 from .svcmanager import do_provision, do_reset, do_restart
 from .schema import CheckerTask, FlagrotatorTask, ServiceManagerTask
@@ -11,17 +10,13 @@ from .schema import CheckerTask, FlagrotatorTask, ServiceManagerTask
 import base64
 import datetime
 import flask
+import importlib
 import json
-import io
+import logging
 import os
 import pika
 import requests
-import secrets
-import time
-import logging
 import zipfile
-import importlib
-import signal
 
 from multiprocessing import TimeoutError
 from multiprocessing.pool import ThreadPool
@@ -153,10 +148,22 @@ def handler_checker_task(body: CheckerTask, **kwargs):
                 Service.team_id == body["team_id"]
             )
         ).scalars().all()
+        flags: List[Flag] = db.session.execute(
+            select(Flag).where(
+                Flag.challenge_id == body["challenge_id"],
+                Flag.team_id == body["team_id"],
+                Flag.tick == body["current_tick"],
+                Flag.round == body["current_round"],
+            )
+        ).scalars().all()
+
         result = execute_check_function_with_timelimit(
             checker_module.main,
-            [ServiceSchema().dump(services, many=True)],
-            body.get("time_limit", 20)
+            [
+                ServiceSchema().dump(services, many=True),
+                FlagSchema().dump(flags, many=True),
+            ],
+            body.get("time_limit", 10)
         )
         result["time_finished"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         checker_result.status = CheckerStatus.VALID
@@ -182,9 +189,8 @@ def handler_checker_task(body: CheckerTask, **kwargs):
     db.session.commit()
     return True
 
-def handler_flagrotator_task(body: Mapping[str, Any], **kwargs):
-    task_schema = FlagrotatorTask()
-    task: FlagrotatorTask = task_schema.load(body)
+def handler_flagrotator_task(body: FlagrotatorTask, **kwargs):
+    pass
 
     # TODO: process this
 
