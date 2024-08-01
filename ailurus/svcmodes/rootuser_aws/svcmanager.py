@@ -355,11 +355,6 @@ def do_reset(body: ServiceManagerTask, **kwargs):
     raw_parameters = {x['ParameterKey']: x['ParameterValue'] for x in stack_parameters}
 
     stack_template = aws_client.get_template(StackName=stack_name)['TemplateBody']
-    if stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] == "MachineAMI1":
-        stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] = "MachineAMI2"
-    else:
-        stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] = "MachineAMI1"
-
     stack_template_str = json.dumps(stack_template)
 
     log.info('Rollback instance for %s' % stack_name)
