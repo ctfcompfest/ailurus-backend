@@ -1,0 +1,136 @@
+{% extends "admin/_base.html" %}
+{% block title %}Setup | Ailurus Admin{% endblock %}
+{% block content %}
+  <div class="container col-8 mt-5">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h2 class="mb-0">Setup</h2>
+      </div>
+      <div class="card-body">
+        <div class="container">
+          <form id="settingsForm" method="POST" action="{{ url_for('main.setup_submit') }}">
+            <div id="settingsCarousel" class="carousel slide">
+              <div class="carousel-inner">
+                <!-- Step 1: Admin Secret -->
+                <div class="carousel-item active px-3">
+                  <div class="mb-3">
+                    <label for="admin-secret" class="form-label">Admin Secret</label>
+                    <input type="password" class="form-control" id="admin-secret" name="ADMIN_SECRET" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="admin-secret" class="form-label">Worker Secret</label>
+                    <input type="password" class="form-control" id="admin-secret" name="WORKER_SECRET" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="cors" class="form-label">CORS Whitelist</label>
+                    <input type="text" class="form-control" id="cors" name="CORS_WHITELIST" value='["http://localhost:8080"]' required>
+                  </div>
+                  <div class="d-flex justify-content-end">
+                    <button class="btn btn-primary" type="button" data-bs-slide="next">Next</button>
+                  </div>
+                </div>
+                <!-- Step 2: Event settings -->
+                <div class="carousel-item px-3">
+                  <div class="mb-3">
+                    <label for="event-name" class="form-label">Event Name</label>
+                    <input type="text" class="form-control" id="event-name" name="EVENT_NAME" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="event-logo" class="form-label">Event Logo URL</label>
+                    <input type="text" class="form-control" id="event-logo" name="LOGO_URL">
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col">
+                      <label for="event-start" class="form-label">Start Time</label>
+                      <input type="text" class="form-control" id="event-start" name="START_TIME" value="2037-01-01T00:00:00Z" required>
+                    </div>
+                    <div class="col">
+                      <label for="event-freeze" class="form-label">Freeze Time</label>
+                      <input type="text" class="form-control" id="event-freeze" name="FREEZE_TIME" value="2037-01-01T00:00:00Z" required>
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col">  
+                      <label for="event-round" class="form-label">Round Number</label>
+                      <input type="number" class="form-control" min="1" value="6" id="event-round" name="NUMBER_ROUND" required>
+                    </div>
+                    <div class="col">
+                      <label for="event-tick" class="form-label">Tick Number</label>
+                      <input type="number" class="form-control" min="1" value="5" id="event-tick" name="NUMBER_TICK" required>
+                    </div>
+                    <div class="col">
+                      <label for="event-tick-duration" class="form-label">Tick Duration (in minutes)</label>
+                      <input type="number" class="form-control" min="1" value="5" id="event-tick-duration" name="TICK_DURATION" required>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <button class="btn btn-secondary" type="button" data-bs-target="#settingsCarousel" data-bs-slide="prev">Previous</button>
+                    <button class="btn btn-primary" type="button" data-bs-slide="next">Next</button>
+                  </div>
+                </div>
+                <!-- Step 3: Challenge Settings -->
+                <div class="carousel-item px-3">
+                  <div class="mb-3">
+                    <label for="event-prov" class="form-label">Service Mode</label>
+                    <select class="form-select" id="event-prov" name="SERVICE_MODE">
+                      {% for mode in service_modes %}
+                      <option value="{{mode.id}}">{{mode.display}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="event-unlock" class="form-label">Manage Service Unlock Mode</label>
+                    <select class="form-select" id="event-unlock" name="UNLOCK_MODE">
+                      {% for mode in unlock_modes %}
+                      <option value="{{mode.value}}">{{mode.value}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <button class="btn btn-secondary" type="button" data-bs-target="#settingsCarousel" data-bs-slide="prev">Previous</button>
+                    <button class="btn btn-primary" type="submit">Save Settings</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block endbody %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const carouselElm = new bootstrap.Carousel('#settingsCarousel');
+      
+      var form = document.getElementById('settingsForm');
+      var carousel = document.getElementById('settingsCarousel');
+      var nextButtons = form.querySelectorAll('button[data-bs-slide="next"]');
+
+      function validateCurrentStep(currentStep) {
+        var inputs = currentStep.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) {
+          if (!inputs[i].required) continue;
+
+          if (inputs[i].value === '') {
+            inputs[i].classList.add('is-invalid');
+            return false;
+          } else {
+            inputs[i].classList.remove('is-invalid');
+          }
+        }
+        return true;
+      }
+
+      nextButtons.forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          var currentStep = carousel.querySelector('.carousel-item.active');
+          if (validateCurrentStep(currentStep)) {
+            carouselElm.next();
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}

@@ -6,10 +6,20 @@ services:
     ports:
     - 5432:5432
     volumes:
-    - ./.postgres-data:/var/lib/postgresql/data
+    - ./.data/db:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # RabbitMQ broker
+      - "15672:15672" # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    volumes:
+      - ./.data/rabbitmq:/var/lib/rabbitmq
   cache:
     image: redis:7.2.0-alpine
     restart: always
@@ -17,43 +27,32 @@ services:
     - 6379:6379
     command: >
       --requirepass P@ssw0rd
-  web:
+  webapp:
     build: .
     restart: always
     ports:
     - "5000:5000"
     volumes:
-    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    - "./ailurus/.adce_data:/opt/app/ailurus/.adce_data"
     depends_on:
     - db
+    - rabbitmq
     - cache
-  webcelery:
+  keeper:
     build: .
-    command: webcelery
+    command: keeper
+    restart: always
+    depends_on:
+    - webapp
+  worker:
+    build: .
+    command: worker
     restart: always
     volumes:
-    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    - "./ailurus/worker_data:/opt/app/ailurus/worker_data"
     depends_on:
-    - db
-    - cache
-  beat:
-    build: .
-    command: beat
-    restart: always
-    volumes:
-    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
-    depends_on:
-    - db
-    - cache
-  checker:
-    build: .
-    restart: always
-    command: checker
-    volumes:
-    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
-    depends_on:
-    - db
-    - cache
+    - webapp
+  
   # sample_server:
   #   privileged: true
   #   build:

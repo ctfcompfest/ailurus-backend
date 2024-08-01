@@ -1,96 +1,45 @@
-from and_platform import create_scheduler, create_app, create_checker, create_checker_executor, create_contest_worker, create_celery
-from and_platform.socket import socketio
-from multiprocessing import Process, cpu_count, set_start_method
-from wsgi import StandaloneApplication
-import sys
+from ailurus import create_keeper_daemon, create_worker_daemon, create_webapp_daemon
+
 import argparse
+import flask_migrate
+import sys
+import os
 
-args = sys.argv[1:]
-# set_start_method("spawn")
-
-def help():
-    print("Usage: python manage.py [module] [args]\n")
-    print("Available modules: checker, web")
-
-def run_web(**kwargs):
-    flask_app = create_app()
-    celery = create_celery(flask_app)
-    flask_arg = {
-        'debug': kwargs.get('debug') or False,
-        'host': kwargs.get('host') or '0.0.0.0',
-        'port': kwargs.get('port') or 5000,
-    }
-    socketio.run(flask_app, **flask_arg)
-
-
-def run_beat(**kwargs):
-    flask_app = create_app()
-    celery_schedule = create_scheduler(flask_app)
-    
-    if kwargs['debug']:
-        celery_extra_opts = ['--loglevel', "DEBUG"]
-    else:
-        celery_extra_opts = ['--loglevel', "INFO"]
-    celery_schedule.start(["beat"] + celery_extra_opts)
-        
-
-def run_webcelery(**kwargs):
-    flask_app = create_app()
-    celery_worker = create_contest_worker(flask_app)
-
-    if kwargs['debug']:
-        celery_extra_opts = ['--loglevel', "DEBUG"]
-    else:
-        celery_extra_opts = ['--loglevel', "INFO"]    
-    celery_worker.start(["worker", "-E"] + celery_extra_opts)
-
-
-def run_checker(**kwargs):
-    celery_extra_opts = ['--loglevel', "INFO"]
-    celery = create_checker()
-    celery.start(["worker", "-E"] + celery_extra_opts)
-    
-def run_checker_executor(**kwargs):
-    checker = create_checker_executor()
-    checker.run_check(kwargs['team'], kwargs['challenge'])
-
+# Ensure the script directory is in the system path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog='PROG')
+    parser = argparse.ArgumentParser(description='Manage script for running Ailurus Backend services.')
     subparser = parser.add_subparsers(dest="command", help='subcommand help')
 
-    checkexec_parser = subparser.add_parser('checkexec', help='checker executor command help')
-    checkexec_parser.add_argument('--team', type=int, required=True, help="specify service team id.")
-    checkexec_parser.add_argument('--challenge', type=int, required=True, help="specify service challenge id.")
+    webapp_parser = subparser.add_parser('webapp', help='webapp command help')
+    webapp_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
+    webapp_parser.add_argument('--port', type=int, help='the port web app will bind to.')
 
-    checker_parser = subparser.add_parser('checker', help='checker command help')
-    checker_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
-
-    web_parser = subparser.add_parser('web', help='web command help')
-    web_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
-    web_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
-    web_parser.add_argument('--port', type=int, help='the port web app will bind to.')
-
-    webcelery_parser = subparser.add_parser('webcelery', help='web celery command help')
-    webcelery_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
+    worker_parser = subparser.add_parser('worker', help='worker command help')
+    keeper_parser = subparser.add_parser('keeper', help='keeper command help')
     
-    beat_parser = subparser.add_parser('beat', help='beat command help')
-    beat_parser.add_argument('--debug', action='store_true', help='turn on debug mode.')
-    
+    args = sys.argv[1:]
     if len(args) < 1:
         parser.print_help()
         exit()
 
     user_arg = parser.parse_args(args)
-    if user_arg.command == "checkexec":
-        run_checker_executor(**vars(user_arg))
-    elif user_arg.command == "checker":
-        run_checker(**vars(user_arg))
-    elif user_arg.command == "web":
-        run_web(**vars(user_arg))
-    elif user_arg.command == "webcelery":
-        run_webcelery(**vars(user_arg))
-    elif user_arg.command == "beat":
-        run_beat(**vars(user_arg))
-    else:
-        help()    
+    if user_arg.command == 'webapp':
+        webapp_opts = {
+            'host': vars(user_arg)['host'] or '0.0.0.0',
+            'port': vars(user_arg)['port'] or 5000
+        }
+
+        webapp = create_webapp_daemon()
+
+        with webapp.app_context():
+            flask_migrate.upgrade()
+
+        socketio = webapp.extensions['socketio']
+        socketio.run(webapp, **webapp_opts)
+    elif user_arg.command == 'keeper':
+        create_keeper_daemon()
+    elif user_arg.command == 'worker':
+        create_worker_daemon()
