@@ -22,6 +22,9 @@ import zipfile
 
 log = logging.getLogger(__name__)
 
+team_local_user = "ubuntu"
+checker_local_user = "ctf"
+
 def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
     """
     Service detail format:
@@ -114,7 +117,7 @@ def generate_ssh_key():
     private_key = ed25519.Ed25519PrivateKey.generate()
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
+        format=serialization.PrivateFormat.OpenSSH,
         encryption_algorithm=serialization.NoEncryption()
     )
 
@@ -275,7 +278,7 @@ def do_provision(body: ServiceManagerTask, **kwargs):
     stack_name = f"{configs["parameters"]["EventSlug"]}-machine-{body["challenge_id"]}-{body["team_id"]}"
     with open(os.path.join(artifact_folder, configs["templates"]["machine"])) as fp:
         template_body = fp.read()
-        template_body = template_body.replace("{{Ailurus.CheckerPublicKey}}", machine_pubkey)
+        template_body = template_body.replace("{{Ailurus.CheckerPublicKey}}", provision_machine_detail["CheckerPublicKey"])
 
     stack_output = create_or_update_cloudformation_stack(configs['credentials'], stack_name, template_body, stack_params)
     if not stack_output:
@@ -290,12 +293,12 @@ def do_provision(body: ServiceManagerTask, **kwargs):
         "stack_name": stack_name,
         "publish": {
             "IP": stack_output_dict["MachinePrivateIp"],
-            "Username": "ubuntu",
+            "Username": team_local_user,
             "Private Key": machine_privkey,
         },
         "checker": {
             "ip": stack_output_dict["MachinePrivateIp"],
-            "username": "ctf",
+            "username": checker_local_user,
             "private_key": provision_machine_detail["CheckerPrivateKey"],
             "instance_id": stack_output_dict["MachineInstanceId"],
         }
@@ -311,14 +314,14 @@ def do_provision(body: ServiceManagerTask, **kwargs):
     db.session.add(service)
     db.session.commit()
 
-    log.error("provision service for team={} challenge={} completed.".format(body["team_id"], body["challenge_id"]))
+    log.info("provision service for team={} challenge={} completed.".format(body["team_id"], body["challenge_id"]))
     return True
 
 def do_delete(body: ServiceManagerTask, **kwargs):
     artifact_folder = init_artifact(body, **kwargs)
     service: Service = Service.query.filter_by(challenge_id=body["challenge_id"], team_id=body["team_id"]).first()
     if not service:
-        log.error("service for team={} challenge={} not found, cannot execute delete action".format(body["team_id"], body["challenge_id"]))
+        return log.error("service for team={} challenge={} not found, cannot execute delete action".format(body["team_id"], body["challenge_id"]))
 
     stack_name = json.loads(service.detail)["stack_name"]
     db.session.delete(service)
@@ -332,7 +335,7 @@ def do_delete(body: ServiceManagerTask, **kwargs):
 def do_reset(body: ServiceManagerTask, **kwargs):
     service: Service = Service.query.filter_by(challenge_id=body["challenge_id"], team_id=body["team_id"]).first()
     if not service:
-        log.error("service for team={} challenge={} not found, cannot execute reset action".format(body["team_id"], body["challenge_id"]))
+        return log.error("service for team={} challenge={} not found, cannot execute reset action".format(body["team_id"], body["challenge_id"]))
 
     artifact_folder = init_artifact(body, **kwargs)
     stack_name = json.loads(service.detail)["stack_name"]
@@ -352,10 +355,10 @@ def do_reset(body: ServiceManagerTask, **kwargs):
     raw_parameters = {x['ParameterKey']: x['ParameterValue'] for x in stack_parameters}
 
     stack_template = aws_client.get_template(StackName=stack_name)['TemplateBody']
-    if stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] == configs["parameters"]["MachineAMI1"]:
-        stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] = configs["parameters"]["MachineAMI2"]
+    if stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] == "MachineAMI1":
+        stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] = "MachineAMI2"
     else:
-        stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] = configs["parameters"]["MachineAMI1"]
+        stack_template['Resources']['Ec2Instance']['Properties']['ImageId']['Ref'] = "MachineAMI1"
 
     stack_template_str = json.dumps(stack_template)
 

@@ -33,7 +33,7 @@ services:
     ports:
     - "5000:5000"
     volumes:
-    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    - "./ailurus/.adce_data:/opt/app/ailurus/.adce_data"
     depends_on:
     - db
     - rabbitmq
@@ -42,8 +42,6 @@ services:
     build: .
     command: keeper
     restart: always
-    volumes:
-    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
     depends_on:
     - webapp
   worker:
@@ -51,7 +49,7 @@ services:
     command: worker
     restart: always
     volumes:
-    - "./and_platform/.adce_data:/opt/app/and_platform/.adce_data"
+    - "./ailurus/worker_data:/opt/app/ailurus/worker_data"
     depends_on:
     - webapp
   

@@ -12,8 +12,8 @@ class CheckerTask(TypedDict):
     time_created: str
 
 class FlagrotatorTask(TypedDict):
-    flag_value = str
-    flag_order: int
+    flag_value: str
+    flag_order: int # 0: root, 1: user
     challenge_id: int
     team_id: int
     current_tick: int

@@ -1,4 +1,5 @@
 from ailurus.models import db, Team, CheckerResult, CheckerStatus, Flag, ChallengeRelease, Submission
+from ailurus.utils.config import get_config
 from functools import cmp_to_key
 from sqlalchemy import select, func
 from typing import List
