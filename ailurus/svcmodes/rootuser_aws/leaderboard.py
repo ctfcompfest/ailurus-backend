@@ -48,10 +48,10 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     result["flag_captured"] = flag_captured
     result["flag_stolen"] = flag_stolen
     result["attack"] = flag_captured
-    result["defend"] = -0.5 * flag_stolen
-    result["sla"] = 100
+    result["defense"] = -0.5 * flag_stolen
+    result["sla"] = 1
     if (checker_valid + checker_faulty) != 0:
-        result["sla"] = checker_valid / (checker_valid + checker_faulty) * 100
+        result["sla"] = checker_valid / (checker_valid + checker_faulty)
     return result
 
 def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
@@ -68,8 +68,8 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
 
     for team in teams:
         team_leaderboard_entry: TeamLeaderboardEntry = {
-            "team_id": team.id,
-            "team_name": team.name,
+            "id": team.id,
+            "name": team.name,
             "challenges": {},
             "total_score": 0,
         }
@@ -82,7 +82,7 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
     for team in results:
         for chall_id in chall_ids:
             chall_score = team["challenges"][chall_id]
-            team["total_score"] += chall_score["attack"] + chall_score["defend"] + chall_score["sla"]
+            team["total_score"] += chall_score["attack"] + chall_score["defense"] + chall_score["sla"] * 100
 
     results_sorted = sorted(results, key=cmp_to_key(lambda x, y: x["total_score"] > y["total_score"]))
     for i in range(len(results_sorted)):
