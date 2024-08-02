@@ -32,7 +32,7 @@ class TeamChallengeLeaderboardEntry(TypedDict):
     flag_captured: int
     flag_stolen: int
     attack: float
-    defend: float
+    defense: float
     sla: float
 
 class TeamLeaderboardEntry(TypedDict):
