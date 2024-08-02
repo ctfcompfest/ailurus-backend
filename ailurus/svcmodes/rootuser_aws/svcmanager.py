@@ -37,6 +37,8 @@ def generator_public_services_info(team: Team, challenge: Challenge, services: L
         "checker": {...}
     }
     """
+    if len(services) == 0:
+        return ""
     return json.loads(services[0].detail).get("publish", {}).get("IP", "")
 
 def handler_svcmanager_request(**kwargs) -> flask.Response:
