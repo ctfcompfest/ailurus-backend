@@ -80,7 +80,7 @@ def handler_checker_task(body: CheckerTask, **kwargs):
             )
         ).scalars().all()
 
-        result = execute_check_function_with_timelimit(
+        checker_status, checker_detail = execute_check_function_with_timelimit(
             checker_module.main,
             [
                 ServiceSchema().dump(services, many=True),
@@ -88,8 +88,8 @@ def handler_checker_task(body: CheckerTask, **kwargs):
             ],
             body.get("time_limit", 10)
         )
-        checker_detail_result["checker_output"] = result
-        checker_result.status = CheckerStatus.VALID
+        checker_detail_result["checker_output"] = checker_detail
+        checker_result.status = CheckerStatus.VALID if checker_status else CheckerStatus.FAULTY
     except TimeoutError as e:
         log.error(f"checker failed: {str(e)}.")
         checker_detail_result["is_timeout"] = True
