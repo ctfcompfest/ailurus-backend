@@ -277,7 +277,7 @@ def do_provision(body: ServiceManagerTask, **kwargs):
         "MachineSecurityGroupId": provision_machine_detail["MachineSecurityGroupId"],
         "MachineSubnetId": provision_machine_detail["MachineSubnetId"],
     }
-    stack_name = f"{configs["parameters"]["EventSlug"]}-machine-{body["challenge_id"]}-{body["team_id"]}"
+    stack_name = "{}-machine-{}-{}".fomrat(configs["parameters"]["EventSlug"], body["challenge_id"], body["team_id"])
     with open(os.path.join(artifact_folder, configs["templates"]["machine"])) as fp:
         template_body = fp.read()
         template_body = template_body.replace("{{Ailurus.CheckerPublicKey}}", provision_machine_detail["CheckerPublicKey"])

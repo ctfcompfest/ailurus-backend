@@ -12,6 +12,7 @@ services:
       POSTGRES_DB: postgres
   rabbitmq:
     image: rabbitmq:3-management
+    restart: always
     ports:
       - "5672:5672"   # RabbitMQ broker
       - "15672:15672" # RabbitMQ management UI

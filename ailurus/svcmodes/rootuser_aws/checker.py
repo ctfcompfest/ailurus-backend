@@ -33,7 +33,7 @@ def handler_checker_task(body: CheckerTask, **kwargs):
     if not os.path.exists(tc_folder):
         os.makedirs(tcroot_folder, exist_ok=True)
         
-        link_download = get_app_config("WEBAPP_URL") + f"/api/v2/worker/testcase/{body["challenge_id"]}/"
+        link_download = get_app_config("WEBAPP_URL") + "/api/v2/worker/testcase/{}/".format(body["challenge_id"])
         log.info(f"tc file not found.")
         log.debug(f"downloading tc file from {link_download}.")
         
@@ -49,7 +49,7 @@ def handler_checker_task(body: CheckerTask, **kwargs):
             tczip_file.extractall(tc_folder)
     
     checker_spec = importlib.util.spec_from_file_location(
-        f"ailurus.worker_data.testcases.{body['testcase_checksum']}",
+        "ailurus.worker_data.testcases.{}".format(body['testcase_checksum']),
         os.path.join(tc_folder, "__init__.py")
     )
     checker_module = importlib.util.module_from_spec(checker_spec)
@@ -64,7 +64,7 @@ def handler_checker_task(body: CheckerTask, **kwargs):
 
     checker_detail_result = {}
     try:
-        log.info(f"executing testcase: chall_id={body['challenge_id']}, team_id={body['team_id']}.")
+        log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))
         services: List[Service] = db.session.execute(
             select(Service).where(
                 Service.challenge_id == body["challenge_id"],
@@ -100,7 +100,7 @@ def handler_checker_task(body: CheckerTask, **kwargs):
         checker_result.status = CheckerStatus.FAULTY
     
     checker_detail_result["time_finished"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    checker_result.detail = json.dumps(result)
+    checker_result.detail = json.dumps(checker_detail_result)
 
     db.session.add(checker_result)
     db.session.commit()
