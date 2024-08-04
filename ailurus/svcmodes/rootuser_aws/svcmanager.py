@@ -224,7 +224,7 @@ def create_or_get_provision_machine(challenge_id, artifact_folder):
     with open(os.path.join(artifact_folder, "config.yml")) as fp:
         configs = yaml.safe_load(fp)
         
-    stack_name = f"{configs["parameters"]["EventSlug"]}-network-{challenge_id}"
+    stack_name = "{}-network-{challenge_id}".format(configs["parameters"]["EventSlug"])
     with open(os.path.join(artifact_folder, configs["templates"]["network"])) as fp:
         template_body = fp.read()
     
