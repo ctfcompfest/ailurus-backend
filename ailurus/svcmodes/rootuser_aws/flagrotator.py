@@ -10,7 +10,7 @@ from .schema import FlagrotatorTask
 log = logging.getLogger(__name__)
 
 rootflag_path = "/root/flag.txt"
-userflag_path = "/home/ec2-user/flag.txt"
+userflag_path = "/home/ubuntu/flag.txt"
 
 def handler_flagrotator_task(body: FlagrotatorTask, **kwargs):
     flag_value = body["flag_value"]
@@ -35,7 +35,7 @@ def handler_flagrotator_task(body: FlagrotatorTask, **kwargs):
 
     try:
         ssh.connect(host, username=username, pkey=pkey, timeout=5)
-        ssh.exec_command(f"sudo sh -c 'echo \"{flag_value}\" >> {flag_path} && cat /dev/null > ~/.bash_history && history -c && exit'")
+        ssh.exec_command(f"sudo sh -c 'echo \"{flag_value}\" > {flag_path}' && cat /dev/null > ~/.bash_history && history -c && exit")
         ssh.close()
         log.info(f"Flag for challenge_id: {chall_id} and team_id: {team_id} successfully rotated.")
         return ssh
