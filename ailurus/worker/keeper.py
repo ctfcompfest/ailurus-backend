@@ -14,7 +14,6 @@ from apscheduler.triggers.cron import CronTrigger
 
 from datetime import datetime, timezone, timedelta
 from flask import Flask
-from pika.channel import Channel
 from sqlalchemy import select
 from typing import List, Any, Callable
 
@@ -31,23 +30,14 @@ def create_keeper(app):
     if not get_app_config("KEEPER_ENABLE", False):
         return
 
-    rabbitmq_conn = pika.BlockingConnection(
-        pika.URLParameters(get_app_config("RABBITMQ_URI"))
-    )
-    rabbitmq_channel = rabbitmq_conn.channel()
-    rabbitmq_channel.queue_declare(get_app_config("QUEUE_CHECKER_TASK", "checker_task"), durable=True)
-    rabbitmq_channel.queue_declare(get_app_config("QUEUE_FLAG_TASK", "flag_task"), durable=True)
-    
-    log.info("Successfully connect to RabbitMQ.")
-
     scheduler = BackgroundScheduler()
     cron_trigger = CronTrigger(minute="*")
     
     if not scheduler.get_job('tick-keeper'):
-        scheduler.add_job(tick_keeper, cron_trigger, args=[app, flag_keeper, [app, rabbitmq_channel]], id='tick-keeper')
+        scheduler.add_job(tick_keeper, cron_trigger, args=[app, flag_keeper, [app]], id='tick-keeper')
     
     if not scheduler.get_job('checker-keeper'):
-        scheduler.add_job(checker_keeper, cron_trigger, args=[app, rabbitmq_channel], id='checker-keeper')
+        scheduler.add_job(checker_keeper, cron_trigger, args=[app], id='checker-keeper')
 
     log.info("Starting keeper background scheduler.")
 
@@ -88,7 +78,7 @@ def tick_keeper(app: Flask, callback: Callable, callback_args: List[Any]):
     return callback(*callback_args)
 
 
-def checker_keeper(app: Flask, queue_channel: Channel):
+def checker_keeper(app: Flask):
     with app.app_context():
         if not is_contest_running():
             log.info("checker-keeper: contest is not running.")
@@ -100,6 +90,14 @@ def checker_keeper(app: Flask, queue_channel: Channel):
         
         time_now = datetime.now(timezone.utc).replace(microsecond=0)
     
+        rabbitmq_conn = pika.BlockingConnection(
+            pika.URLParameters(get_app_config("RABBITMQ_URI"))
+        )
+        rabbitmq_channel = rabbitmq_conn.channel()
+        rabbitmq_channel.queue_declare(get_app_config("QUEUE_CHECKER_TASK", "checker_task"), durable=True)
+        
+        log.info("Successfully connect to RabbitMQ.")
+
         teams: List[Team] = Team.query.all()
         release_challs: List[Challenge] = db.session.execute(
             select(
@@ -109,7 +107,7 @@ def checker_keeper(app: Flask, queue_channel: Channel):
                 ChallengeRelease.challenge_id == Challenge.id
             ).where(ChallengeRelease.round == current_round)
         ).scalars().all()
-
+        
         for chall, team in itertools.product(release_challs, teams):
             task_body = {
                 "challenge_id": chall.id,
@@ -121,19 +119,20 @@ def checker_keeper(app: Flask, queue_channel: Channel):
                 "time_created": time_now.isoformat(),
             }
             
-            queue_channel.basic_publish(
+            rabbitmq_channel.basic_publish(
                 exchange='',
                 routing_key=get_app_config('QUEUE_CHECKER_TASK', "checker_task"),
                 body=base64.b64encode(
                     json.dumps(task_body).encode()
                 )
             )
+        rabbitmq_channel.close()
         log.info(f"checker-keeper: successfully queueing {len(release_challs) * len(teams)} checker tasks.")
                 
     return True
 
 
-def flag_keeper(app: Flask, queue_channel: Channel):
+def flag_keeper(app: Flask):
     with app.app_context():
         if not is_contest_running():
             log.info("flag-keeper: contest is not running.")
@@ -144,6 +143,14 @@ def flag_keeper(app: Flask, queue_channel: Channel):
         if time_now - last_tick_change > timedelta(seconds=20):
             log.info("flag-keeper: invalid execution because last tick change is too old.")
             return False
+
+        rabbitmq_conn = pika.BlockingConnection(
+            pika.URLParameters(get_app_config("RABBITMQ_URI"))
+        )
+        rabbitmq_channel = rabbitmq_conn.channel()
+        rabbitmq_channel.queue_declare(get_app_config("QUEUE_FLAG_TASK", "flag_task"), durable=True)
+        
+        log.info("Successfully connect to RabbitMQ.")
 
         current_tick: int = get_config("CURRENT_TICK")
         current_round: int = get_config("CURRENT_ROUND")
@@ -181,13 +188,13 @@ def flag_keeper(app: Flask, queue_channel: Channel):
         log.info(f"flag-keeper: successfully generate {len(flags)} flags.")
         
         for taskbody in taskbodys:
-            queue_channel.basic_publish(
+            rabbitmq_channel.basic_publish(
                 exchange='',
                 routing_key=get_app_config('QUEUE_FLAG_TASK', "flag_task"),
                 body=base64.b64encode(
                     json.dumps(taskbody).encode()
                 )
             )
-        
+        rabbitmq_channel.close()
         log.info(f"flag-keeper: successfully broadcast {len(flags)} flag task.")
     return True
