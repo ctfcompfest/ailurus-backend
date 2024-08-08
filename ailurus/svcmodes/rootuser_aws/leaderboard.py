@@ -60,7 +60,7 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
     if is_admin or freeze_time == None:
         freeze_time = datetime.datetime.now(datetime.timezone.utc)
 
-    current_round = get_config("CURRENT_ROUND")
+    current_round = get_config("CURRENT_ROUND", 0)
     chall_ids: List[int] = db.session.execute(
         select(ChallengeRelease.challenge_id).where(ChallengeRelease.round <= current_round).distinct(ChallengeRelease.challenge_id)
     ).scalars().all()
