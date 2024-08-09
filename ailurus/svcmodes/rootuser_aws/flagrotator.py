@@ -45,6 +45,6 @@ def handler_flagrotator_task(body: FlagrotatorTask, **kwargs):
     except paramiko.SSHException as e:
         log.error(f"Unable to establish SSH connection to {host}: {str(e)}")
         return None
-    except paramiko.TimeoutError:
-        log.error(f"Connection to {host} timed out")
+    except Exception as e:
+        log.error(f"Some error occured: {str(e)}")
         return None
