@@ -13,7 +13,7 @@ import json
 def update_paused_status(newvalue: bool | str):
     if isinstance(newvalue, str):
         newvalue = json.loads(newvalue)
-        
+    
     if get_config("IS_CONTEST_PAUSED") and not newvalue:
         tick_duration = get_config("TICK_DURATION")
         last_tick_change = get_config("LAST_TICK_CHANGE")

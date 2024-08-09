@@ -101,7 +101,7 @@ def test_tick_keeper_when_tick_reach_max(mock_isrun, webapp: Flask):
 @patch("ailurus.worker.keeper.is_contest_running")
 def test_flag_keeper_when_contest_not_running(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_isrun.return_value = False
-    resp = flag_keeper(webapp, None)
+    resp = flag_keeper(webapp)
     assert resp == False
     assert Flag.query.count() == 0
 
@@ -109,25 +109,30 @@ def test_flag_keeper_when_contest_not_running(mock_isrun, webapp: Flask, challen
 def test_flag_keeper_when_lasttick_far(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_isrun.return_value = True
     # No previous last tick
-    resp = flag_keeper(webapp, None)
+    resp = flag_keeper(webapp)
     assert resp == False
     assert Flag.query.count() == 0
 
     old_time = datetime.now(timezone.utc) - timedelta(days=1)
     set_config("LAST_TICK_CHANGE", old_time.isoformat())
-    resp = flag_keeper(webapp, None)
+    resp = flag_keeper(webapp)
     assert resp == False
     assert Flag.query.count() == 0
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_flag_keeper_run_correctly(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
+@patch("ailurus.worker.keeper.pika")
+def test_flag_keeper_run_correctly(mock_pika, mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_queue = Mock(pika.channel.Channel)
+    mock_pikacon = Mock()
+    mock_pikacon.channel.return_value = mock_queue
+    mock_pika.BlockingConnection.return_value = mock_pikacon
+
     mock_isrun.return_value = True
 
     set_config("FLAG_FORMAT", "flag{aaa}")
     set_config("LAST_TICK_CHANGE", datetime.now(timezone.utc).isoformat())
 
-    resp = flag_keeper(webapp, mock_queue)
+    resp = flag_keeper(webapp)
     assert resp == True
     assert Flag.query.count() == 4
     assert mock_queue.basic_publish.call_count == 4
@@ -143,15 +148,20 @@ def test_flag_keeper_run_correctly(mock_isrun, webapp: Flask, challenge_fixture,
 @patch("ailurus.worker.keeper.is_contest_running")
 def test_checker_keeper_when_contest_not_running(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_isrun.return_value = False
-    resp = checker_keeper(webapp, None)
+    resp = checker_keeper(webapp)
     assert resp == False
 
 @patch("ailurus.worker.keeper.is_contest_running")
-def test_checker_keeper_run_correctly(mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
+@patch("ailurus.worker.keeper.pika")
+def test_checker_keeper_run_correctly(mock_pika, mock_isrun, webapp: Flask, challenge_fixture, team_fixture):
     mock_queue = Mock(pika.channel.Channel)
+    mock_pikacon = Mock()
+    mock_pikacon.channel.return_value = mock_queue
+    mock_pika.BlockingConnection.return_value = mock_pikacon
+
     mock_isrun.return_value = True
 
-    resp = checker_keeper(webapp, mock_queue)
+    resp = checker_keeper(webapp)
     assert resp == True
     assert mock_queue.basic_publish.call_count == 4
     
