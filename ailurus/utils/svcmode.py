@@ -1,10 +1,7 @@
-from importlib.machinery import SourceFileLoader
-from types import ModuleType
 import ailurus.svcmodes
-import os
-import sys
-
+import flask
 import importlib
+import os
 
 def get_svcmode_module(service_mode: str):
     svcmode_dir = os.path.dirname(ailurus.svcmodes.__file__)
@@ -19,3 +16,7 @@ def get_svcmode_module(service_mode: str):
     spec.loader.exec_module(mod)
 
     return mod
+
+def load_svcmode_module(service_mode: str, app: flask.Flask):
+    mod = get_svcmode_module(service_mode)
+    return mod.load(app)
