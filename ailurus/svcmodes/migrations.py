@@ -12,39 +12,40 @@ from sqlalchemy import create_engine
 from sqlalchemy import pool
 
 from ailurus.utils.config import get_config, set_config
+import ailurus.svcmodes
 
-def current(plugin_name=None):
-    if plugin_name is None:
+def current(svcmode_name=None):
+    if svcmode_name is None:
         # Get the directory name of the plugin if unspecified
         # Doing it this way doesn't waste the rest of the inspect.stack call
         frame = inspect.currentframe()
         caller_info = inspect.getframeinfo(frame.f_back)
         caller_path = caller_info[0]
-        plugin_name = os.path.basename(os.path.dirname(caller_path))
+        svcmode_name = os.path.basename(os.path.dirname(caller_path))
 
     # Specifically bypass the cached config so that we always get the database value
-    version = get_config(plugin_name + "_alembic_version")
+    version = get_config(svcmode_name + "_alembic_version")
     if version == KeyError:
         version = None
     return version
 
 
-def upgrade(plugin_name=None, revision=None, lower="current"):
+def upgrade(svcmode_name=None, revision=None, lower="current"):
     database_url = current_app.config.get("SQLALCHEMY_DATABASE_URI")
     if database_url.startswith("sqlite"):
         current_app.db.create_all()
         return
 
-    if plugin_name is None:
+    if svcmode_name is None:
         # Get the directory name of the plugin if unspecified
         # Doing it this way doesn't waste the rest of the inspect.stack call
         frame = inspect.currentframe()
         caller_info = inspect.getframeinfo(frame.f_back)
         caller_path = caller_info[0]
-        plugin_name = os.path.basename(os.path.dirname(caller_path))
+        svcmode_name = os.path.basename(os.path.dirname(caller_path))
 
     # Check if the plugin has migraitons
-    migrations_path = os.path.join(current_app.plugins_dir, plugin_name, "migrations")
+    migrations_path = os.path.join(os.path.dirname(ailurus.svcmodes.__file__), svcmode_name, "migrations")
     if os.path.isdir(migrations_path) is False:
         return
 
@@ -63,7 +64,7 @@ def upgrade(plugin_name=None, revision=None, lower="current"):
     # "current" points to the current plugin version stored in config
     # None represents the absolute base layer (e.g. first installation)
     if lower == "current":
-        lower = current(plugin_name)
+        lower = current(svcmode_name)
 
     # Do we upgrade to head or to a specific revision
     if revision is None:
@@ -81,9 +82,9 @@ def upgrade(plugin_name=None, revision=None, lower="current"):
                 r.module.upgrade(op=op)
             # Set revision that succeeded so we don't need
             # to start from the beginning on failure
-            set_config(plugin_name + "_alembic_version", r.revision)
+            set_config(svcmode_name + "_alembic_version", r.revision)
     finally:
         conn.close()
 
     # Set the new latest revision
-    set_config(plugin_name + "_alembic_version", upper)
+    set_config(svcmode_name + "_alembic_version", upper)
