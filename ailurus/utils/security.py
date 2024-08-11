@@ -38,3 +38,10 @@ def validteam_only():
     verify_jwt_in_request()
     if current_team == None:
         return jsonify(status="forbidden", message="forbidden."), 403
+
+def svcmode_match_only(svcmode_name):
+    # Preflight
+    if request.method == "OPTIONS":
+        return
+    if get_config("SERVICE_MODE") != svcmode_name:
+        return jsonify(status="forbidden", message="forbidden."), 403

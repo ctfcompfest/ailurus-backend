@@ -1,5 +1,4 @@
 from ailurus.utils.config import get_config
-from ailurus.utils.svcmode import load_svcmode_module
 from ailurus.routes.api import api_blueprint
 from ailurus.models import db, Config, ManageServiceUnlockMode
 from flask import Blueprint, redirect, render_template, request, url_for, current_app
@@ -56,7 +55,5 @@ def setup_submit():
             config.value = cfg_form_val
     
     db.session.commit()
-
-    load_svcmode_module(get_config("SERVICE_MODE"), current_app)
 
     return "Configuration Applied!"
