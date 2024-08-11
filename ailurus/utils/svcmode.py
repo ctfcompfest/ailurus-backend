@@ -31,4 +31,4 @@ def load_all_svcmode(app: flask.Flask):
         cfgfile_path = os.path.join(realpath, "config.json")
         if not os.path.isdir(realpath) or \
             not os.path.exists(cfgfile_path): continue
-        load_svcmode_module(elm)
+        load_svcmode_module(elm, app)
