@@ -7,14 +7,14 @@
 
 - name: Check server's wireguard key file
   stat:
-    path: /etc/wireguard/keys/{{peer_num}}.privkey
+    path: /etc/wireguard/keys-{{vpn_name}}/{{peer_num}}.privkey
   register: privkey_stat
 
 - name: Generate peer wireguard key
-  shell: wg genkey | tee /etc/wireguard/keys/{{peer_num}}.privkey | wg pubkey > /etc/wireguard/keys/{{peer_num}}.pubkey
+  shell: wg genkey | tee /etc/wireguard/keys-{{vpn_name}}/{{peer_num}}.privkey | wg pubkey > /etc/wireguard/keys-{{vpn_name}}/{{peer_num}}.pubkey
   when: not privkey_stat.stat.exists
 
-- command: "cat /etc/wireguard/keys/{{peer_num}}.{{item}}"
+- command: "cat /etc/wireguard/keys-{{vpn_name}}/{{peer_num}}.{{item}}"
   register: key_proc
   loop:
     - privkey
@@ -27,13 +27,13 @@
 - name: Generating configuration file
   template:
     src: "{{item}}.conf.j2"
-    dest: /etc/wireguard/user{{peer_num}}.{{item}}.conf
+    dest: /etc/wireguard/user{{peer_num}}.{{item}}-{{vpn_name}}.conf
   loop:
   - client
   - peer
 
 - name: Copying configuration file
   fetch:
-    src: /etc/wireguard/user{{peer_num}}.client.conf
+    src: /etc/wireguard/user{{peer_num}}.client-{{vpn_name}}.conf
     dest: ../wireguard-result/
     flat: true

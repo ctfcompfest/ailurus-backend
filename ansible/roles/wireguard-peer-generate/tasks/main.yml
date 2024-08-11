@@ -1,3 +1,13 @@
+- command: "cat /etc/wireguard/keys-{{vpn_name}}/server.{{item}}"
+  register: key_proc
+  loop:
+    - privkey
+    - pubkey
+
+- set_fact:
+    wgserver_privkey: "{{key_proc['results'][0]['stdout']}}"
+    wgserver_pubkey: "{{key_proc['results'][1]['stdout']}}"
+
 - include_tasks:
     file: generator.yml
   loop: "{{ range(1, number_user + 1) | list }}"

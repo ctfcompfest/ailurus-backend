@@ -6,19 +6,19 @@
     update_cache: true
 
 - file:
-    path: /etc/wireguard/keys/
+    path: "/etc/wireguard/keys-{{vpn_name}}/"
     state: directory
 
 - name: Check server's wireguard key file
   stat:
-    path: /etc/wireguard/keys/server.privkey
+    path: "/etc/wireguard/keys-{{vpn_name}}/server.privkey"
   register: privkey_stat
 
 - name: Generate server's wireguard key
-  shell: wg genkey | tee /etc/wireguard/keys/server.privkey | wg pubkey > /etc/wireguard/keys/server.pubkey
+  shell: "wg genkey | tee /etc/wireguard/keys-{{vpn_name}}/server.privkey | wg pubkey > /etc/wireguard/keys-{{vpn_name}}/server.pubkey"
   when: not privkey_stat.stat.exists
 
-- command: "cat /etc/wireguard/keys/server.{{item}}"
+- command: "cat /etc/wireguard/keys-{{vpn_name}}/server.{{item}}"
   register: key_proc
   loop:
     - privkey
@@ -36,14 +36,14 @@
 - name: Generate the configuration file
   template:
     src: wg0.conf.j2
-    dest: /etc/wireguard/wg0.conf
+    dest: "/etc/wireguard/{{vpn_name}}.conf"
   
 - name: Generate backup configuration file
   template:
     src: wg0.conf.j2
-    dest: /etc/wireguard/wg0.back.conf
+    dest: "/etc/wireguard/{{vpn_name}}.back.conf"
 
 - name: Enable the wireguard service
   systemd:
-    name: wg-quick@wg0
+    name: "wg-quick@{{vpn_name}}"
     enabled: yes

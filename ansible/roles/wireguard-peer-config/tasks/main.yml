@@ -1,8 +1,8 @@
 - name: Combine configuration files
   assemble:
     src: /etc/wireguard
-    dest: /etc/wireguard/peer.conf
-    regexp: "\\S*.peer.conf"
+    dest: "/etc/wireguard/peer-{{vpn_name}}.conf"
+    regexp: "\\S*.peer-{{vpn_name}}.conf"
 
-- shell: cat /etc/wireguard/wg0.back.conf > /etc/wireguard/wg0.conf
-- shell: cat /etc/wireguard/peer.conf >> /etc/wireguard/wg0.conf
+- shell: "cat /etc/wireguard/{{vpn_name}}.back.conf > /etc/wireguard/{{vpn_name}}.conf"
+- shell: cat /etc/wireguard/peer.conf >> /etc/wireguard/{{vpn_name}}.conf
