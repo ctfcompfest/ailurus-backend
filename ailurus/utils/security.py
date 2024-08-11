@@ -40,8 +40,10 @@ def validteam_only():
         return jsonify(status="forbidden", message="forbidden."), 403
 
 def svcmode_match_only(svcmode_name):
-    # Preflight
-    if request.method == "OPTIONS":
-        return
-    if get_config("SERVICE_MODE") != svcmode_name:
-        return jsonify(status="forbidden", message="forbidden."), 403
+    def wrapper_func():
+        # Preflight
+        if request.method == "OPTIONS":
+            return
+        if get_config("SERVICE_MODE") != svcmode_name:
+            return jsonify(status="forbidden", message="forbidden."), 403
+    return wrapper_func
