@@ -9,8 +9,9 @@ from ailurus.utils.config import (
 from datetime import datetime, timezone, timedelta
 from flask.testing import FlaskClient
 from flask_jwt_extended import create_access_token
-
+from typing import List
 import pytest
+import time
 
 @pytest.fixture
 def data_fixture():
@@ -136,6 +137,8 @@ def test_submit_correct_flags_as_solvefirst(client: FlaskClient, request_headers
     assert Submission.query.count() == 1
     assert Solve.query.count() == 0
 
+    time.sleep(2)
+
     resp = client.post("/api/v2/submit/", headers=request_headers, json={"flags": ["flag112"]})
     assert resp.status_code == 200
     resp_data = resp.get_json()["data"]
@@ -144,6 +147,8 @@ def test_submit_correct_flags_as_solvefirst(client: FlaskClient, request_headers
     assert Submission.query.count() == 2
     assert Solve.query.count() == 1
 
+    submissions: List[Submission] = Submission.query.all()
+    assert submissions[0].time_created != submissions[1].time_created
 
 def test_submit_correct_flags_as_nolock(client: FlaskClient, request_headers, data_fixture, contest_started):
     set_config("UNLOCK_MODE", "nolock")
