@@ -24,7 +24,8 @@ def get_submissions():
             Challenge.title,
             Team.name
         ).join(Challenge,
-            Challenge.id == Submission.challenge_id
+            Challenge.id == Submission.challenge_id,,
+            isouter=True,
         ).join(Team,
             Team.id == Submission.team_id
         ).filter(*query_filter).order_by(Submission.id.desc()).paginate(page=page, per_page=DATA_PER_PAGE)
