@@ -24,7 +24,7 @@ def get_submissions():
             Challenge.title,
             Team.name
         ).join(Challenge,
-            Challenge.id == Submission.challenge_id,
+            Challenge.id == Submission.challenge_id,,
             isouter=True,
         ).join(Team,
             Team.id == Submission.team_id
