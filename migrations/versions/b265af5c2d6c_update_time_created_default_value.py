@@ -17,12 +17,12 @@ depends_on = None
 
 
 def upgrade():
-    op.alter_column("score_per_tick", "time_created", server_default=sa.func.utcnow())
-    op.alter_column("submission", "time_created", server_default=sa.func.utcnow())
-    op.alter_column("solve", "time_created", server_default=sa.func.utcnow())
-    op.alter_column("service", "time_created", server_default=sa.func.utcnow())
-    op.alter_column("checker_result", "time_created", server_default=sa.func.utcnow())
-    op.alter_column("team_activity_log", "time_created", server_default=sa.func.utcnow())
+    op.alter_column("score_per_tick", "time_created", server_default=sa.func.now())
+    op.alter_column("submission", "time_created", server_default=sa.func.now())
+    op.alter_column("solve", "time_created", server_default=sa.func.now())
+    op.alter_column("service", "time_created", server_default=sa.func.now())
+    op.alter_column("checker_result", "time_created", server_default=sa.func.now())
+    op.alter_column("team_activity_log", "time_created", server_default=sa.func.now())
     
 
 def downgrade():
