@@ -1,6 +1,6 @@
 repository:
-  backend: git@github.com:ctfcompfest/ailurus-backend.git
-  frontend: git@github.com:ctfcompfest/ailurus-frontend.git
+  backend: https://github.com/ctfcompfest/ailurus-backend.git
+  frontend: https://github.com/ctfcompfest/ailurus-frontend.git
 
 host:
   backend: https://backend.ailurus.com

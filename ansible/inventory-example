@@ -10,9 +10,3 @@ frontend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/pa
 [worker]
 worker1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 worker2 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
-
-[db]
-db ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
-
-[rabbitmq]
-rabbitmq ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key

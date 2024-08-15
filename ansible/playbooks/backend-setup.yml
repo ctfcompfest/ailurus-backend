@@ -1,9 +1,11 @@
 ---
-- name: Deploy Ailurus backend and keeper server
+- name: Setup and deploy Ailurus backend and keeper server
   hosts: backend
   become: true
   roles:
-  - dependencies-install
   - docker-install
+  - surround-setup
   - backend-setup
+  - caddy-setup
   - backend-run
+  - caddy-add-directive

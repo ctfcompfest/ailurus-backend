@@ -1,0 +1,29 @@
+- name: Run PostgreSQL database
+  docker_container:
+    name: ailurus-postgres
+    image: postgres:15-alpine
+    state: started
+    restart: yes
+    volumes:
+      - /opt/ailurus-data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    env:
+      POSTGRES_USER: "{{ database.username }}"
+      POSTGRES_PASSWORD: "{{ database.password }}"
+      POSTGRES_DB: "{{ database.db_name }}"
+
+- name: Run RabbitMQ
+  docker_container:
+    name: ailurus-rabbitmq
+    image: rabbitmq:3-management
+    state: started
+    restart: yes
+    volumes:
+      - /opt/ailurus-data/rabbitmq:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env:
+      RABBITMQ_DEFAULT_USER: "{{ rabbitmq.username }}"
+      RABBITMQ_DEFAULT_PASS: "{{ rabbitmq.password }}"
