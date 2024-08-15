@@ -1,12 +1,18 @@
 [vpn]
 vpn ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
-[platform_backend]
-platform1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
+[backend]
+backend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
-[checker]
-checker1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
+[frontend]
+frontend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
-[service_server]
-remote1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
-remote2 ansible_host=1.2.3.4 ansible_user=root ansible_password=password
+[worker]
+worker1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
+worker2 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
+
+[db]
+db ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
+
+[rabbitmq]
+rabbitmq ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key

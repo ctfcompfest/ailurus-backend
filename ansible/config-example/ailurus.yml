@@ -1,0 +1,19 @@
+repository:
+  backend: git@github.com:ctfcompfest/ailurus-backend.git
+  frontend: git@github.com:ctfcompfest/ailurus-frontend.git
+
+host:
+  backend: https://backend.ailurus.com
+  frontend: https://ailurus.com
+
+# Random string for Flask SECRET_KEY
+secret_key: random-string
+
+database:
+  username: postgresql
+  password: postgresql
+  db_name: postgresql
+
+rabbitmq:
+  username: rabbitmq
+  password: rabbitmq
