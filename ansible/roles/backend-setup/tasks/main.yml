@@ -19,3 +19,4 @@
     build:
       path: /opt/ailurus-backend
     state: present
+    force_source: true
