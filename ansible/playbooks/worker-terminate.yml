@@ -1,0 +1,6 @@
+---
+- name: Terminate Ailurus worker
+  hosts: worker
+  become: true
+  roles:
+  - worker-terminate

@@ -1,6 +1,0 @@
----
-- name: Machine provision
-  hosts: all
-  become: true
-  roles:
-  - docker-install

@@ -1,0 +1,21 @@
+- name: Clone backend git repository
+  git:
+    repo: "{{ repository.backend }}"
+    dest: "/opt/ailurus-backend"
+
+- name: Generate surround IP Address
+  set_fact:
+    surround_ip: "{{ hostvars[groups['backend'][0]]['ansible_host'] }}"
+    
+- name: Generating environment file
+  template:
+    src: "env-file.j2"
+    dest: /opt/ailurus-backend/.env
+
+- name: Build backend Docker image
+  docker_image:
+    name: ailurus-backend
+    source: build
+    build:
+      path: /opt/ailurus-backend
+    state: present

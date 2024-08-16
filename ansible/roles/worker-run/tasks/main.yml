@@ -1,0 +1,13 @@
+---
+- name: Run worker Docker container
+  docker_container:
+    name: ailurus-worker
+    image: ailurus-backend:latest
+    state: started
+    restart: yes
+    command: worker
+    volumes:
+    - "/opt/ailurus-worker/ailurus/worker_data:/opt/app/ailurus/worker_data"
+    links:
+      - ailurus-postgres
+      - ailurus-rabbitmq

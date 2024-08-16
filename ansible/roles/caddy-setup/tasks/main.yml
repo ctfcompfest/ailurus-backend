@@ -1,0 +1,15 @@
+- name: Add caddy certificate and list
+  shell: |
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+
+- name: Install caddy
+  apt:
+    pkg:
+      - caddy
+    state: latest
+
+- name: Start Caddy service
+  systemd:
+    name: caddy
+    state: started

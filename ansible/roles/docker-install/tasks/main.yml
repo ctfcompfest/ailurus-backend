@@ -1,12 +1,12 @@
-- name: Add Docker GPG apt Key
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-
-- name: Add Docker Repository
-  apt_repository:
-    repo: deb https://download.docker.com/linux/ubuntu focal stable
-    state: present
+- name: Add Docker GPG apt Key and repository
+  shell: |
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 - name: Update apt and install docker-ce
   apt:
@@ -18,9 +18,10 @@
     state: latest
     update_cache: true
 
-- name: Install Docker Module for Python
+- name: Install docker python module
   pip:
     name: docker
+    extra_args: --break-system-packages
 
 - name: Adding user '{{ ansible_user }}' to group docker
   user:

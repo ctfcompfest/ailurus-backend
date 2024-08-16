@@ -1,0 +1,8 @@
+---
+- name: Setup and deploy Ailurus worker
+  hosts: worker
+  become: true
+  roles:
+  - docker-install
+  - docker-setup
+  - worker-run

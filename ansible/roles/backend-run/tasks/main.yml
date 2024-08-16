@@ -1,0 +1,30 @@
+---
+- name: Run webapp Docker container
+  docker_container:
+    name: ailurus-webapp
+    image: ailurus-backend:latest
+    state: started
+    restart: yes
+    volumes:
+    - "/opt/ailurus-data/adce:/opt/app/ailurus/.adce_data"
+    links:
+      - ailurus-postgres
+      - ailurus-rabbitmq
+    ports:
+      - "8000:5000"
+
+- name: Run keeper Docker container
+  docker_container:
+    name: ailurus-keeper
+    image: ailurus-backend:latest
+    state: started
+    restart: yes
+    volumes:
+    - "/opt/ailurus-data/adce:/opt/app/ailurus/.adce_data"
+    links:
+      - ailurus-postgres
+      - ailurus-rabbitmq
+
+- set_fact:
+    domain: "{{ host.backend | split('//') | reverse | first}}"
+    upstream: "localhost:8000"
