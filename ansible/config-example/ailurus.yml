@@ -3,11 +3,18 @@ repository:
   frontend: https://github.com/ctfcompfest/ailurus-frontend.git
 
 host:
-  backend: https://backend.ailurus.com
-  frontend: https://ailurus.com
+  backend: https://api.ailurus.pw
+  frontend: https://ailurus.pw
+
+ssl: true
+public_ca: false
+ssl_cert_file:
+  cert: /etc/letsencrypt/live/ailurus.pw/fullchain.pem
+  key: /etc/letsencrypt/live/ailurus.pw/privkey.pem
 
 # Random string for Flask SECRET_KEY
 secret_key: random-string
+frontend_service_manage_panel: fullserver
 
 database:
   username: postgresql

@@ -1,0 +1,6 @@
+---
+- name: Deploy Ailurus frontend and keeper server
+  hosts: frontend
+  become: true
+  roles:
+  - frontend-run
