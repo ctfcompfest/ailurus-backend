@@ -5,4 +5,4 @@
     regexp: "\\S*.peer-{{vpn_name}}.conf"
 
 - shell: "cat /etc/wireguard/{{vpn_name}}.back.conf > /etc/wireguard/{{vpn_name}}.conf"
-- shell: cat /etc/wireguard/peer.conf >> /etc/wireguard/{{vpn_name}}.conf
+- shell: cat /etc/wireguard/peer-{{vpn_name}}.conf >> /etc/wireguard/{{vpn_name}}.conf

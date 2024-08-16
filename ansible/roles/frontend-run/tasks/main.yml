@@ -1,0 +1,13 @@
+---
+- name: Run frontend Docker container
+  docker_container:
+    name: ailurus-frontend
+    image: ailurus-frontend:latest
+    state: started
+    restart: yes
+    ports:
+      - "3000:3000"
+
+- set_fact:
+    domain: "{{ host.frontend | split('//') | reverse | first}}"
+    upstream: "localhost:3000"

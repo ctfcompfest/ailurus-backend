@@ -1,0 +1,13 @@
+---
+- name: Setup and deploy Ailurus frontend and keeper server
+  hosts: frontend
+  become: true
+  roles:
+  - docker-install
+  - surround-setup
+  - frontend-setup
+  - name: caddy-setup
+    when: ssl == True
+  - frontend-run
+  - name: caddy-add-directive
+    when: ssl == True
