@@ -12,6 +12,7 @@ def run_testcase():
         {
             "start_time": start_time,
             "end_time": end_time,
-            "duration": rand_val
+            "duration": rand_val,
+            "message": "please refer to documentation"
         }
     )
