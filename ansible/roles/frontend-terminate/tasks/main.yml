@@ -1,0 +1,5 @@
+---
+- name: Run frontend Docker container
+  docker_container:
+    name: ailurus-frontend
+    state: stopped

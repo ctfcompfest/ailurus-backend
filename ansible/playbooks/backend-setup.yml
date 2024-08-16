@@ -6,6 +6,8 @@
   - docker-install
   - surround-setup
   - backend-setup
-  - caddy-setup
+  - name: caddy-setup
+    when: ssl == True
   - backend-run
-  - caddy-add-directive
+  - name: caddy-add-directive
+    when: ssl == True

@@ -4,6 +4,26 @@
     state: directory
     mode: 0755
 
+- name: Create ssl cert folder
+  file:
+    path: "/etc/caddy/ssl"
+    state: directory
+    mode: 0755
+
+- name: Copy ssl cert to target system
+  copy:
+    src: "{{ ssl_cert_file.cert }}"
+    dest: /etc/caddy/ssl/cert
+    mode: 0644
+  when: not public_ca
+
+- name: Copy ssl key to target system
+  copy:
+    src: "{{ ssl_cert_file.key }}"
+    dest: /etc/caddy/ssl/key
+    mode: 0644
+  when: not public_ca
+
 - name: Create config file
   template:
     src: config.j2
@@ -14,6 +34,7 @@
     cat /dev/null > /etc/caddy/Caddyfile
     for file in $(find /etc/caddy/caddy.d -type f); do
       cat "$file" >> /etc/caddy/Caddyfile
+      echo '\n' >> /etc/caddy/Caddyfile
     done
 
 - name: Restart Caddy service
