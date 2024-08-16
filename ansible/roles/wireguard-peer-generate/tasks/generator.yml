@@ -35,5 +35,5 @@
 - name: Copying configuration file
   fetch:
     src: /etc/wireguard/user{{peer_num}}.client-{{vpn_name}}.conf
-    dest: ../wireguard-result/
+    dest: ../wireguard-result-{{vpn_name}}/
     flat: true
