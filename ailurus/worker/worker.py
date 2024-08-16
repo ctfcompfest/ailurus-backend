@@ -15,7 +15,7 @@ def create_worker(**kwargs):
         pika.URLParameters(kwargs.get("RABBITMQ_URI"))
     )
     rabbitmq_channel = rabbitmq_conn.channel()
-    rabbitmq_channel.basic_qos(prefetch_count=1)
+    rabbitmq_channel.basic_qos(prefetch_count=int(kwargs.get("QUEUE_PREFETCH", "1")))
 
     log.info("Successfully connect to RabbitMQ.")
     

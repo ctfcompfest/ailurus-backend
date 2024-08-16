@@ -1,0 +1,5 @@
+---
+- name: Terminate backend Docker container
+  docker_container:
+    name: ailurus-backend
+    state: stopped

@@ -1,0 +1,39 @@
+challenges:
+  slug1:
+    owner: user_owner
+    flag_dir: /path/to/mount/flag/dir
+  slug2:
+    owner: root
+    flag_dir: /root/flag
+    is_root_flag: true
+
+templates:
+  infra: machinesubnet-samba-resource.json
+  machine: team-resource.json
+
+local_user:
+  team: ubuntu
+  checker: ctf
+
+# AWS credentials    
+credentials:
+  aws_access_key_id: access_key
+  aws_secret_access_key: secret_access_key
+  region_name: us-east-1
+
+# Cloudformation Parameters
+parameters:
+  # global parameter
+  EventSlug: Ailurus
+  
+  # machine subnet and samba parameters
+  VpcId: vpc-0f919cf9e68a60ca5
+  NATGatewayId: nat-028761173c067ada7
+  MachineSubnetCidrBlock: 10.0.32.0/22
+  SambaMachineAMI: ami-04a81a99f5ec58529 
+  SambaPrivateIpAddress: 10.0.35.1
+  SambaMachineType: c5a.large
+
+  # team parameters
+  MachineAMI: ami-083ac6de37d37a7f4
+  MachineType: t2.small

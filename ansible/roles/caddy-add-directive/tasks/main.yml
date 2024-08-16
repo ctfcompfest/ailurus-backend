@@ -1,0 +1,22 @@
+- name: Create Caddyfile folder
+  file:
+    path: "/etc/caddy/caddy.d"
+    state: directory
+    mode: 0755
+
+- name: Create config file
+  template:
+    src: config.j2
+    dest: /etc/caddy/caddy.d/{{domain}}
+
+- name: Update Caddyfile
+  shell: |
+    cat /dev/null > /etc/caddy/Caddyfile
+    for file in $(find /etc/caddy/caddy.d -type f); do
+      cat "$file" >> /etc/caddy/Caddyfile
+    done
+
+- name: Restart Caddy service
+  systemd:
+    name: caddy
+    state: restarted

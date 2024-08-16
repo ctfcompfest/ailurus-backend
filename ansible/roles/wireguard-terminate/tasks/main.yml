@@ -1,5 +1,5 @@
 - name: Stop the wireguard service
   systemd:
-    name: wg-quick@wg0
+    name: wg-quick@{{vpn_name}}
     enabled: yes
     state: stopped

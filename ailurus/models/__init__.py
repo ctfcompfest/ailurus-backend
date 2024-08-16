@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Double, Enum, String, Text, TIMESTAMP
-from sqlalchemy import ForeignKey, UniqueConstraint, Index
+from sqlalchemy import ForeignKey, UniqueConstraint, Index, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional
 
@@ -96,7 +96,7 @@ class Submission(db.Model):
     value: Mapped[str] = mapped_column(Text)
     verdict: Mapped[bool]
     point: Mapped[float] = mapped_column(Double, default=0.0)
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now(timezone.utc))
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.utcnow())
 
 class Solve(db.Model):
     __tablename__ = "solve"
@@ -107,7 +107,7 @@ class Solve(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
     challenge_id: Mapped[int] = mapped_column(ForeignKey("challenge.id"))
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now(timezone.utc))
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.utcnow())
 
     @classmethod
     def is_solved(cls, team_id: int, chall_id: int) -> list:
@@ -136,7 +136,7 @@ class Service(db.Model):
     order: Mapped[int]
     secret: Mapped[str]
     detail: Mapped[str] = mapped_column(Text, doc="JSON format service detail configuration.")
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now(timezone.utc))
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.utcnow())
     
     @classmethod
     def is_teamservice_exist(cls, team_id, challenge_id):
@@ -160,7 +160,7 @@ class CheckerResult(db.Model):
     tick: Mapped[int]
     status: Mapped[CheckerStatus] = mapped_column(Enum(CheckerStatus), default=CheckerStatus.QUEUE)
     detail: Mapped[str] = mapped_column(Text, doc="JSON format checker result detail.")
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now(timezone.utc))
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.utcnow())
 
 
 class TeamActivityLog(db.Model):
@@ -171,7 +171,7 @@ class TeamActivityLog(db.Model):
     team_name: Mapped[str]
     activity: Mapped[str] = mapped_column(String(32), doc="Activity log code.")
     detail: Mapped[str] = mapped_column(Text, doc="JSON format team activity log detail.")
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now(timezone.utc))
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.utcnow())
 
 
 class ScorePerTick(db.Model):
@@ -188,6 +188,6 @@ class ScorePerTick(db.Model):
     attack_score: Mapped[float] = mapped_column(Double, default=0.0)
     defense_score: Mapped[float] = mapped_column(Double, default=0.0)
     sla: Mapped[float] = mapped_column(Double, default=1.0)
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now(timezone.utc))
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.utcnow())
 
     team: Mapped["Team"] = relationship('Team', foreign_keys="ScorePerTick.team_id", lazy='joined')

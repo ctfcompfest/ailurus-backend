@@ -4,19 +4,24 @@
 # * vpn-useradd.yml
 ##########################################
 
+vpn_name: wg0
 endpoint:
   # Public VPN server IP address
   ip: 1.2.3.4
   # Server need to allowed UDP connection on this port
   port: 51820
 
-# Usable IP must be greater than the number_user value
-subnet: 10.15.0.0/16
+# Wireguard internal subnet to identify each VPN clients.
+# This attribute is not related to the server subnet or existing connections.
+# P.S: usable IP must greater than the number_user value.
+subnet: 172.32.0.0/16
+number_user: 3
+
 # Allowed routed IPs
 allowed_ips: 10.0.0.0/8
+
 # Network interface name on vpn server to forward the connection
 interface_name: eth0
-number_user: 3
 
 dns:
 - 8.8.8.8

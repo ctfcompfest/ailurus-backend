@@ -1,7 +1,7 @@
 from ailurus.utils.config import get_config
 from ailurus.routes.api import api_blueprint
 from ailurus.models import db, Config, ManageServiceUnlockMode
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, redirect, render_template, request, url_for, current_app
 from typing import List
 
 import ailurus.svcmodes

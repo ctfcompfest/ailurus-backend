@@ -1,0 +1,8 @@
+SECRET_KEY={{secret_key}}
+KEEPER_ENABLE=false
+SQLALCHEMY_DATABASE_URI=postgresql://{{ database.username }}:{{ database.password }}@{{surround_ip}}:5432/{{ database.db_name }}
+RABBITMQ_URI=amqp://{{ rabbitmq.username }}:{{ rabbitmq.password }}@{{surround_ip}}:5672/%2F
+QUEUE_CHECKER_TASK=checker_task
+QUEUE_FLAG_TASK=flag_task
+QUEUE_SVMANAGER_TASK=svcmanager_task
+WEBAPP_URL={{host.backend}}

@@ -4,6 +4,7 @@ from ailurus.routes import app_routes
 from ailurus.utils.cors import CORS
 from ailurus.utils.security import limiter
 from ailurus.utils.socket import socketio
+from ailurus.utils.svcmode import load_all_svcmode
 from ailurus.worker import create_keeper, create_worker
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -71,6 +72,8 @@ def create_app(env_file=".env"):
         migrate.init_app(app, db)
         init_data_dir(app)
         
+        # Load all svcmode
+        load_all_svcmode(app)
     return app
 
 def create_keeper_daemon(env_file=".env"):
@@ -108,6 +111,8 @@ def create_worker_daemon(env_file=".env"):
 def create_webapp_daemon(env_file=".env"):
     app = create_app(env_file)
     with app.app_context():
+        create_logger(os.path.join(app.config["DATA_DIR"], "logs", "webapp.log"))
+
         # Security
         setup_jwt_app(app)
         CORS(app)

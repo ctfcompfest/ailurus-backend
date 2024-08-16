@@ -1,0 +1,6 @@
+---
+- name: Deploy Ailurus backend and keeper server
+  hosts: backend
+  become: true
+  roles:
+  - backend-run

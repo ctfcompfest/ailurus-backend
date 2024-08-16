@@ -1,0 +1,6 @@
+---
+- name: Terminate Ailurus backend and keeper server
+  hosts: backend
+  become: true
+  roles:
+  - backend-terminate
