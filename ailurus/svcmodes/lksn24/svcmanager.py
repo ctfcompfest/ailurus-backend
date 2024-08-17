@@ -212,10 +212,17 @@ def generate_share_in_samba_server(provision_machine_detail, team_id, team_machi
    smb encrypt = required
    hosts allow = {machine_ip}""".format(share_name=share_name, flag_dir=flag_dir, machine_ip=team_machine_ip)
             
-            ssh.exec_command("sudo -u samba-lksn mkdir -p {flag_dir}".format(flag_dir=flag_dir))
-            ssh.exec_command("echo \'{config_content}\' > {config_path}".format(config_path=config_path, config_content=share_config))
-            
-        ssh.exec_command("sudo /home/ubuntu/samba/recreate_share_config.sh && sudo systemctl restart smbd")
+            stdin, stdout, stderr = ssh.exec_command("sudo -u samba-lksn mkdir -p {flag_dir}".format(flag_dir=flag_dir))
+            log.info("samba-create_flagdir.stdout: {}".format(stdout.read().decode()))
+            log.info("samba-create_flagdir.stderr: {}".format(stderr.read().decode()))
+
+            stdin, stdout, stderr = ssh.exec_command("echo \'{config_content}\' > {config_path}".format(config_path=config_path, config_content=share_config))
+            log.info("samba-create_conf.stdout: {}".format(stdout.read().decode()))
+            log.info("samba-create_conf.stderr: {}".format(stderr.read().decode()))
+
+        stdin, stdout, stderr = ssh.exec_command("sudo /home/ubuntu/samba/recreate_share_config.sh && sudo systemctl restart smbd")
+        log.info("samba-recreate_share.stdout: {}".format(stdout.read().decode()))
+        log.info("samba-recreate_share.stderr: {}".format(stderr.read().decode()))
         
         ssh.close()
         log.info(f"Successfully generate share in samba for team_id: {team_id}.")
