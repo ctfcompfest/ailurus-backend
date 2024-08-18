@@ -7,6 +7,9 @@ from .models import CheckerAgentReport
 
 import json
 import jwt
+import logging
+
+log = logging.getLogger(__name__)
 
 checker_agent_blueprint = Blueprint("checker_agent", __name__, url_prefix="/api/v2/checkeragent")
 checker_agent_blueprint.before_request(svcmode_match_only("lksn24"))
@@ -35,10 +38,14 @@ def receive_checker_agent_report():
 
         return jsonify(status="success")
     except jwt.InvalidSignatureError:
+        log.error("invalid signature")
         return jsonify(status="failed", message="Invalid signature."), 400
     except jwt.InvalidIssuedAtError:
+        log.error("token expired because iat")
         return jsonify(status="failed", message="Token has expired."), 400
     except jwt.ExpiredSignatureError:
+        log.error("token expired because expired signature")
         return jsonify(status="failed", message="Token has expired."), 400
-    except Exception:
+    except Exception as e:
+        log.error(e)
         return jsonify(status="failed", message="invalid token."), 400
