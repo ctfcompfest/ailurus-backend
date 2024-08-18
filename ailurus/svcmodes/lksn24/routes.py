@@ -28,7 +28,7 @@ def receive_checker_agent_report():
         claim = jwt.decode(request_data, get_config("CHECKER_AGENT_SECRET"), algorithms="HS256", leeway=5, options={"verify_iat": True, "verify_signature": True})
         
         report = CheckerAgentReport(
-            source_ip=source_ip,
+            ip_source=source_ip,
             selinux_status=claim["selinux"],
             flag_status=json.dumps(claim["flag"]),
             challenge_status=json.dumps(claim["challs"]),

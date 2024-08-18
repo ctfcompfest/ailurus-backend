@@ -82,7 +82,7 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
 
         service_ip = ServiceSchema().dump(services[0])["detail"]["checker"]["ip"]
         agent_latest_report: CheckerAgentReport = CheckerAgentReport.query.filter_by(
-                source_ip=service_ip
+                ip_source=service_ip
             ).order_by(CheckerAgentReport.time_created.desc()).first()
 
         checker_status, checker_detail = execute_check_function_with_timelimit(

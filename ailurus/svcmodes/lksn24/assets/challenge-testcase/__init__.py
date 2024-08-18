@@ -22,7 +22,7 @@ class FlagType(TypedDict):
 
 class CheckerAgentReport(TypedDict):
     id: int
-    source_ip: str
+    ip_source: str
     selinux_status: bool
     flag_status: Dict
     challenge_status: Dict
