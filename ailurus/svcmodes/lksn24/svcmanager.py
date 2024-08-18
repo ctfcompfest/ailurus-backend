@@ -204,23 +204,17 @@ def generate_share_in_samba_server(provision_machine_detail, team_id, team_machi
             config_path = f"/home/ubuntu/samba/samba.d/{share_name}.conf"
             flag_dir = f"/home/samba-lksn/flags/{chall_slug}-t{team_id}"
 
-            share_config = """[{share_name}]
-   path = {flag_dir}
-   read only = yes
-   browsable = no
-   valid users = samba-lksn
-   smb encrypt = required
-   hosts allow = {machine_ip}""".format(share_name=share_name, flag_dir=flag_dir, machine_ip=team_machine_ip)
+            share_config = """[{share_name}]\\npath = {flag_dir}\\nread only = yes\\nbrowsable = no\\nvalid users = samba-lksn\\nsmb encrypt = required\\nhosts allow = {machine_ip}""".format(share_name=share_name, flag_dir=flag_dir, machine_ip=team_machine_ip)
             
-            stdin, stdout, stderr = ssh.exec_command("sudo -u samba-lksn mkdir -p {flag_dir}".format(flag_dir=flag_dir))
+            stdin, stdout, stderr = ssh.exec_command("sudo -u samba-lksn bash -c 'mkdir -p {flag_dir}'".format(flag_dir=flag_dir))
             log.info("samba-create_flagdir.stdout: {}".format(stdout.read().decode()))
             log.info("samba-create_flagdir.stderr: {}".format(stderr.read().decode()))
 
-            stdin, stdout, stderr = ssh.exec_command("echo \'{config_content}\' > {config_path}".format(config_path=config_path, config_content=share_config))
+            stdin, stdout, stderr = ssh.exec_command("echo \"{config_content}\" > {config_path}".format(config_path=config_path, config_content=share_config))
             log.info("samba-create_conf.stdout: {}".format(stdout.read().decode()))
             log.info("samba-create_conf.stderr: {}".format(stderr.read().decode()))
 
-        stdin, stdout, stderr = ssh.exec_command("sudo /home/ubuntu/samba/recreate_share_config.sh && sudo systemctl restart smbd")
+        stdin, stdout, stderr = ssh.exec_command("sudo bash /home/ubuntu/samba/recreate_share_config.sh && sudo systemctl restart smbd")
         log.info("samba-recreate_share.stdout: {}".format(stdout.read().decode()))
         log.info("samba-recreate_share.stderr: {}".format(stderr.read().decode()))
         

@@ -18,6 +18,7 @@
     name: ailurus-keeper
     image: ailurus-backend:latest
     state: started
+    command: keeper
     restart: yes
     volumes:
     - "/opt/ailurus-data/adce:/opt/app/ailurus/.adce_data"
