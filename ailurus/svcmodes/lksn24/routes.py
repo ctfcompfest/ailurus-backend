@@ -46,6 +46,6 @@ def receive_checker_agent_report():
     except jwt.ExpiredSignatureError:
         log.error("token expired because expired signature")
         return jsonify(status="failed", message="Token has expired."), 400
-    # except Exception as e:
-    #     log.error(e)
-    #     return jsonify(status="failed", message="invalid token."), 400
+    except Exception as e:
+        log.error(e)
+        return jsonify(status="failed", message="invalid token."), 400
