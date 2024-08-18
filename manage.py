@@ -38,7 +38,7 @@ if __name__ == "__main__":
             flask_migrate.upgrade()
 
         socketio = webapp.extensions['socketio']
-        socketio.run(webapp, logger=True, engineio_logger=True, **webapp_opts)
+        socketio.run(webapp, log_output=True, **webapp_opts)
     elif user_arg.command == 'keeper':
         create_keeper_daemon()
     elif user_arg.command == 'worker':
