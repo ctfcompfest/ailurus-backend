@@ -71,7 +71,7 @@ def create_app(env_file=".env"):
         db.init_app(app)
         migrate.init_app(app, db)
         init_data_dir(app)
-        
+                
         # Load all svcmode
         load_all_svcmode(app)
     return app
