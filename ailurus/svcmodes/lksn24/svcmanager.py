@@ -19,6 +19,7 @@ import os
 import paramiko
 import pika
 import secrets
+import time
 import yaml
 import zipfile
 
@@ -183,6 +184,10 @@ def create_or_get_provision_machine(challenge_id, artifact_folder):
     provision_machine = ProvisionMachine(name=f"cloudformation-{challenge_id}", host="aws_sdk", port=0, detail=json.dumps(details))
     db.session.add(provision_machine)
     db.session.commit()
+    
+    # Add some delay to wait samba server run init script
+    time.sleep(30)
+
     return provision_machine
 
 
