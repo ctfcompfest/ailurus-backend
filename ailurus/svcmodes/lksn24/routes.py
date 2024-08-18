@@ -31,7 +31,7 @@ def receive_checker_agent_report():
             source_ip=source_ip,
             selinux_status=claim["selinux"],
             flag_status=json.dumps(claim["flag"]),
-            challenge_status=json.dumps(claim["chall"]),
+            challenge_status=json.dumps(claim["challs"]),
         )
         db.session.add(report)
         db.session.commit()
