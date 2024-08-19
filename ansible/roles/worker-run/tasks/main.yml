@@ -1,10 +1,10 @@
 ---
 - name: Get number of workers
   set_fact:
-    number_worker: "{{ hostvars[ansible_host]['num_worker'] }}"
+    number_worker: "{{ hostvars[inventory_hostname]['num_worker'] | int }}"
     
 - include_tasks:
     file: run.yml
-  loop: "{{ range(1, number_worker + 1) | list }}"
+  loop: "{{ range(1, (number_worker | int) + 1) | list }}"
   loop_control:
     loop_var: worker_id

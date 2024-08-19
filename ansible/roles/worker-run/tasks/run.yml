@@ -1,7 +1,7 @@
 ---
 - name: Run worker Docker container
   docker_container:
-    name: "ailurus-worker-{{worker_id}}"
+    name: ailurus-worker-{{worker_id}}
     image: ailurus-backend:latest
     state: started
     restart_policy: always
