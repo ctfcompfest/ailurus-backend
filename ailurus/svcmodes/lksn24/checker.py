@@ -67,7 +67,6 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
         log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))
         services: List[Service] = db.session.execute(
             select(Service).where(
-                Service.challenge_id == body["challenge_id"],
                 Service.team_id == body["team_id"]
             )
         ).scalars().all()
