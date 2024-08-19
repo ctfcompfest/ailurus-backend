@@ -76,6 +76,6 @@ class CheckerAgentReportSchema(SQLAlchemyAutoSchema):
     @post_dump
     def parse_status(self, data, **kwargs):
         for key in ["flag_status", "challenge_status"]:
-            if key in data and isinstance(data[key], (dict, list)):
+            if key in data and isinstance(data[key], str):
                 data[key] = json.loads(data[key])
         return data
