@@ -1,5 +1,10 @@
 ---
-- name: Terminate worker Docker container
-  docker_container:
-    name: ailurus-worker
-    state: stopped
+- name: Get number of workers
+  set_fact:
+    number_worker: "{{ hostvars[ansible_host]['num_worker'] }}"
+    
+- include_tasks:
+    file: terminate.yml
+  loop: "{{ range(1, number_worker + 1) | list }}"
+  loop_control:
+    loop_var: worker_id

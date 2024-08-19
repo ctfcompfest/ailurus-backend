@@ -1,13 +1,10 @@
 ---
-- name: Run worker Docker container
-  docker_container:
-    name: ailurus-worker
-    image: ailurus-backend:latest
-    state: started
-    restart_policy: always
-    command: worker
-    volumes:
-    - "/opt/ailurus-worker/ailurus/worker_data:/opt/app/ailurus/worker_data"
-    links:
-      - ailurus-postgres
-      - ailurus-rabbitmq
+- name: Get number of workers
+  set_fact:
+    number_worker: "{{ hostvars[ansible_host]['num_worker'] }}"
+    
+- include_tasks:
+    file: run.yml
+  loop: "{{ range(1, number_worker + 1) | list }}"
+  loop_control:
+    loop_var: worker_id

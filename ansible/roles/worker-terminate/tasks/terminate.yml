@@ -1,0 +1,5 @@
+---
+- name: Terminate worker Docker container
+  docker_container:
+    name: ailurus-worker-{{worker_id}}
+    state: stopped
