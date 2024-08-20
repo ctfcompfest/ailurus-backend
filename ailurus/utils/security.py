@@ -6,7 +6,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from typing import Optional
 
-limiter = Limiter(get_remote_address, default_limits=["60 per minute"])
+# limiter = Limiter(get_remote_address, default_limits=["1000 per minute"])
 
 current_team: Optional[Team] = current_user
 

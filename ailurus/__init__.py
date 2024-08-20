@@ -116,7 +116,7 @@ def create_webapp_daemon(env_file=".env"):
         # Security
         setup_jwt_app(app)
         CORS(app)
-        limiter.init_app(app)
+        # limiter.init_app(app)
         
         # Socket
         socketio.init_app(app)
