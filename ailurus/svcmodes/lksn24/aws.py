@@ -19,7 +19,7 @@ def create_or_update_cloudformation_stack(credentials: Mapping[str, str], stack_
     
     try:
         try:
-            template_params = json.loads(template_body)["Parameters"].keys()
+            template_params = json.loads(template_body, strict=False)["Parameters"].keys()
         except Exception as e:
             log.error("error parsing stack template as json: %s", str(e))
             template_params = yaml.safe_load(template_body)["Parameters"].keys()
