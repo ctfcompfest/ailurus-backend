@@ -12,3 +12,11 @@ class CheckerAgentReport(db.Model):
     flag_status: Mapped[str] = mapped_column(Text, doc="JSON format detail flag status for every challenges.")
     challenge_status: Mapped[str] = mapped_column(Text, doc="JSON format detail service status for every challenges.")
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+
+class ServiceResetQueue(db.Model):
+    __tablename__ = 'lksn24_service_reset_queue'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    team_id: Mapped[int]
+    is_done: Mapped[bool] = mapped_column(default=False)
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())

@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from typing import List, Dict
 
+from .models import ServiceResetQueue
 from .schema import ServiceManagerTaskSchema, ServiceDetailSchema
 from .aws import create_or_update_cloudformation_stack, delete_cloudformation_stack
 
@@ -97,6 +98,15 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
         service_detail: ServiceDetailSchema = json.loads(service.detail)
         return flask.jsonify(status="success", data=service_detail["publish"])
 
+    if cmd == "reset":
+        reset_request = ServiceResetQueue.query.filter_by(team_id=team_id, is_done=False).first()
+        if reset_request:
+            return flask.jsonify(status="failed", message="reset in progress"), 200
+        else:
+            reset_request = ServiceResetQueue(team_id=team_id)
+            db.session.add(reset_request)
+            db.session.commit()
+    
     rabbitmq_conn = pika.BlockingConnection(
         pika.URLParameters(get_app_config("RABBITMQ_URI"))
     )
@@ -374,7 +384,14 @@ def do_reset(body: ServiceManagerTaskSchema, **kwargs):
 
     stack_template_str = aws_client.get_template(StackName=stack_name)['TemplateBody']
 
+    log.info('Rollback instance for %s' % stack_name)
     aws_client.close()
 
     delete_cloudformation_stack(configs["credentials"], stack_name)
-    return  create_or_update_cloudformation_stack(configs['credentials'], stack_name, stack_template_str, raw_parameters)
+    create_or_update_cloudformation_stack(configs['credentials'], stack_name, stack_template_str, raw_parameters)
+    
+    reset_req = ServiceResetQueue.query.filter_by(team_id=body["team_id"], is_done=False).first()
+    reset_req.is_done = True
+    db.session.commit()
+
+    return True
