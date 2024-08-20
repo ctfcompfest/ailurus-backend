@@ -2,7 +2,7 @@ import dotenv.parser
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
 from ailurus.utils.cors import CORS
-from ailurus.utils.security import limiter
+# from ailurus.utils.security import limiter
 from ailurus.utils.socket import socketio
 from ailurus.utils.svcmode import load_all_svcmode
 from ailurus.worker import create_keeper, create_worker
