@@ -19,8 +19,10 @@ def create_or_update_cloudformation_stack(credentials: Mapping[str, str], stack_
     
     try:
         try:
+            log.info('Stack template str: %s' % template_body)
             template_params = json.loads(template_body)["Parameters"].keys()
-        except:
+        except Exception as e:
+            log.error("error parsing stack template as json: %s", str(e))
             template_params = yaml.safe_load(template_body)["Parameters"].keys()
         
         reformat_params = [{'ParameterKey': x, 'ParameterValue': params[x]} for x in params.keys() if x in template_params]
