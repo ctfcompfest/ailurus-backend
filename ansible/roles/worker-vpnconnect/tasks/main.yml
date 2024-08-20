@@ -1,0 +1,24 @@
+---
+- name: Update apt and install wireguard
+  apt:
+    pkg:
+      - wireguard
+    state: latest
+    update_cache: true
+
+- name: Get vpn config
+  set_fact:
+    vpn_profile_path: "{{ hostvars[inventory_hostname]['vpn_profile_path'] }}"
+
+- name: Copy vpn profile to target system
+  copy:
+    src: "{{ vpn_profile_path }}"
+    dest: /etc/wireguard/wgchecker.conf
+    mode: 0755
+
+- name: Start the wireguard service
+  systemd:
+    name: wg-quick@wgchecker
+    enabled: yes
+    state: started
+

@@ -4,6 +4,7 @@ import boto3
 import json
 import logging
 import yaml
+import traceback
 
 log = logging.getLogger(__name__)
 def create_or_update_cloudformation_stack(credentials: Mapping[str, str], stack_name: str, template_body: str, params: Mapping[str, str]):
@@ -62,6 +63,7 @@ def create_or_update_cloudformation_stack(credentials: Mapping[str, str], stack_
                 log.error(f'Stack creation failed. Status: {stack_info["Stacks"][0]["StackStatus"]}')
     except Exception as e:
         log.error(f'Stack create or update throw exception: {str(e)}')
+        log.error("{}", traceback.format_exc())
     finally:
         log.info(f"create or update cloudformation finished.")
         aws_client.close()
