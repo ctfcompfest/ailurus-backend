@@ -1,6 +1,6 @@
 from ailurus.models import db
 from datetime import datetime
-from sqlalchemy import Text, TIMESTAMP, func
+from sqlalchemy import Text, TIMESTAMP, func, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
 class CheckerAgentReport(db.Model):
@@ -18,5 +18,5 @@ class ServiceResetQueue(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     team_id: Mapped[int]
-    is_done: Mapped[bool] = mapped_column(default=False)
+    is_done: Mapped[bool] = mapped_column(Boolean, default=False)
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())

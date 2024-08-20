@@ -19,7 +19,7 @@ def upgrade(op):
     op.create_table('lksn24_service_reset_queue',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('team_id', sa.Integer(), nullable=False),
-        sa.Column('is_done', sa.Boolean(), nullable=False, server_default=False),
+        sa.Column('is_done', sa.Boolean(), nullable=False, default=False),
         sa.Column('time_created', sa.TIMESTAMP(), nullable=False, server_default=sa.func.now()),
         sa.PrimaryKeyConstraint('id')
     )
