@@ -376,6 +376,7 @@ def do_reset(body: ServiceManagerTaskSchema, **kwargs):
     stack_template_str = json.dumps(stack_template)
 
     log.info('Rollback instance for %s' % stack_name)
+    log.info('Stack template str: %s' % stack_template_str)
     aws_client.close()
 
     delete_cloudformation_stack(configs["credentials"], stack_name)
