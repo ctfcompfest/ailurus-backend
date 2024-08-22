@@ -15,7 +15,7 @@ __all__ = ["public_services_blueprint", "auth_services_blueprint"]
 public_services_blueprint = Blueprint("public_services", __name__)
 
 @public_services_blueprint.get("/services-status/")
-@cache.cached(timeout=15)
+@cache.cached(timeout=30)
 def get_all_services_status():
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
@@ -56,7 +56,7 @@ def get_all_services_status():
 
 
 @public_services_blueprint.get("/teams/<int:team_id>/services-status/")
-@cache.cached(timeout=15)
+@cache.cached(timeout=30)
 def get_all_services_status_from_team(team_id):
     team = Team.query.filter_by(id=team_id).first()
     if not team:
@@ -97,7 +97,7 @@ def get_all_services_status_from_team(team_id):
 
 
 @public_services_blueprint.get("/challenges/<int:challenge_id>/services-status/")
-@cache.cached(timeout=15)
+@cache.cached(timeout=30)
 def get_all_services_status_from_challenge(challenge_id):
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
@@ -136,7 +136,7 @@ def get_all_services_status_from_challenge(challenge_id):
 
 
 @public_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services-status/")
-@cache.cached(timeout=15)
+@cache.cached(timeout=30)
 def get_all_services_status_from_team_and_chall(team_id, challenge_id):
     team = Team.query.filter_by(id=team_id).first()
     if not team:

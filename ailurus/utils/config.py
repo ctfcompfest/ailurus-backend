@@ -32,7 +32,6 @@ def get_app_config(key: str, default=None):
         return _convert_config_value(value)
     return default
 
-@cache.memoize(timeout=15)
 def _get_config(key: str):
     config = db.session.execute(
         Config.__table__.select().where(Config.key == key)
