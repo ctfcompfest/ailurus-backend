@@ -1,6 +1,7 @@
 import dotenv.parser
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
+from ailurus.utils.cache import cache
 from ailurus.utils.cors import CORS
 # from ailurus.utils.security import limiter
 from ailurus.utils.socket import socketio
@@ -116,6 +117,7 @@ def create_webapp_daemon(env_file=".env"):
         # Security
         setup_jwt_app(app)
         CORS(app)
+        cache.init_app(app)
         # limiter.init_app(app)
         
         # Socket

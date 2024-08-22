@@ -1,5 +1,6 @@
 from ailurus.models import db, Challenge, ChallengeRelease
 from ailurus.utils.config import get_config
+from ailurus.utils.cache import cache
 from flask import Blueprint, jsonify
 from flask_jwt_extended import (
     verify_jwt_in_request,
@@ -12,6 +13,7 @@ import markdown
 public_challenge_blueprint = Blueprint("public_challenge", __name__, url_prefix="/challenges")
 
 @public_challenge_blueprint.get("/")
+@cache.cached(timeout=60)
 def get_all_visible_challenges():
     current_round = get_config("CURRENT_ROUND", 0)
     challs: List[Tuple[Challenge]] = db.session.execute(
@@ -26,6 +28,7 @@ def get_all_visible_challenges():
     return jsonify(status="success", data=challs_data)
 
 @public_challenge_blueprint.get("/<int:challenge_id>/")
+@cache.cached(timeout=60)
 def get_detail_challenges(challenge_id):
     verify_jwt_in_request(optional=True)
 

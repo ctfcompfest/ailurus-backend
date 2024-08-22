@@ -3,7 +3,7 @@
     name: ailurus-postgres
     image: postgres:15-alpine
     state: started
-    restart: yes
+    restart_policy: always
     volumes:
       - /opt/ailurus-data/postgres:/var/lib/postgresql/data
     ports:
@@ -18,7 +18,7 @@
     name: ailurus-rabbitmq
     image: rabbitmq:3-management
     state: started
-    restart: yes
+    restart_policy: always
     volumes:
       - /opt/ailurus-data/rabbitmq:/var/lib/rabbitmq
     ports:
@@ -27,3 +27,14 @@
     env:
       RABBITMQ_DEFAULT_USER: "{{ rabbitmq.username }}"
       RABBITMQ_DEFAULT_PASS: "{{ rabbitmq.password }}"
+
+- name: Run Redis
+  docker_container:
+    name: ailurus-redis
+    image: redis:7.2.0-alpine
+    state: started
+    restart_policy: always
+    ports:
+      - "6379:6379"
+    command: >
+      --requirepass P@ssw0rd

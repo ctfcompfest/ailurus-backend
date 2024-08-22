@@ -1,7 +1,7 @@
 # Taken from https://github.com/CTFd/CTFd/blob/master/CTFd/utils/__init__.py with some modification
 
 from ailurus.models import db, Config
-
+from ailurus.utils.cache import cache
 from datetime import datetime, timezone
 from flask import current_app as app
 from enum import Enum
@@ -32,6 +32,7 @@ def get_app_config(key: str, default=None):
         return _convert_config_value(value)
     return default
 
+@cache.memoize(timeout=15)
 def _get_config(key: str):
     config = db.session.execute(
         Config.__table__.select().where(Config.key == key)
