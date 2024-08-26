@@ -4,7 +4,7 @@
     name: ailurus-frontend
     image: ailurus-frontend:latest
     state: started
-    restart: yes
+    restart_policy: always
     ports:
       - "3000:3000"
 

@@ -4,5 +4,6 @@
   become: true
   roles:
   - docker-install
-  - docker-setup
+  - worker-vpnconnect
+  - backend-setup
   - worker-run

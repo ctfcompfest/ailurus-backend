@@ -1,5 +1,6 @@
 from ailurus.utils.config import get_app_config
 from ailurus.utils.security import validteam_only
+from ailurus.utils.cache import cache
 from flask import Blueprint, jsonify
 from mdx_gfm import GithubFlavoredMarkdownExtension
 
@@ -10,6 +11,7 @@ public_docs_blueprint = Blueprint("public_docs_blueprint", __name__, url_prefix=
 public_docs_blueprint.before_request(validteam_only)
 
 @public_docs_blueprint.get("/<string:page>/")
+@cache.cached(timeout=60)
 def get_docs(page):
     base_path = os.path.join(get_app_config("TEMPLATE_DIR"), "docs")
     ALLOWED_PAGE = [elm.replace(".md", "") for elm in os.listdir(base_path)]

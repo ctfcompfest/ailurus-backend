@@ -1,8 +1,9 @@
 import dotenv.parser
 from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
+from ailurus.utils.cache import cache
 from ailurus.utils.cors import CORS
-from ailurus.utils.security import limiter
+# from ailurus.utils.security import limiter
 from ailurus.utils.socket import socketio
 from ailurus.utils.svcmode import load_all_svcmode
 from ailurus.worker import create_keeper, create_worker
@@ -71,7 +72,7 @@ def create_app(env_file=".env"):
         db.init_app(app)
         migrate.init_app(app, db)
         init_data_dir(app)
-        
+                
         # Load all svcmode
         load_all_svcmode(app)
     return app
@@ -111,10 +112,13 @@ def create_worker_daemon(env_file=".env"):
 def create_webapp_daemon(env_file=".env"):
     app = create_app(env_file)
     with app.app_context():
+        create_logger(os.path.join(app.config["DATA_DIR"], "logs", "webapp.log"))
+
         # Security
         setup_jwt_app(app)
         CORS(app)
-        limiter.init_app(app)
+        cache.init_app(app)
+        # limiter.init_app(app)
         
         # Socket
         socketio.init_app(app)

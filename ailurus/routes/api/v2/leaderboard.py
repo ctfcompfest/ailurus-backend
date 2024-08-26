@@ -1,12 +1,14 @@
 from ailurus.utils.config import get_config, is_contest_started
 from ailurus.utils.svcmode import get_svcmode_module
 from flask import Blueprint, jsonify
+from ailurus.utils.cache import cache
 
 from datetime import datetime, timezone
 
 public_leaderboard_blueprint = Blueprint("leaderboard", __name__)
 
 @public_leaderboard_blueprint.get("/leaderboard/")
+@cache.cached(timeout=45)
 def get_public_leaderboard():
     if not is_contest_started():
         return jsonify(status="success", data=[])

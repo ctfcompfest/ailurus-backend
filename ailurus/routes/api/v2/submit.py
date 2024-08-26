@@ -1,7 +1,7 @@
 from ailurus.models import db, Challenge, ChallengeRelease, Flag, ManageServiceUnlockMode, Solve, Submission, Team
 from ailurus.utils.config import is_contest_running, is_scoreboard_freeze, get_config
 from ailurus.utils.contest import calculate_submission_score
-from ailurus.utils.security import validteam_only, current_team, limiter
+from ailurus.utils.security import validteam_only, current_team
 from ailurus.utils.socket import send_attack_event
 from flask import Blueprint, jsonify, request
 from typing import List
@@ -72,7 +72,6 @@ def submit_flags(team: Team, flags: List[str]):
     return [submit_flag(team, flag) for flag in flags]
 
 @submit_blueprint.post("/")
-@limiter.limit("30 per minute")
 def bulk_submit_flag():
     if not is_contest_running():
         return jsonify(status="failed", message="contest is not running."), 400

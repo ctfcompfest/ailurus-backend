@@ -1,7 +1,7 @@
 # Taken from https://github.com/CTFd/CTFd/blob/master/CTFd/utils/__init__.py with some modification
 
 from ailurus.models import db, Config
-
+from ailurus.utils.cache import cache
 from datetime import datetime, timezone
 from flask import current_app as app
 from enum import Enum

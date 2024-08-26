@@ -2,6 +2,7 @@ from ailurus.models import db, Challenge, ChallengeRelease, CheckerResult, Check
 from ailurus.utils.config import get_config
 from ailurus.utils.security import validteam_only
 from ailurus.utils.svcmode import get_svcmode_module
+from ailurus.utils.cache import cache
 from flask import Blueprint, jsonify
 from sqlalchemy import and_, select, func
 from typing import List, Tuple, Any
@@ -14,6 +15,7 @@ __all__ = ["public_services_blueprint", "auth_services_blueprint"]
 public_services_blueprint = Blueprint("public_services", __name__)
 
 @public_services_blueprint.get("/services-status/")
+@cache.cached(timeout=30)
 def get_all_services_status():
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
@@ -54,6 +56,7 @@ def get_all_services_status():
 
 
 @public_services_blueprint.get("/teams/<int:team_id>/services-status/")
+@cache.cached(timeout=30)
 def get_all_services_status_from_team(team_id):
     team = Team.query.filter_by(id=team_id).first()
     if not team:
@@ -94,6 +97,7 @@ def get_all_services_status_from_team(team_id):
 
 
 @public_services_blueprint.get("/challenges/<int:challenge_id>/services-status/")
+@cache.cached(timeout=30)
 def get_all_services_status_from_challenge(challenge_id):
     chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
 
@@ -132,6 +136,7 @@ def get_all_services_status_from_challenge(challenge_id):
 
 
 @public_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services-status/")
+@cache.cached(timeout=30)
 def get_all_services_status_from_team_and_chall(team_id, challenge_id):
     team = Team.query.filter_by(id=team_id).first()
     if not team:
@@ -178,6 +183,7 @@ auth_services_blueprint = Blueprint("auth_services", __name__)
 auth_services_blueprint.before_request(validteam_only)
 
 @auth_services_blueprint.get("/services/")
+@cache.cached(timeout=60)
 def get_all_services():
     svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
     release_challs: List[Challenge] = db.session.execute(
@@ -209,6 +215,7 @@ def get_all_services():
     return jsonify(status="success", data=response)
 
 @auth_services_blueprint.get("/teams/<int:team_id>/services/")
+@cache.cached(timeout=60)
 def get_all_services_from_team(team_id):
     team: Team = Team.query.filter_by(id=team_id).first()
     if not team:
@@ -242,6 +249,7 @@ def get_all_services_from_team(team_id):
 
 
 @auth_services_blueprint.get("/challenges/<int:challenge_id>/services/")
+@cache.cached(timeout=60)
 def get_all_services_from_challenge(challenge_id):
     chall: Challenge = db.session.execute(
             select(
@@ -278,6 +286,7 @@ def get_all_services_from_challenge(challenge_id):
 
 
 @auth_services_blueprint.get("/teams/<int:team_id>/challenges/<int:challenge_id>/services/")
+@cache.cached(timeout=60)
 def get_all_services_from_team_and_chall(team_id, challenge_id):
     team: Team = Team.query.filter_by(id=team_id).first()
     if not team:

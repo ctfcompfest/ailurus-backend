@@ -4,7 +4,7 @@
     name: ailurus-webapp
     image: ailurus-backend:latest
     state: started
-    restart: yes
+    restart_policy: always
     volumes:
     - "/opt/ailurus-data/adce:/opt/app/ailurus/.adce_data"
     links:
@@ -18,7 +18,8 @@
     name: ailurus-keeper
     image: ailurus-backend:latest
     state: started
-    restart: yes
+    command: keeper
+    restart_policy: always
     volumes:
     - "/opt/ailurus-data/adce:/opt/app/ailurus/.adce_data"
     links:

@@ -21,7 +21,8 @@ def load_svcmode_module(service_mode: str, app: flask.Flask):
     mod = get_svcmode_module(service_mode)
     try:
         return mod.load(app)
-    except Exception:
+    except Exception as e:
+        print(e)
         return None
     
 def load_all_svcmode(app: flask.Flask):
@@ -31,4 +32,5 @@ def load_all_svcmode(app: flask.Flask):
         cfgfile_path = os.path.join(realpath, "config.json")
         if not os.path.isdir(realpath) or \
             not os.path.exists(cfgfile_path): continue
+        print("Module", elm)
         load_svcmode_module(elm, app)

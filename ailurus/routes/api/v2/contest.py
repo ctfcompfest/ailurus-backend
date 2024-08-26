@@ -6,10 +6,12 @@ from ailurus.utils.config import (
     is_contest_started
 )
 from flask import Blueprint, jsonify
+from ailurus.utils.cache import cache
 
 contestinfo_blueprint = Blueprint("contestinfo", __name__, url_prefix="/contest")
 
 @contestinfo_blueprint.get("/info/")
+@cache.cached(timeout=30)
 def get_contest_info():
     if not is_contest_started():
         event_status = "not started"

@@ -1,5 +1,10 @@
 ---
-- name: Terminate backend Docker container
+- name: Terminate webapp Docker container
   docker_container:
-    name: ailurus-backend
+    name: ailurus-webapp
+    state: stopped
+
+- name: Terminate keeper Docker container
+  docker_container:
+    name: ailurus-keeper
     state: stopped
