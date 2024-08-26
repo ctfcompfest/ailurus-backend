@@ -1,4 +1,4 @@
 {
-    "display": "Root-User AWS",
+    "display": "[AWS] Full server - Root and user flag mode",
     "doc": "Root-User flag in AWS ecosystems, such as EC2, VPC, etc."
 }
