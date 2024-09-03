@@ -27,7 +27,7 @@ def do_build_image(body: ServiceManagerTaskSchema, **kwargs):
     storage_bucket_name =  gcp_config_json["storage_bucket"]
 
     challenge_artifact_checksum = body["artifact_checksum"]
-    challenge_artifact_path = kwargs["artifact_folder"]
+    challenge_artifact_path = os.path.join(kwargs["artifact_folder"], "src")
     service_image_name = f"{image_name_prefix}/{challenge_slug}:{challenge_artifact_checksum}"
 
     challenge_testcase_checksum = body["testcase_checksum"]
