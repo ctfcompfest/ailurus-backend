@@ -1,5 +1,7 @@
+from ailurus.models import db
 from datetime import datetime, timezone
 
+from ..models import ManageServicePendingList
 from ..schema import ServiceManagerTaskSchema
 from ..k8s import get_kubernetes_apiclient
 
@@ -39,4 +41,11 @@ def do_reset(body: ServiceManagerTaskSchema, **kwargs):
     except kubernetes.client.ApiException as e:
             log.error("restart-service: %s %s.", e.reason, e.body)
 
-    # TODO: unlock service manager action
+    pending_list = ManageServicePendingList.query.filter_by(
+         team_id=team_id,
+         challenge_slug=challenge_slug,
+         is_done=False,
+    )
+    if pending_list:
+        pending_list.is_done = True
+        db.session.commit()

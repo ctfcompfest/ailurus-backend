@@ -1,8 +1,9 @@
-from ailurus.models import Challenge, Service
+from ailurus.models import db, Challenge, Service
 from ailurus.utils.config import get_app_config, is_contest_running
 
 from ..schema import ServiceManagerTaskSchema, ServiceDetailSchema
 from ..utils import init_challenge_asset
+from ..models import ManageServicePendingList
 
 from .build_image import do_build_image
 from .delete import do_delete
@@ -45,11 +46,16 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
         service_detail: ServiceDetailSchema = json.loads(service.detail)
         return flask.jsonify(status="success", data=service_detail["credentials"])
 
-    # TODO: detect if reset/restart is in progress or not
-
     challenge: Challenge = Challenge.query.filter_by(id=chall_id).first()
     if not challenge:
         return flask.jsonify(status="failed", message="invalid command."), 400
+
+    pending_list = ManageServicePendingList.query.filter_by(
+        team_id=team_id,
+        challenge_id=chall_id,
+    ).first()
+    if pending_list:
+        return flask.jsonify(status="success", message="in progress."), 200
 
     rabbitmq_conn = pika.BlockingConnection(
         pika.URLParameters(get_app_config("RABBITMQ_URI"))
@@ -80,6 +86,10 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
     )
     rabbitmq_conn.close()
     
+    pending_list = ManageServicePendingList(team_id=team_id, challenge_id=chall_id)
+    db.session.add(pending_list)
+    db.session.commit()
+
     return flask.jsonify(status="success", message="success.")
 
 def handler_svcmanager_task(body: ServiceManagerTaskSchema, **kwargs):
