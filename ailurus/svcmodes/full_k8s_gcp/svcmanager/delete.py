@@ -1,3 +1,6 @@
+from ailurus.models import db, Service
+from sqlalchemy import delete
+
 from typing import List
 
 from ..schema import ServiceManagerTaskSchema
@@ -57,6 +60,7 @@ def delete_service_loadbalancer(k8s_coreapi: kubernetes.client.CoreV1Api, team_i
 
 def do_delete(body: ServiceManagerTaskSchema, **kwargs):
     team_id = body["team_id"]
+    challenge_id = body["challenge_id"]
     challenge_slug = body["challenge_slug"]
     
     k8s_api_baseclient = get_kubernetes_apiclient()
@@ -73,4 +77,9 @@ def do_delete(body: ServiceManagerTaskSchema, **kwargs):
         else:
             log.error("delete-service-configmap: %s %s.", e.reason, e.body)
 
-    # TODO: remove service data from database
+    db.session.execute(
+        delete(Service).where(
+            Service.team_id == team_id,
+            Service.challenge_id == challenge_id,
+        )
+    )
