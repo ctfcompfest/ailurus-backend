@@ -34,7 +34,7 @@ def do_build_image(body: ServiceManagerTaskSchema, **kwargs):
     challenge_testcase_path = os.path.join(kwargs["testcase_folder"], "agent")
     agentchecker_image_name = f"{image_name_prefix}/{challenge_slug}-agent-checker:{challenge_testcase_checksum}"
 
-    if not get_config("GCP_USE_CLOUD_BUILD", False):
+    if not gcp_config_json["build_in_cloudbuild"]:
         local_build_image(challenge_artifact_path, service_image_name, creds_json)
         local_build_image(challenge_testcase_path, agentchecker_image_name, creds_json)
     else:
