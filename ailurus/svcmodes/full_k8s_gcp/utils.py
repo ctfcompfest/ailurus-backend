@@ -1,5 +1,7 @@
+from ailurus.models import ProvisionMachine
 from ailurus.utils.config import get_app_config, get_config
 
+import json
 import logging
 import os
 import requests
@@ -32,3 +34,7 @@ def init_challenge_asset(chall_id, chall_slug, asset_checksum=None, asset_type="
             log.debug(f"extracting tc zipfile to {asset_folder}.")
             tczip_file.extractall(asset_folder)
     return asset_folder
+
+def get_gcp_configuration():
+    machine: ProvisionMachine = ProvisionMachine.query.filter_by(name="gcp-k8s").first()
+    return json.loads(machine.detail)

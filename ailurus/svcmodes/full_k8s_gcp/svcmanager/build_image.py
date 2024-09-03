@@ -6,6 +6,7 @@ from google.oauth2 import service_account
 from os import PathLike
 
 from ..schema import ServiceManagerTaskSchema
+from ..utils import get_gcp_configuration
 
 import docker
 import logging
@@ -17,12 +18,13 @@ log = logging.getLogger(__name__)
 def do_build_image(body: ServiceManagerTaskSchema, **kwargs):
     challenge_slug = body["challenge_slug"]
 
-    creds_json = get_config("GCP_SERVICE_ACCOUNTS_CREDS", {})
+    gcp_config_json = get_gcp_configuration()
+    creds_json = gcp_config_json["credentials"]
     project_id = creds_json['project_id']
-    project_zone = get_config("GCP_ZONE", "us-central1")
-    event_slug = get_config("GCP_RESOURCES_PREFIX", "ailurus")    
-    image_name_prefix = f"{project_zone}-docker.pkg.dev/{project_id}/{event_slug}-image-artifact"
-    storage_bucket_name = f"{event_slug}-image-assets"
+    project_zone = gcp_config_json["zone"]
+    artifact_repo = gcp_config_json["artifact_registry"]
+    image_name_prefix = f"{project_zone}-docker.pkg.dev/{project_id}/{artifact_repo}"
+    storage_bucket_name =  gcp_config_json["storage_bucket"]
 
     challenge_artifact_checksum = body["artifact_checksum"]
     challenge_artifact_path = kwargs["artifact_folder"]

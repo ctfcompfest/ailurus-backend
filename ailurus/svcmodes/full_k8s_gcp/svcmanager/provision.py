@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives.asymmetric import ed25519
 
 from ..k8s import get_kubernetes_apiclient
 from ..schema import ServiceManagerTaskSchema
+from ..utils import get_gcp_configuration
 
 import hashlib
 import kubernetes
@@ -313,12 +314,12 @@ def do_provision(body: ServiceManagerTaskSchema, **kwargs):
     with open(os.path.join(challenge_artifact_path, 'spec.yml')) as spec_file:
         challenge_service_spec = yaml.safe_load(spec_file)
     
-    creds_json = get_config("GCP_SERVICE_ACCOUNTS_CREDS", {})
+    gcp_config_json = get_gcp_configuration()
+    creds_json =  gcp_config_json["credentials"]
     project_id = creds_json['project_id']
-    project_zone = get_config("GCP_ZONE", "us-central1")
-    event_slug = get_config("GCP_RESOURCES_PREFIX", "ailurus")
+    project_zone = gcp_config_json["zone"]
     
-    repo_name = "{}-image-artifact".format(event_slug)
+    repo_name =  gcp_config_json["artifact_registry"]
 
     challenge_image_name = "{}-docker.pkg.dev/{}/{}/{}:{}".format(
         project_zone, project_id, repo_name, challenge_slug, challenge_artifact_checksum
