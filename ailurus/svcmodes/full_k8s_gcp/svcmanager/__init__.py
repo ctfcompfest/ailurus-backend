@@ -56,7 +56,7 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
         is_done=False,
     ).first()
     if pending_list:
-        return flask.jsonify(status="success", message="in progress."), 200
+        return flask.jsonify(status="failed", message="the last request still in progress."), 400
 
     rabbitmq_conn = pika.BlockingConnection(
         pika.URLParameters(get_app_config("RABBITMQ_URI"))
