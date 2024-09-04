@@ -400,14 +400,14 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
     public_ports = calc_public_ports(challenge_id, challenge_service_spec["ssh_port"], expose_ports)
     service_detail: ServiceDetailSchema = {
         "credentials": {
-            "Address": "{}:{}".format(team_private_ip, public_ports[0]),
+            "Address": "{}:{}".format(team_private_ip, public_ports[challenge_service_spec["ssh_port"]]),
             "Username": "root",
             "Private Key": ssh_privkey,
         },
-        "public_adresses": [
-            "{}:{}".format(team_private_ip, port)
-            for port in public_ports[1:]
-        ]
+        "public_adresses": list(map(
+            lambda x: x[0] != challenge_service_spec["ssh_port"] and "{}:{}".format(x[0], x[1]),
+            public_ports.items()
+        ))
     }
 
     service = Service(
