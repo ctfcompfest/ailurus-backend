@@ -12,7 +12,7 @@ import flask
 import json
 
 def load(app: flask.Flask):
-    upgrade("gcpk8s")
+    upgrade()
 
 def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
     if len(services) == 0: return []

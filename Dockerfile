@@ -6,17 +6,20 @@ RUN apt update && \
 
 WORKDIR /opt/app
 
-# Workaround for python module installation error
-RUN mkdir ailurus && touch ailurus/__init__.py && touch README.md
-COPY pyproject.toml .
-RUN pip install .
-
 RUN mkdir -p -m=777 ailurus/.adce_data
 COPY .env.example .env
 COPY . .
+
+RUN pip install .
+RUN for folder in /opt/app/ailurus/svcmodes/*/; do \
+        if [ -f "$folder/requirements.txt" ]; then \
+            pip3 install -r "$folder/requirements.txt"; \
+        fi \
+    done
+
 RUN chmod +x startup.sh
 RUN ln -s /run/shm /dev/shm
-
+    
 EXPOSE 5000
 
 ENTRYPOINT [ "./startup.sh" ]

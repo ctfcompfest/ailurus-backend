@@ -174,3 +174,7 @@ migrations-old
 .adce_data
 .data
 worker_data
+
+# docker
+Dockerfile
+docker-compose.yml

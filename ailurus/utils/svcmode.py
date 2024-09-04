@@ -21,7 +21,8 @@ def get_svcmode_module(service_mode: str):
 def load_svcmode_module(service_mode: str, app: flask.Flask):
     mod = get_svcmode_module(service_mode)
     try:
-        return mod.load(app)
+        mod.load(app)
+        print("Successfully loaded")
     except Exception as e:
         print(e)
         return None
