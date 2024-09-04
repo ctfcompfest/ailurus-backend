@@ -31,11 +31,15 @@ def main():
         with open("/configmap/flag/flag.txt") as flag_file:
             current_flag = flag_file.read().strip()
         checker_result = run_checker(team_id, challenge_slug, app_file_basedir, service_secret, current_flag)
-        requests.post(
-            report_url,
-            json={"challenge_slug": challenge_slug, "team_id": team_id, "report": checker_result},
-            headers={'X-CHECKER-SECRET': checker_secret},
-        )
+        try:
+            requests.post(
+                report_url,
+                json={"challenge_slug": challenge_slug, "team_id": team_id, "report": checker_result},
+                headers={'X-CHECKER-SECRET': checker_secret},
+                timeout=1
+            )
+        except Exception as e:
+            print(e)
         
         time.sleep(checker_interval)
 
