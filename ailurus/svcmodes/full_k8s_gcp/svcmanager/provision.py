@@ -3,8 +3,6 @@ from ailurus.utils.config import get_app_config
 from typing import List, Mapping, Any, Tuple
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
-from google.oauth2 import service_account
-from google.cloud import compute_v1
 
 from ..k8s import get_kubernetes_apiclient
 from ..schema import ServiceManagerTaskSchema, ServiceDetailSchema

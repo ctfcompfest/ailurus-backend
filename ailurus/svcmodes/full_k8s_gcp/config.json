@@ -1,5 +1,5 @@
 {
     "display": "[GCP] Full access - Kubernetes mode",
     "doc": "Participants has full access to the container/services that deployed in Google Kubernetes Engine (GKE).",
-    "enabled": true
+    "enable": true
 }

@@ -31,9 +31,12 @@ def setup_page():
             not os.path.exists(cfgfile_path): continue
         with open(cfgfile_path) as cfgfile:
             cfg = json.load(cfgfile)
+            module_displayname = cfg["display"]
+            if not cfg["enable"]:
+                module_displayname += " - Disable"
             service_modes.append({
                 "id": elm,
-                "display": cfg["display"],
+                "display": module_displayname,
             })
     return render_template("admin/setup.html", unlock_modes = ManageServiceUnlockMode, service_modes = service_modes)
 
