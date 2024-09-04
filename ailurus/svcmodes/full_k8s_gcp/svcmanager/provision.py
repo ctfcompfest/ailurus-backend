@@ -1,13 +1,18 @@
-from ailurus.utils.config import get_config
+from ailurus.models import db, Service
+from ailurus.utils.config import get_app_config
 from typing import List, Mapping, Any, Tuple
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from google.oauth2 import service_account
+from google.cloud import compute_v1
 
 from ..k8s import get_kubernetes_apiclient
-from ..schema import ServiceManagerTaskSchema
+from ..schema import ServiceManagerTaskSchema, ServiceDetailSchema
 from ..utils import get_gcp_configuration
 
 import hashlib
+import ipaddress
+import json
 import kubernetes
 import logging
 import os
@@ -34,18 +39,23 @@ def generate_ssh_key() -> Tuple[str, str]:
 def get_mountpath_code(path: str) -> str:
     return hashlib.md5(path.encode()).hexdigest()
 
-def calc_public_ports(challenge_id: int, ssh_port: int, expose_ports: List[int]) -> Mapping[int, int]:
+def calc_public_ports(challenge_id: int, ssh_port: int = None, expose_ports: List[int] = []) -> Mapping[int, int]:
     START_ALLOWED_PORT = 20000
     RANGE_PER_CHALL = 200
 
     min_port = challenge_id * RANGE_PER_CHALL + START_ALLOWED_PORT
 
     public_ports = {}
-    public_ports[ssh_port] = min_port + ssh_port % 50
+    if ssh_port:
+        public_ports[ssh_port] = min_port + ssh_port % 50
     for i in range(len(expose_ports)):
         port = expose_ports[i] 
         public_ports[port] = min_port + (51 + i)
     return public_ports
+
+def calculate_team_instanceip(cidr_block, team_id):
+    padding = 30
+    return str(ipaddress.ip_address(cidr_block.split("/")[0]) + team_id + padding)
 
 def create_global_persistentvolumeclaim(k8s_coreapi: kubernetes.client.CoreV1Api) -> str:
     pvc_name = "pvc-global"
@@ -168,16 +178,14 @@ def create_service_deployment(
                             "env": [
                                 {"name": "CHECKER_INTERVAL", "value": "20"},
                                 {"name": "CHECKER_SECRET", "value": "secret"},
-                                # TODO: fix this
-                                {"name": "REPORT_API_ENDPOINT", "value": "https://webhook.site/5c60c618-7976-4e5f-a2d1-0005b0bbedac"},
+                                {"name": "REPORT_API_ENDPOINT", "value": "{}/api/v2/agentchecker".format(get_app_config("WEBAPP_URL"))},
                                 {"name": "REPORT_CHALL_SLUG", "value": challenge_slug},
                                 {"name": "REPORT_TEAM_ID", "value": str(team_id)},
                                 {"name": "APP_CONTAINER_FILESYSTEM", "value": "/app-container"},
                             ],
                             "resources": {
-                                # TODO: fix this
-                                "limits": {
-                                    "memory": "128Mi",
+                                "requests": {
+                                    "memory": "64Mi",
                                     "cpu": "250m",
                                 },
                             },
@@ -240,8 +248,8 @@ def create_service_loadbalancer(
         challenge_id: int,
         challenge_slug: str,
         challenge_service_spec: Mapping[str, Any],
+        team_private_ip: str,
     ) -> str:
-    # TODO: Calculate team private IP address    
     service_lb_name = "lb-t{}".format(team_id)
     is_lb_service_available = False
     service_lb_service = {
@@ -249,9 +257,13 @@ def create_service_loadbalancer(
         "kind": "Service",
         "metadata": {
             "name": service_lb_name,
+            "annotations": {
+                "networking.gke.io/load-balancer-type": "Internal",
+            },
         },
         "spec": {
             "type": "LoadBalancer",
+            "loadBalancerIP": team_private_ip,
             "selector": {
                 "team": str(team_id)
             },
@@ -319,6 +331,7 @@ def do_provision(body: ServiceManagerTaskSchema, **kwargs):
     project_id = creds_json['project_id']
     project_zone = gcp_config_json["zone"]
     
+    team_private_ip = calculate_team_instanceip(gcp_config_json["loadbalancer_cidr"], team_id)
     repo_name =  gcp_config_json["artifact_registry"]
 
     challenge_image_name = "{}-docker.pkg.dev/{}/{}/{}:{}".format(
@@ -383,6 +396,28 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
 
     create_global_persistentvolumeclaim(k8s_coreapi)
     create_service_deployment(k8s_appsapi, team_id, challenge_slug, challenge_service_spec, challenge_image_name, agentchecker_image_name) 
-    create_service_loadbalancer(k8s_coreapi, team_id, challenge_id, challenge_slug, challenge_service_spec)
+    create_service_loadbalancer(k8s_coreapi, team_id, challenge_id, challenge_slug, challenge_service_spec, team_private_ip)
 
-    # TODO: Add new service data to database
+    expose_ports = [d["port"] for d in challenge_service_spec["expose_ports"]]
+    public_ports = calc_public_ports(challenge_id, challenge_service_spec["ssh_port"], expose_ports)
+    service_detail: ServiceDetailSchema = {
+        "credentials": {
+            "Address": "{}:{}".format(team_private_ip, public_ports[0]),
+            "Username": "root",
+            "Private Key": ssh_privkey,
+        },
+        "public_adresses": [
+            "{}:{}".format(team_private_ip, port)
+            for port in public_ports[1:]
+        ]
+    }
+
+    service = Service(
+        team_id=team_id,
+        challenge_id=challenge_id,
+        order=0,
+        secret=service_secret,
+        detail=json.dumps(service_detail)
+    )
+    db.session.add(service)
+    db.session.commit()

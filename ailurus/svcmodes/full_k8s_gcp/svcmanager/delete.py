@@ -28,9 +28,13 @@ def delete_service_loadbalancer(k8s_coreapi: kubernetes.client.CoreV1Api, team_i
         "kind": "Service",
         "metadata": {
             "name": service_lb_name,
+            "annotations": {
+                "networking.gke.io/load-balancer-type": "Internal",
+            },
         },
         "spec": {
             "type": "LoadBalancer",
+            "loadBalancerIP": "",
             "selector": {
                 "team": str(team_id)
             },
@@ -40,6 +44,8 @@ def delete_service_loadbalancer(k8s_coreapi: kubernetes.client.CoreV1Api, team_i
     try:
         k8s_lb_config: kubernetes.client.V1Service = k8s_coreapi.read_namespaced_service(service_lb_name, "default")
         k8s_lb_config_ports: List[kubernetes.client.V1ServicePort] = k8s_lb_config.spec.ports
+
+        service_lb_service["spec"]["loadBalancerIP"] = k8s_lb_config.spec.load_balancer_ip
         for port_cfg in k8s_lb_config_ports:
             if port_cfg.name.find("port-{}".format(challenge_slug)) == -1:
                 service_lb_service["spec"]["ports"].append(port_cfg.to_dict())
