@@ -53,6 +53,7 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
     pending_list = ManageServicePendingList.query.filter_by(
         team_id=team_id,
         challenge_id=chall_id,
+        is_done=False,
     ).first()
     if pending_list:
         return flask.jsonify(status="success", message="in progress."), 200
@@ -113,6 +114,15 @@ def handler_svcmanager_task(body: ServiceManagerTaskSchema, **kwargs):
     
     if body["action"] == "restart":
         do_restart(body, **kwargs)
-        
+    
+    pending_list = ManageServicePendingList.query.filter_by(
+        team_id=body["team_id"],
+        challenge_id=body["challenge_id"],
+        is_done=False,
+    ).first()
+    if pending_list:
+        pending_list.is_done = True
+        db.session.commit()
+
     log.info("finish executing %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
     

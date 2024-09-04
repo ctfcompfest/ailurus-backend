@@ -3,8 +3,9 @@ from sqlalchemy import delete
 
 from typing import List
 
-from ..schema import ServiceManagerTaskSchema
+from ..models import ManageServicePendingList
 from ..k8s import get_kubernetes_apiclient
+from ..schema import ServiceManagerTaskSchema
 
 import kubernetes
 import logging
@@ -89,3 +90,4 @@ def do_delete(body: ServiceManagerTaskSchema, **kwargs):
             Service.challenge_id == challenge_id,
         )
     )
+    db.session.commit()

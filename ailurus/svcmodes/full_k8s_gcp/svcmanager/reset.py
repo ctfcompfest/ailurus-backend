@@ -40,12 +40,3 @@ def do_reset(body: ServiceManagerTaskSchema, **kwargs):
         )
     except kubernetes.client.ApiException as e:
             log.error("restart-service: %s %s.", e.reason, e.body)
-
-    pending_list = ManageServicePendingList.query.filter_by(
-         team_id=team_id,
-         challenge_slug=challenge_slug,
-         is_done=False,
-    )
-    if pending_list:
-        pending_list.is_done = True
-        db.session.commit()
