@@ -4,6 +4,7 @@ from ailurus.models import (
     Challenge,
 )
 from ailurus.utils.config import get_config, set_config
+from ailurus.utils.scoremode import get_scoremode_module
 from datetime import datetime, timezone
 from secrets import choice
 from string import ascii_lowercase, digits
@@ -31,7 +32,7 @@ def update_paused_status(newvalue: bool | str):
         set_config("IS_CONTEST_PAUSED", "true")
 
 def calculate_submission_score(attacker: Team, defender: Team, challenge: Challenge, flag: Flag):
-    return 1.0
+    return get_scoremode_module(get_config("SCRIPT_MODE")).calculate_submission_score(get_config("SCORE_SCRIPT"), attacker, defender, challenge, flag)
 
 def generate_flag(current_round: int, current_tick: int, team: Team, challenge: Challenge, order: int = 0) -> Flag:
     CHARSET = ascii_lowercase + digits
