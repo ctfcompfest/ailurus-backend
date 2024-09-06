@@ -5,7 +5,7 @@ from typing import List
 
 from ..models import ManageServicePendingList
 from ..k8s import get_kubernetes_apiclient
-from ..schema import ServiceManagerTaskSchema
+from ..types import ServiceManagerTaskType
 
 import kubernetes
 import logging
@@ -65,7 +65,7 @@ def delete_service_loadbalancer(k8s_coreapi: kubernetes.client.CoreV1Api, team_i
         log.error("delete-service-loadbalancer: failed to delete: %s %s.", e.reason, e.body)
     return service_lb_name
 
-def do_delete(body: ServiceManagerTaskSchema, **kwargs):
+def do_delete(body: ServiceManagerTaskType, **kwargs):
     team_id = body["team_id"]
     challenge_id = body["challenge_id"]
     challenge_slug = body["challenge_slug"]

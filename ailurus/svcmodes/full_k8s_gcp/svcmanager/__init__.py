@@ -1,7 +1,7 @@
 from ailurus.models import db, Challenge, Service
 from ailurus.utils.config import get_app_config, is_contest_running
 
-from ..schema import ServiceManagerTaskSchema, ServiceDetailSchema
+from ..types import ServiceManagerTaskType, ServiceDetailType
 from ..utils import init_challenge_asset
 from ..models import ManageServicePendingList
 
@@ -43,7 +43,7 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
         service = Service.query.filter_by(challenge_id=chall_id, team_id=team_id).first()
         if not service:
             return flask.jsonify(status="failed", message="invalid command."), 400
-        service_detail: ServiceDetailSchema = json.loads(service.detail)
+        service_detail: ServiceDetailType = json.loads(service.detail)
         return flask.jsonify(status="success", data=service_detail["credentials"])
 
     challenge: Challenge = Challenge.query.filter_by(id=chall_id).first()
@@ -65,7 +65,7 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
     queue_name = get_app_config("QUEUE_SVCMANAGER_TASK", "svcmanager_task")
     rabbitmq_channel.queue_declare(queue_name, durable=True)
 
-    taskbody: ServiceManagerTaskSchema = {
+    taskbody: ServiceManagerTaskType = {
         "action": cmd,
         "initiator": ("team" if not is_admin else "admin"),
         "artifact_checksum": challenge.artifact_checksum,
@@ -93,7 +93,7 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
 
     return flask.jsonify(status="success", message="success.")
 
-def handler_svcmanager_task(body: ServiceManagerTaskSchema, **kwargs):
+def handler_svcmanager_task(body: ServiceManagerTaskType, **kwargs):
     log.info("execute %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
     
     if body["action"] == "build_image" and body["initiator"] == "admin":

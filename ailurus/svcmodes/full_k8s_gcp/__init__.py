@@ -6,7 +6,7 @@ from .flagrotator import handler_flagrotator_task
 from .svcmanager import handler_svcmanager_request, handler_svcmanager_task
 from .checker import handler_checker_task
 
-from .schema import ServiceDetailSchema
+from .types import ServiceDetailType
 
 import datetime
 import flask
@@ -17,7 +17,7 @@ def load(app: flask.Flask):
 
 def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
     if len(services) == 0: return []
-    service_detail: ServiceDetailSchema = json.loads(services[0].detail)
+    service_detail: ServiceDetailType = json.loads(services[0].detail)
     return service_detail['public_addresses']
 
 def generator_public_services_status_detail(result_detail: Mapping[str, Any]) -> Dict | List | str:

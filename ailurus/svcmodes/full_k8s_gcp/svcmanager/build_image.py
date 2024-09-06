@@ -5,7 +5,7 @@ from google.cloud import storage
 from google.oauth2 import service_account
 from os import PathLike
 
-from ..schema import ServiceManagerTaskSchema
+from ..types import ServiceManagerTaskType
 from ..utils import get_gcp_configuration
 
 import docker
@@ -15,7 +15,7 @@ import tarfile
 
 log = logging.getLogger(__name__)
 
-def do_build_image(body: ServiceManagerTaskSchema, **kwargs):
+def do_build_image(body: ServiceManagerTaskType, **kwargs):
     challenge_slug = body["challenge_slug"]
 
     gcp_config_json = get_gcp_configuration()

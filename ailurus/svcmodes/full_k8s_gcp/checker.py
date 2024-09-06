@@ -1,12 +1,12 @@
 from ailurus.models import db, CheckerResult, CheckerStatus, Service, Flag, CheckerAgentReport
-from ailurus.schema import CheckerTaskSchema, ServiceSchema, FlagSchema, CheckerAgentReportSchema
+from ailurus.schema import CheckerTaskType, ServiceSchema, FlagSchema, CheckerAgentReportSchema
 from ailurus.utils.checker import execute_check_function_with_timelimit
 
 from sqlalchemy import select
 from typing import List
 
 from .utils import init_challenge_asset
-from .schema import CheckerResultDetailSchema
+from .types import CheckerResultDetailType
 
 import datetime
 import json
@@ -17,7 +17,7 @@ import traceback
 
 log = logging.getLogger(__name__)
 
-def handler_checker_task(body: CheckerTaskSchema, **kwargs):
+def handler_checker_task(body: CheckerTaskType, **kwargs):
     if not body["testcase_checksum"]:
         return False
     tc_folder = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["testcase_checksum"], "testcase")
@@ -37,7 +37,7 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
         time_created = body["time_created"],
     )
 
-    checker_detail_result: CheckerResultDetailSchema = {}
+    checker_detail_result: CheckerResultDetailType = {}
     try:
         log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))
         services: List[Service] = db.session.execute(

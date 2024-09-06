@@ -1,14 +1,14 @@
 from ailurus.models import Challenge
 
 from .k8s import get_kubernetes_apiclient
-from .schema import FlagrotatorTaskSchema
+from .types import FlagrotatorTaskType
 
 import kubernetes
 import logging
 
 log = logging.getLogger(__name__)
 
-def handler_flagrotator_task(body: FlagrotatorTaskSchema, **kwargs):
+def handler_flagrotator_task(body: FlagrotatorTaskType, **kwargs):
     chall: Challenge = Challenge.query.filter_by(id=body["challenge_id"]).first()
 
     team_id = body["team_id"]

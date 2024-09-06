@@ -153,7 +153,7 @@ class CheckerAgentReportSchema(SQLAlchemyAutoSchema):
         data['report'] = json.loads(data['report'])
         return data
     
-class CheckerTaskSchema(TypedDict):
+class CheckerTaskType(TypedDict):
     time_limit: int
     challenge_id: int
     challenge_slug: str

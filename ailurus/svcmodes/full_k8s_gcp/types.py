@@ -1,7 +1,7 @@
 from typing import TypedDict, List, Dict
 import datetime
 
-class ServiceManagerTaskSchema(TypedDict):
+class ServiceManagerTaskType(TypedDict):
     action: str
     initiator: str
     artifact_checksum: str
@@ -11,13 +11,13 @@ class ServiceManagerTaskSchema(TypedDict):
     team_id: int
     time_created: str
 
-class ServiceDetailSchema(TypedDict):
+class ServiceDetailType(TypedDict):
     ServiceDetailCreds = TypedDict('ServiceDetailCreds', {'Address':str, 'Username':str, 'Private Key':str})
 
     credentials: ServiceDetailCreds
     public_adresses: List[str]
 
-class FlagrotatorTaskSchema(TypedDict):
+class FlagrotatorTaskType(TypedDict):
     flag_value: str
     flag_order: int
     challenge_id: int
@@ -26,7 +26,7 @@ class FlagrotatorTaskSchema(TypedDict):
     current_round: int
     time_created: str
 
-class CheckerResultDetailSchema(TypedDict):
+class CheckerResultDetailType(TypedDict):
     status_detail: str
     exception: str
     checker_output: Dict

@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 from ..k8s import get_kubernetes_apiclient
-from ..schema import ServiceManagerTaskSchema, ServiceDetailSchema
+from ..types import ServiceManagerTaskType, ServiceDetailType
 from ..utils import get_gcp_configuration
 
 import hashlib
@@ -310,7 +310,7 @@ def create_service_loadbalancer(
 
     return service_lb_name
 
-def do_provision(body: ServiceManagerTaskSchema, **kwargs):
+def do_provision(body: ServiceManagerTaskType, **kwargs):
     team_id = body["team_id"]
     challenge_slug = body["challenge_slug"]
     challenge_id = body["challenge_id"]
@@ -398,7 +398,7 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
 
     expose_ports = [d["port"] for d in challenge_service_spec["expose_ports"]]
     public_ports = calc_public_ports(challenge_id, challenge_service_spec["ssh_port"], expose_ports)
-    service_detail: ServiceDetailSchema = {
+    service_detail: ServiceDetailType = {
         "credentials": {
             "Address": "{}:{}".format(team_private_ip, public_ports[challenge_service_spec["ssh_port"]]),
             "Username": "root",

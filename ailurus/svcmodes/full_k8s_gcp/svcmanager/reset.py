@@ -2,7 +2,7 @@ from ailurus.models import db
 from datetime import datetime, timezone
 
 from ..models import ManageServicePendingList
-from ..schema import ServiceManagerTaskSchema
+from ..types import ServiceManagerTaskType
 from ..k8s import get_kubernetes_apiclient
 
 import kubernetes
@@ -10,7 +10,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def do_reset(body: ServiceManagerTaskSchema, **kwargs):
+def do_reset(body: ServiceManagerTaskType, **kwargs):
     team_id = body["team_id"]
     challenge_slug = body["challenge_slug"]
     
