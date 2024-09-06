@@ -5,6 +5,7 @@ from flask import Blueprint, redirect, render_template, request, url_for, curren
 from typing import List
 
 import ailurus.svcmodes
+import ailurus.scoremodes
 import json
 import os
 
@@ -38,7 +39,20 @@ def setup_page():
                 "id": elm,
                 "display": module_displayname,
             })
-    return render_template("admin/setup.html", unlock_modes = ManageServiceUnlockMode, service_modes = service_modes)
+    
+    scoremode_dir = os.path.dirname(ailurus.scoremodes.__file__)
+    score_modes = []
+    for elm in os.listdir(scoremode_dir):
+        realpath = os.path.join(scoremode_dir, elm)
+        cfgfile_path = os.path.join(realpath, "__init__.py")
+        if not os.path.isdir(realpath) or \
+            not os.path.exists(cfgfile_path): continue
+        score_modes.append({
+            "id": elm,
+            "display": elm,
+        })
+
+    return render_template("admin/setup.html", unlock_modes = ManageServiceUnlockMode, service_modes = service_modes, score_modes = score_modes)
 
 @app_routes.post("/setup")
 def setup_submit():
