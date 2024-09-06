@@ -23,8 +23,4 @@ def generator_public_services_info(team: Team, challenge: Challenge, services: L
 def generator_public_services_status_detail(result_detail: Mapping[str, Any]) -> Dict | List | str:
     return result_detail["status_detail"]
 
-def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
-    pass
-
-
 
