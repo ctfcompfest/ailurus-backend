@@ -15,9 +15,6 @@ def generator_public_services_info(team: Team, challenge: Challenge, services: L
 def generator_public_services_status_detail(result_detail: Mapping[str, Any]) -> Dict | List | str:
     return result_detail
 
-def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
-    return []
-
 def handler_svcmanager_request(**kwargs) -> flask.Response:
     is_allow_manage = kwargs['is_allow_manage']
     if is_allow_manage:
