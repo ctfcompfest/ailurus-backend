@@ -79,6 +79,14 @@
                     </select>
                   </div>
                   <div class="mb-3">
+                    <label for="event-prov" class="form-label">Scoring Mode</label>
+                    <select class="form-select" id="event-prov" name="SCORE_SCRIPT">
+                      {% for mode in score_modes %}
+                      <option value="{{mode.id}}">{{mode.display}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="mb-3">
                     <label for="event-unlock" class="form-label">Manage Service Unlock Mode</label>
                     <select class="form-select" id="event-unlock" name="UNLOCK_MODE">
                       {% for mode in unlock_modes %}
