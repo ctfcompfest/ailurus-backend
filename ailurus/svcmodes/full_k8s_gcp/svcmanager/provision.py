@@ -1,5 +1,5 @@
 from ailurus.models import db, Service
-from ailurus.utils.config import get_app_config
+from ailurus.utils.config import get_app_config, get_config
 from typing import List, Mapping, Any, Tuple
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
@@ -170,13 +170,13 @@ def create_service_deployment(
                             },
                         },
                         {
-                            "name": "agent-checker",
+                            "name": "checker-agent",
                             "restartPolicy": "Always",
                             "image": checker_image_name,
                             "env": [
                                 {"name": "CHECKER_INTERVAL", "value": "20"},
-                                {"name": "CHECKER_SECRET", "value": "secret"},
-                                {"name": "REPORT_API_ENDPOINT", "value": "{}/api/v2/agentchecker".format(get_app_config("WEBAPP_URL"))},
+                                {"name": "CHECKER_SECRET", "value": get_config("AGENT_CHECKER_SECRET")},
+                                {"name": "REPORT_API_ENDPOINT", "value": "{}/api/v2/checkeragent".format(get_app_config("WEBAPP_URL"))},
                                 {"name": "REPORT_CHALL_SLUG", "value": challenge_slug},
                                 {"name": "REPORT_TEAM_ID", "value": str(team_id)},
                                 {"name": "APP_CONTAINER_FILESYSTEM", "value": "/app-container"},
@@ -335,7 +335,7 @@ def do_provision(body: ServiceManagerTaskSchema, **kwargs):
     challenge_image_name = "{}-docker.pkg.dev/{}/{}/{}:{}".format(
         project_zone, project_id, repo_name, challenge_slug, challenge_artifact_checksum
     )
-    agentchecker_image_name = "{}-docker.pkg.dev/{}/{}/{}-agent-checker:{}".format(
+    checkeragent_image_name = "{}-docker.pkg.dev/{}/{}/{}-checker-agent:{}".format(
         project_zone, project_id, repo_name, challenge_slug, challenge_testcase_checksum
     )
 
@@ -393,7 +393,7 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
             log.error("create-service-configmap: %s %s.", e.reason, e.body)
 
     create_global_persistentvolumeclaim(k8s_coreapi)
-    create_service_deployment(k8s_appsapi, team_id, challenge_slug, challenge_service_spec, challenge_image_name, agentchecker_image_name) 
+    create_service_deployment(k8s_appsapi, team_id, challenge_slug, challenge_service_spec, challenge_image_name, checkeragent_image_name) 
     create_service_loadbalancer(k8s_coreapi, team_id, challenge_id, challenge_slug, challenge_service_spec, team_private_ip)
 
     expose_ports = [d["port"] for d in challenge_service_spec["expose_ports"]]

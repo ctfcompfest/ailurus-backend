@@ -49,6 +49,7 @@ class TeamLeaderboardEntry(TypedDict):
 class CheckerTaskSchema(TypedDict):
     time_limit: int
     challenge_id: int
+    challenge_slug: str
     team_id: int
     testcase_checksum: str
     artifact_checksum: str

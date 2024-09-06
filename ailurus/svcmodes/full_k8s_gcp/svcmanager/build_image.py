@@ -32,14 +32,14 @@ def do_build_image(body: ServiceManagerTaskSchema, **kwargs):
 
     challenge_testcase_checksum = body["testcase_checksum"]
     challenge_testcase_path = os.path.join(kwargs["testcase_folder"], "agent")
-    agentchecker_image_name = f"{image_name_prefix}/{challenge_slug}-agent-checker:{challenge_testcase_checksum}"
+    checkeragent_image_name = f"{image_name_prefix}/{challenge_slug}-checker-agent:{challenge_testcase_checksum}"
 
     if not gcp_config_json["build_in_cloudbuild"]:
         local_build_image(challenge_artifact_path, service_image_name, creds_json)
-        local_build_image(challenge_testcase_path, agentchecker_image_name, creds_json)
+        local_build_image(challenge_testcase_path, checkeragent_image_name, creds_json)
     else:
         gcp_build_image(challenge_artifact_path, service_image_name, creds_json, storage_bucket_name)
-        gcp_build_image(challenge_testcase_path, agentchecker_image_name, creds_json, storage_bucket_name)
+        gcp_build_image(challenge_testcase_path, checkeragent_image_name, creds_json, storage_bucket_name)
 
 def get_gcp_credentials(service_account_creds: dict) -> service_account.Credentials:
     credentials = service_account.Credentials.from_service_account_info(

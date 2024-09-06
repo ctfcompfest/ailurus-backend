@@ -1,4 +1,5 @@
-from typing import TypedDict, List
+from typing import TypedDict, List, Dict
+import datetime
 
 class ServiceManagerTaskSchema(TypedDict):
     action: str
@@ -24,3 +25,9 @@ class FlagrotatorTaskSchema(TypedDict):
     current_tick: int
     current_round: int
     time_created: str
+
+class CheckerResultDetailSchema(TypedDict):
+    status_detail: str
+    exception: str
+    checker_output: Dict
+    time_finished: datetime.datetime
