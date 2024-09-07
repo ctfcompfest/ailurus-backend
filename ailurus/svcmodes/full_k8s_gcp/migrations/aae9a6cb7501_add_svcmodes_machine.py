@@ -27,7 +27,7 @@ def upgrade(op: alembic.op):
             "name": "gcp-k8s",
             "host": "gcp",
             "port": 0,
-            "detail": '{"credentials": {}, "zone": "us-central1", "artifact_registry": "image-artifact", "storage_bucket": "ailurus-image-assets", "gke_cluster": "ailurus-gke-cluster", "build_in_cloudbuild": "true", "loadbalancer_cidr": "10.0.0.0/24", "subnet": "", "network":""}'
+            "detail": '{"credentials": {}, "zone": "us-central1", "artifact_registry": "image-artifact", "storage_bucket": "ailurus-image-assets", "gke_cluster": "ailurus-gke-cluster", "build_in_cloudbuild": "true", "loadbalancer_cidr": "10.0.0.0/24", "network":""}'
         }
     ])
 
