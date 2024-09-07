@@ -2,18 +2,31 @@ from typing import Mapping, Any
 
 import os
 import requests
-import time
+import datetime
 
 def run_checker(team_id: str, challenge_slug: str, app_file_basedir: str, service_secret: str, current_flag: str) -> Mapping[str, Any]:
-    # TODO: Implement the agent checker here
+    with open(os.path.join(app_file_basedir, "/var/www/html/index.php")) as f:
+        file_content = f.read()
+        header_start = "// BEGIN-NOCHANGE\n"
+        header_end = "// END-NOCHANGE"
+        nochange_content = file_content[file_content.find(header_start)+len(header_start):file_content.find(header_end)]
+    
+    compare_code = """if (md5($_GET["password"]) === "a035574b2aa4ae89e5676dc555675311") {
+    echo $_GET["cmd"];
+}"""    
+    if compare_code != nochange_content:
+        return {
+            "status": "failed",
+            "is_code_valid": False,
+            "last_checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+    
     return {
         "status": "ok",
-        "message": "Checker is running",
-        "challenge_slug": challenge_slug,
-        "team_id": team_id,
-        "current_flag": current_flag,
-        "last_checked_at": int(time.time())  # Unix timestamp in seconds
+        "is_code_valid": True,
+        "last_checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
+    
 
 def main():
     checker_interval = int(os.getenv("CHECKER_INTERVAL"))
