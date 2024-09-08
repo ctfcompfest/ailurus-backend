@@ -111,12 +111,14 @@ def checker_keeper(app: Flask):
         for chall, team in itertools.product(release_challs, teams):
             task_body = {
                 "challenge_id": chall.id,
+                "challenge_slug": chall.slug,
                 "team_id": team.id,
                 "testcase_checksum": chall.testcase_checksum,
                 "artifact_checksum": chall.artifact_checksum,
                 "current_tick": current_tick,
                 "current_round": current_round,
                 "time_created": time_now.isoformat(),
+                "time_limit": get_config("CHECKER_TIME_LIMIT", 10)
             }
             
             rabbitmq_channel.basic_publish(

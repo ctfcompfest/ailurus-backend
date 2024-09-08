@@ -1,4 +1,5 @@
 {
     "display": "Sample Mode",
-    "doc": "This service mode is part of the unit test."
+    "doc": "This service mode is part of the unit test.",
+    "enable": false
 }

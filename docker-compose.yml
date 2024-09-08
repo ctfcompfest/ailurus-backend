@@ -34,7 +34,7 @@ services:
     ports:
     - "5000:5000"
     volumes:
-    - "./ailurus/.adce_data:/opt/app/ailurus/.adce_data"
+    - "./:/opt/app"
     depends_on:
     - db
     - rabbitmq
@@ -50,14 +50,6 @@ services:
     command: worker
     restart: always
     volumes:
-    - "./ailurus/worker_data:/opt/app/ailurus/worker_data"
+    - "./:/opt/app/"
     depends_on:
     - webapp
-  
-  # sample_server:
-  #   privileged: true
-  #   build:
-  #     dockerfile: sample_server.Dockerfile
-  #   ports:
-  #   - 22022:22
-  

@@ -72,9 +72,6 @@ def create_app(env_file=".env"):
         db.init_app(app)
         migrate.init_app(app, db)
         init_data_dir(app)
-                
-        # Load all svcmode
-        load_all_svcmode(app)
     return app
 
 def create_keeper_daemon(env_file=".env"):
@@ -103,6 +100,8 @@ def create_worker_daemon(env_file=".env"):
         create_logger(os.path.join(app.config["DATA_DIR"], "logs", "worker.log"))
 
         configs["flask_app"] = app
+        # Load all svcmode
+        load_all_svcmode(app)
 
         try:
             create_worker(**configs)
@@ -125,6 +124,9 @@ def create_webapp_daemon(env_file=".env"):
 
         # API
         app.register_blueprint(app_routes)
+        
+        # Load all svcmode
+        load_all_svcmode(app)
 
         # Keeper
         create_keeper(app)

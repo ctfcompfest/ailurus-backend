@@ -2,6 +2,7 @@ import ailurus.svcmodes
 import flask
 import importlib
 import os
+import json
 
 def get_svcmode_module(service_mode: str):
     svcmode_dir = os.path.dirname(ailurus.svcmodes.__file__)
@@ -20,7 +21,8 @@ def get_svcmode_module(service_mode: str):
 def load_svcmode_module(service_mode: str, app: flask.Flask):
     mod = get_svcmode_module(service_mode)
     try:
-        return mod.load(app)
+        mod.load(app)
+        print("Successfully loaded")
     except Exception as e:
         print(e)
         return None
@@ -32,5 +34,9 @@ def load_all_svcmode(app: flask.Flask):
         cfgfile_path = os.path.join(realpath, "config.json")
         if not os.path.isdir(realpath) or \
             not os.path.exists(cfgfile_path): continue
-        print("Module", elm)
-        load_svcmode_module(elm, app)
+        with open(cfgfile_path) as cfgfile:
+            module_cfg = json.load(cfgfile)
+
+        if module_cfg["enable"] == True:
+            print("Module", elm)
+            load_svcmode_module(elm, app)
