@@ -30,6 +30,7 @@ services:
       --requirepass P@ssw0rd
   webapp:
     build: .
+    command: webapp --spawn 10
     restart: always
     ports:
     - "5000:5000"

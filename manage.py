@@ -1,4 +1,5 @@
 from ailurus import create_keeper_daemon, create_worker_daemon, create_webapp_daemon
+from gevent import monkey
 
 import argparse
 import flask_migrate
@@ -16,6 +17,7 @@ if __name__ == "__main__":
     webapp_parser = subparser.add_parser('webapp', help='webapp command help')
     webapp_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
     webapp_parser.add_argument('--port', type=int, help='the port web app will bind to.')
+    webapp_parser.add_argument('--spawn', type=int, help='the number of web app worker need to be spawn.')
 
     migrator_parser = subparser.add_parser('migrate', help='migrate command help')
     worker_parser = subparser.add_parser('worker', help='worker command help')
@@ -30,11 +32,14 @@ if __name__ == "__main__":
     if user_arg.command == 'webapp':
         webapp_opts = {
             'host': vars(user_arg)['host'] or '0.0.0.0',
-            'port': vars(user_arg)['port'] or 5000
+            'port': vars(user_arg)['port'] or 5000,
+            'spawn': vars(user_arg)['spawn'] or 10
         }
 
         webapp = create_webapp_daemon()
         socketio = webapp.extensions['socketio']
+
+        monkey.patch_all()
         socketio.run(webapp, log_output=True, **webapp_opts)
     elif user_arg.command == 'migrate':
         webapp = create_webapp_daemon()

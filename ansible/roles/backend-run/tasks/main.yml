@@ -4,6 +4,7 @@
     name: ailurus-webapp
     image: ailurus-backend:latest
     state: started
+    command: webapp --spawn {{gevent_worker_num}}
     restart_policy: always
     volumes:
     - "/opt/ailurus-data/adce:/opt/app/ailurus/.adce_data"
