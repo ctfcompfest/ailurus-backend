@@ -35,6 +35,8 @@ gcloud beta compute routers nats delete "$INSTANCE_PREFIX-nat" --router="$INSTAN
 gcloud compute routers delete "$INSTANCE_PREFIX-router" --region $ZONE --project=$PROJECT_ID  --quiet
 
 # Delete firewall
+gcloud compute firewall-rules delete "$INSTANCE_PREFIX-deny-node-to-platform" --project=$PROJECT_ID --quiet
+gcloud compute firewall-rules delete "$INSTANCE_PREFIX-allow-node-to-platform-http" --project=$PROJECT_ID --quiet
 gcloud compute firewall-rules delete "$INSTANCE_PREFIX-allow-custom" --project=$PROJECT_ID --quiet
 gcloud compute firewall-rules delete "$INSTANCE_PREFIX-allow-ssh" --project=$PROJECT_ID --quiet
 gcloud compute firewall-rules delete "$INSTANCE_PREFIX-allow-icmp" --project=$PROJECT_ID --quiet
