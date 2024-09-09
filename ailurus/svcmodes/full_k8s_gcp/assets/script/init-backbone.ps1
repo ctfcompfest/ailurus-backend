@@ -49,6 +49,16 @@ gcloud compute networks subnets create "$INSTANCE_PREFIX-gke-teamlb-subnet" --pr
     --stack-type=IPV4_ONLY --network="$INSTANCE_PREFIX-network" --region=$ZONE --enable-private-ip-google-access
 
 # Add firewall
+gcloud compute firewall-rules create "$INSTANCE_PREFIX-allow-node-to-platform-http" --project=$PROJECT_ID `
+    --network="projects/$PROJECT_ID/global/networks/$INSTANCE_PREFIX-network" `
+    --description="Allow all HTTP/s connection from GKE instances to platform subnet." `
+    --direction=EGRESS --priority=65000 --destination-ranges="$PLATFORM_CIDR" `
+    --target-tags="$INSTANCE_PREFIX-gke-instance" --action=ALLOW --rules=tcp:443,tcp:80
+gcloud compute firewall-rules create "$INSTANCE_PREFIX-deny-node-to-platform" --project=$PROJECT_ID `
+    --network="projects/$PROJECT_ID/global/networks/$INSTANCE_PREFIX-network" `
+    --description="Deny all outgoing connection to platform subnet." `
+    --direction=EGRESS --priority=65500 --destination-ranges="$PLATFORM_CIDR" `
+    --target-tags="$INSTANCE_PREFIX-gke-instance" --action=DENY --rules=all
 gcloud compute firewall-rules create "$INSTANCE_PREFIX-allow-custom" --project=$PROJECT_ID `
     --network="projects/$PROJECT_ID/global/networks/$INSTANCE_PREFIX-network" `
     --description="Allows connection from any source to any instance on the network using custom protocols." `
@@ -80,7 +90,8 @@ gcloud beta container --project $PROJECT_ID clusters create-auto "$INSTANCE_PREF
     --private-endpoint-subnetwork="projects/$PROJECT_ID/regions/$ZONE/subnetworks/$INSTANCE_PREFIX-public-subnet" `
     --network "projects/$PROJECT_ID/global/networks/$INSTANCE_PREFIX-network" `
     --subnetwork "projects/$PROJECT_ID/regions/$ZONE/subnetworks/$INSTANCE_PREFIX-gke-node-subnet" `
-    --cluster-ipv4-cidr "/17" --binauthz-evaluation-mode=DISABLED --async
+    --cluster-ipv4-cidr "/17" --binauthz-evaluation-mode=DISABLED --async `
+    --autoprovisioning-network-tags="$INSTANCE_PREFIX-gke-instance"
 
 # Display the configuration details for further use
 $credentials = Get-Content $KEY_FILE | ConvertFrom-Json
