@@ -21,6 +21,8 @@ ssl_cert_file:
 
 # Random string for Flask SECRET_KEY
 secret_key: random-string
+# Recommended value = 2 * cpu_core + 1
+gevent_worker_num: 10
 frontend_service_manage_panel: fullserver
 
 database:
