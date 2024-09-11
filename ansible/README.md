@@ -56,7 +56,7 @@ This playbook will deploy ailurus frontend. This playbook will look into all tar
 #### Notes
 1. Make sure `host.backend` section inside the `ailurus.yml` can be accessed from the worker instance later.
 2. This playbook will use the first entry from `[backend]` section inside the `inventory` to connect to the database and rabbitmq. Make sure it is accessible from the worker instance.
-3. You need to modify `num_worker` attribute on each `[worker]` entry to specify number of workers inside the respective target machine.
+3. You need to modify `num_worker` and `vpn_profile_path` attribute on each `[worker]` entry to specify number of workers inside the respective target machine. The VPN will be used by the worker to mask their IP, so that participant can create a firewall based on IP address.
 
 #### Playbook
 
