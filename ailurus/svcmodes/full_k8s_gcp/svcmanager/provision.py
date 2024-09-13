@@ -70,7 +70,6 @@ def create_global_persistentvolumeclaim(
         "parameters": {
             "tier": "BASIC_HDD",
             "network": "projects/{}/global/networks/{}".format(gcp_config_json["credentials"]["project_id"], gcp_config_json["network"]),
-            "location": "{}".format(gcp_config_json["filestore_zone"]),
         },
         "volumeBindingMode": "WaitForFirstConsumer",
         "allowVolumeExpansion": True
