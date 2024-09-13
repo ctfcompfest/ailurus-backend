@@ -408,7 +408,7 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
     }
 
     k8s_api_baseclient = get_kubernetes_apiclient()
-    k8s_storageapi = kubernetes.client.client.StorageV1Api(k8s_api_baseclient)
+    k8s_storageapi = kubernetes.client.StorageV1Api(k8s_api_baseclient)
     k8s_coreapi = kubernetes.client.CoreV1Api(k8s_api_baseclient)
     k8s_appsapi = kubernetes.client.AppsV1Api(k8s_api_baseclient)
 
