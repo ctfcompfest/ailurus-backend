@@ -86,8 +86,9 @@ gcloud storage buckets create "gs://$INSTANCE_PREFIX-image-assets" --location=$Z
 
 # Create Kubernetes engine cluster
 gcloud beta container --project $PROJECT_ID clusters create-auto "$INSTANCE_PREFIX-gke-cluster" --region "$ZONE" `
-    --release-channel "stable" --enable-private-nodes `
+    --release-channel "stable" --enable-private-nodes --enable-private-endpoint `
     --private-endpoint-subnetwork="projects/$PROJECT_ID/regions/$ZONE/subnetworks/$INSTANCE_PREFIX-public-subnet" `
+    --enable-master-authorized-networks --master-authorized-networks "$PUBLIC_CIDR,$PLATFORM_CIDR" `
     --network "projects/$PROJECT_ID/global/networks/$INSTANCE_PREFIX-network" `
     --subnetwork "projects/$PROJECT_ID/regions/$ZONE/subnetworks/$INSTANCE_PREFIX-gke-node-subnet" `
     --cluster-ipv4-cidr "/17" --binauthz-evaluation-mode=DISABLED --async `
