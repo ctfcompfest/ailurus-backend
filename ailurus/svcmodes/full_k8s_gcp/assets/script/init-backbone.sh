@@ -37,6 +37,7 @@ INSTANCE_PREFIX=${INSTANCE_PREFIX:-"ailurus"}
 ZONE=${ZONE:-"us-central1"}
 
 # Define CIDR ranges
+GLOBAL_CIDR="10.0.0.0/8"
 PLATFORM_CIDR="10.0.38.0/24"
 PUBLIC_CIDR="10.0.47.0/24"
 GKE_NODE_CIDR="10.0.32.0/22"
@@ -82,7 +83,7 @@ gcloud compute firewall-rules create "$INSTANCE_PREFIX-deny-node-to-platform" --
 gcloud compute firewall-rules create "${INSTANCE_PREFIX}-allow-custom" --project="$PROJECT_ID" \
     --network="projects/$PROJECT_ID/global/networks/${INSTANCE_PREFIX}-network" \
     --description="Allows connection from any source to any instance on the network using custom protocols." \
-    --direction=INGRESS --priority=65534 --source-ranges="$PLATFORM_CIDR,$PUBLIC_CIDR,$GKE_NODE_CIDR,$GKE_TEAMLB_CIDR" \
+    --direction=INGRESS --priority=65534 --source-ranges="$GLOBAL_CIDR" \
     --action=ALLOW --rules=all
 
 gcloud compute firewall-rules create "${INSTANCE_PREFIX}-allow-icmp" --project="$PROJECT_ID" \
@@ -126,6 +127,7 @@ cat << EOF
   "gke_cluster": "${INSTANCE_PREFIX}-gke-cluster",
   "build_in_cloudbuild": "true",
   "loadbalancer_cidr": "$GKE_TEAMLB_CIDR",
-  "network": "${INSTANCE_PREFIX}-network"
+  "network": "${INSTANCE_PREFIX}-network",
+  "filestore_zone": "${ZONE}-a"
 }
 EOF

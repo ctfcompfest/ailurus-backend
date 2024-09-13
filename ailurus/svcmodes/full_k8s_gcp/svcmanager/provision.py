@@ -55,9 +55,36 @@ def calculate_team_instanceip(cidr_block, team_id):
     padding = 30
     return str(ipaddress.ip_address(cidr_block.split("/")[0]) + team_id + padding)
 
-def create_global_persistentvolumeclaim(k8s_coreapi: kubernetes.client.CoreV1Api) -> str:
+def create_global_persistentvolumeclaim(
+        k8s_coreapi: kubernetes.client.CoreV1Api, 
+        k8s_storageapi: kubernetes.client.StorageV1Api,
+        gcp_config_json: Mapping[str, Any]
+    ) -> str:
+    storage_class = {
+        "apiVersion": "storage.k8s.io/v1",
+        "kind": "StorageClass",
+        "metadata": {
+            "name": "filestore-custom-network"
+        },
+        "provisioner": "filestore.csi.storage.gke.io",
+        "parameters": {
+            "tier": "BASIC_HDD",
+            "network": "projects/{}/global/networks/{}".format(gcp_config_json["credentials"]["project_id"], gcp_config_json["network"]),
+            "location": "{}".format(gcp_config_json["filestore_zone"]),
+        },
+        "volumeBindingMode": "WaitForFirstConsumer",
+        "allowVolumeExpansion": True
+    }
+    
+    try:
+        k8s_storageapi.create_storage_class(body=storage_class)
+        log.info("StorageClass created successfully.")
+    except kubernetes.client.ApiException as e:
+        log.error(f"Exception when creating StorageClass: {e}")
+        return
+
     pvc_name = "pvc-global"
-    service_persistentvolume = {
+    service_persistentvolumeclaim = {
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
         "metadata": {
@@ -70,12 +97,12 @@ def create_global_persistentvolumeclaim(k8s_coreapi: kubernetes.client.CoreV1Api
                     "storage": "1Ti",
                 }
             },
-            "storageClassName": "standard-rwx",
+            "storageClassName": "filestore-custom-network",
         },
     }
 
     try:
-        k8s_coreapi.create_namespaced_persistent_volume_claim("default", service_persistentvolume)
+        k8s_coreapi.create_namespaced_persistent_volume_claim("default", service_persistentvolumeclaim)
     except kubernetes.client.ApiException as e:
         if e.status == 409:
             log.info("create-global-pvc: conflict: persistent volume claim already exists.")
@@ -381,6 +408,7 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
     }
 
     k8s_api_baseclient = get_kubernetes_apiclient()
+    k8s_storageapi = kubernetes.client.client.StorageV1Api(k8s_api_baseclient)
     k8s_coreapi = kubernetes.client.CoreV1Api(k8s_api_baseclient)
     k8s_appsapi = kubernetes.client.AppsV1Api(k8s_api_baseclient)
 
@@ -392,7 +420,7 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
         else:
             log.error("create-service-configmap: %s %s.", e.reason, e.body)
 
-    create_global_persistentvolumeclaim(k8s_coreapi)
+    create_global_persistentvolumeclaim(k8s_coreapi, k8s_storageapi, gcp_config_json)
     create_service_deployment(k8s_appsapi, team_id, challenge_slug, challenge_service_spec, challenge_image_name, checkeragent_image_name) 
     create_service_loadbalancer(k8s_coreapi, team_id, challenge_id, challenge_slug, challenge_service_spec, team_private_ip)
 
