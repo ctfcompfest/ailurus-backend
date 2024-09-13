@@ -64,7 +64,16 @@ def create_global_persistentvolumeclaim(
         "apiVersion": "storage.k8s.io/v1",
         "kind": "StorageClass",
         "metadata": {
-            "name": "filestore-custom-network"
+            "name": "filestore-custom-network",
+            "annotations": {
+                "components.gke.io/component-name": "filestorecsi",
+                "components.gke.io/component-version": "0.12.23",
+                "components.gke.io/component-layer": "addon",                
+            },
+            "labels": {
+                "addonmanager.kubernetes.io/mode": "EnsureExists",
+                "k8s-app": "gcp-filestore-csi-driver"
+            },
         },
         "provisioner": "filestore.csi.storage.gke.io",
         "parameters": {
