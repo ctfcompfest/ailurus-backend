@@ -33,3 +33,6 @@ database:
 rabbitmq:
   username: rabbitmq
   password: rabbitmq
+
+redis:
+  password: P@ssw0rd
