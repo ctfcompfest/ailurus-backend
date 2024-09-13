@@ -184,7 +184,7 @@ def create_service_deployment(
                             "resources": {
                                 "requests": {
                                     "memory": "64Mi",
-                                    "cpu": "250m",
+                                    "cpu": "100m",
                                 },
                             },
                             "volumeMounts": [
