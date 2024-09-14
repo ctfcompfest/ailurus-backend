@@ -85,7 +85,7 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         for chall_id in chall_ids:
             chall_score = team["challenges"][chall_id]
             team["total_score"] += chall_score["attack"] + chall_score["defense"] + chall_score["sla"] * 100
-            team["sla"] = "{:.02f}%".format(team["sla"])
+            team["sla"] = "{:.02f}%".format(team["sla"] * 100)
 
     results_sorted = sorted(results, key=cmp_to_key(lambda x, y: x["total_score"] > y["total_score"]))
     for i in range(len(results_sorted)):
