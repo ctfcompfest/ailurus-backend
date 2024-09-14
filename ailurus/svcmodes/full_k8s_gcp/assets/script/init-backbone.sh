@@ -127,6 +127,7 @@ cat << EOF
   "gke_cluster": "${INSTANCE_PREFIX}-gke-cluster",
   "build_in_cloudbuild": "true",
   "loadbalancer_cidr": "$GKE_TEAMLB_CIDR",
+  "loadbalancer_subnet": "${INSTANCE_PREFIX}-gke-teamlb-subnet",
   "network": "${INSTANCE_PREFIX}-network",
   "filestore_zone": "${ZONE}-a"
 }

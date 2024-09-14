@@ -284,7 +284,7 @@ def create_service_loadbalancer(
             "annotations": {
                 "networking.gke.io/load-balancer-type": "Internal",
                 "networking.gke.io/internal-load-balancer-allow-global-access": "true",
-                "networking.gke.io/internal-load-balancer-subnet": get_gcp_configuration()["network"],
+                "networking.gke.io/internal-load-balancer-subnet": get_gcp_configuration()["loadbalancer_subnet"],
             },
         },
         "spec": {
