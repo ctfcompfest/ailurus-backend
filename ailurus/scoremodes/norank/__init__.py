@@ -86,10 +86,10 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
             team_leaderboard_entry["challenges"][chall_id] = chall_entry
         results.append(team_leaderboard_entry)
 
-    # Calculate total score for each team
-    results_sorted = sorted(results, key=cmp_to_key(lambda x, y: x["name"] < y["name"]))
+    list_name = sorted([x["name"] for x in results])
+    results_sorted = sorted(results, key=cmp_to_key(lambda x, y: list_name.index(y["name"]) - list_name.index(x["name"])))
     for i in range(len(results_sorted)):
-        results_sorted[i]["rank"] = 1\
+        results_sorted[i]["rank"] = 1
         
     challs: List[Tuple[Challenge]] = db.session.execute(
         select(Challenge).where(
