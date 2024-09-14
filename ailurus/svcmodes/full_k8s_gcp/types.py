@@ -15,7 +15,7 @@ class ServiceDetailType(TypedDict):
     ServiceDetailCreds = TypedDict('ServiceDetailCreds', {'Address':str, 'Username':str, 'Private Key':str})
 
     credentials: ServiceDetailCreds
-    public_adresses: List[str]
+    public_addresses: List[str]
 
 class FlagrotatorTaskType(TypedDict):
     flag_value: str

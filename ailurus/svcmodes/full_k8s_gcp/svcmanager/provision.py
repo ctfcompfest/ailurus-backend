@@ -433,7 +433,7 @@ chmod -R 600 /destvolume/${{POD_NAME}}/ssh;
             "Username": "root",
             "Private Key": ssh_privkey,
         },
-        "public_adresses": [
+        "public_addresses": [
             "{}:{}".format(team_private_ip, pubp)
             for realp, pubp in public_ports.items() if realp != challenge_service_spec["ssh_port"]
         ]
