@@ -93,9 +93,7 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         
     challs: List[Tuple[Challenge]] = db.session.execute(
         select(Challenge).where(
-            Challenge.id.in_(
-                ChallengeRelease.get_challenges_from_round(current_round)
-            )
+            Challenge.id.in_(chall_ids)
         ).order_by(Challenge.id)
     ).all()
     challs_data = {
