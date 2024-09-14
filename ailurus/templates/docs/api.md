@@ -1,5 +1,5 @@
 ### Informasi Umum
-Host yang digunakan untuk mengakses API platform adalah `https://and-be.idcyberskills.com`. Seluruh request dan response body API menggunakan format JSON. Pastikan Anda telah menyesuaikan konfigurasi dengan tepat.
+Host yang digunakan untuk mengakses API platform adalah `{{ webapp_url }}`. Seluruh request dan response body API menggunakan format JSON. Pastikan Anda telah menyesuaikan konfigurasi dengan tepat.
 
 ### Submit Flags
 API ini digunakan untuk melakukan submit atas flag yang berhasil didapat dari diri sendiri ataupun tim lain. Perlu diingat kembali bahwa sebuah flag hanya berlaku pada tick tersebut.
@@ -10,7 +10,7 @@ Contoh request:
 ```
 curl -H 'Content-Type: application/json' -H 'Authorization: Bearer <team JWT>' \
     -X POST --data '{"flags": ["LKSN{incorrect}", "LKSN{expired}", "LKSN{siwlzc8}", "LKSN{siwlzc8}"]}' \
-    https://and-be.idcyberskills.com/api/v2/submit
+    {{ webapp_url }}/api/v2/submit
 ```
 
 Contoh response:
@@ -45,7 +45,7 @@ Kirim GET-request ke endpoint `/api/v2/challenges`.
 
 Contoh request:
 ```
-curl https://and-be.idcyberskills.com/api/v2/challenges
+curl {{ webapp_url }}/api/v2/challenges
 ```
 
 Contoh response:
@@ -72,7 +72,7 @@ Kirim GET-request ke endpoint `/api/v2/teams`.
 
 Contoh request:
 ```
-curl https://and-be.idcyberskills.com/api/v2/teams
+curl {{ webapp_url }}/api/v2/teams
 ```
 
 Contoh response:
@@ -95,11 +95,11 @@ Contoh response:
 ### List Services
 API ini digunakan untuk melihat daftar alamat server setiap tim yang ada. Alamat server ini nantinya akan digunakan untuk melakukan attack. Autorisasi melalui JWT team diperlukan untuk dapat mengaksek API ini.
 
-Kirim GET-request ke endpoint `/api/v2/services/1`.
+Kirim GET-request ke endpoint `/api/v2/challenges/<challenge_id>/services/`.
 
 Contoh request:
 ```
-curl -H 'Authorization: Bearer <team JWT>' https://and-be.idcyberskills.com/api/v2/services/1
+curl -H 'Authorization: Bearer <team JWT>' {{ webapp_url }}/api/v2/challenges/1/services/
 ```
 
 Contoh response:

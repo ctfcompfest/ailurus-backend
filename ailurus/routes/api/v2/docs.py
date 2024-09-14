@@ -10,6 +10,9 @@ import os
 public_docs_blueprint = Blueprint("public_docs_blueprint", __name__, url_prefix="/docs")
 public_docs_blueprint.before_request(validteam_only)
 
+def render_docs_template(content: str):
+    return content.replace("{{ webapp_url }}", get_app_config("WEBAPP_URL"))
+
 @public_docs_blueprint.get("/<string:page>/")
 @cache.cached(timeout=60)
 def get_docs(page):
@@ -18,6 +21,7 @@ def get_docs(page):
     if page not in ALLOWED_PAGE:
         return jsonify(status="not found.", message="page not found."), 404
     with open(os.path.join(base_path, page + ".md")) as f:
-        content = f.read()
+        content = render_docs_template(f.read())
+        
     response = markdown.markdown(content, extensions=[GithubFlavoredMarkdownExtension()])
     return jsonify(status="success", data=response)
