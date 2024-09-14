@@ -34,7 +34,6 @@ def handler_checker_task(body: CheckerTaskType, **kwargs):
         challenge_id = body["challenge_id"],
         round = body["current_round"],
         tick = body["current_tick"],
-        time_created = body["time_created"],
     )
 
     checker_detail_result: CheckerResultDetailType = {}

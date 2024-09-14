@@ -52,9 +52,12 @@ def delete_service_loadbalancer(k8s_coreapi: kubernetes.client.CoreV1Api, team_i
         service_lb_service["spec"]["loadBalancerIP"] = k8s_lb_config.spec.load_balancer_ip
         for port_cfg in k8s_lb_config_ports:
             if port_cfg.name.find("port-{}".format(challenge_slug)) == -1:
-                exist_port = port_cfg.to_dict()
-                del exist_port["nodePort"]
-                service_lb_service["spec"]["ports"].append(exist_port)
+                service_lb_service["spec"]["ports"].append({
+                    "name": port_cfg.name,
+                    "protocol": port_cfg.protocol,
+                    "port": port_cfg.port,
+                    "targetPort": port_cfg.target_port
+                })
     except kubernetes.client.ApiException as e:
         if e.status == 404:
             log.error("delete-service-loadbalancer: not found: failed to delete.")

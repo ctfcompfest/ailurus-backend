@@ -304,9 +304,12 @@ def create_service_loadbalancer(
 
         for port_cfg in k8s_lb_config_ports:
             if port_cfg.name.find("port-{}".format(challenge_slug)) == -1:
-                exist_port = port_cfg.to_dict()
-                del exist_port["nodePort"]
-                service_lb_service["spec"]["ports"].append(exist_port)
+                service_lb_service["spec"]["ports"].append({
+                    "name": port_cfg.name,
+                    "protocol": port_cfg.protocol,
+                    "port": port_cfg.port,
+                    "targetPort": port_cfg.target_port
+                })
     except kubernetes.client.ApiException as e:
         if e.status == 404:
             log.info("create-service-loadbalancer.read: not found: create new service.")
