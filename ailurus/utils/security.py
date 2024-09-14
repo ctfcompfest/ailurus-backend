@@ -30,6 +30,18 @@ def worker_only():
     if get_config("WORKER_SECRET") == None or req_secret != get_config("WORKER_SECRET"):
         return jsonify(status="forbidden", message="forbidden."), 403
 
+
+def checkeragent_only():
+    # Preflight
+    if request.method == "OPTIONS":
+        return
+    req_secret = request.headers.get("x-CHECKER-secret", None)
+
+    # If server admin forgot to set ADMIN_SECRET, all request to the admin API are forbid
+    if get_config("CHECKER_AGENT_SECRET") == None or req_secret != get_config("CHECKER_AGENT_SECRET"):
+        return jsonify(status="forbidden", message="forbidden."), 403
+
+
 def validteam_only():
     # Preflight
     if request.method == "OPTIONS":

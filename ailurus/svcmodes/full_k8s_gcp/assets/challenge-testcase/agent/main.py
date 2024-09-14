@@ -3,6 +3,7 @@ from typing import Mapping, Any
 import os
 import requests
 import datetime
+import time
 
 def run_checker(team_id: str, challenge_slug: str, app_file_basedir: str, service_secret: str, current_flag: str) -> Mapping[str, Any]:
     with open(os.path.join(app_file_basedir, "/var/www/html/index.php")) as f:
