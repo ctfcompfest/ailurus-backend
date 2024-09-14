@@ -252,10 +252,7 @@ def create_service_deployment(
                                 {"mountPath": "/root/.ssh", "name": "volpvc", "subPath": deployment_name+"/ssh", "readOnly": True},
                             ]
                         }
-                    ],
-                    "nodeSelector": {
-                        "cloud.google.com/gke-cpu-scaling-level": "8"
-                    }
+                    ]
                 }
             }
         },
