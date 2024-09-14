@@ -9,7 +9,7 @@ Kirim POST-request ke endpoint `/api/v2/submit`. Body dari request haruslah memi
 Contoh request:
 ```
 curl -H 'Content-Type: application/json' -H 'Authorization: Bearer <team JWT>' \
-    -X POST --data '{"flags": ["LKSN{incorrect}", "LKSN{expired}", "LKSN{siwlzc8}", "LKSN{siwlzc8}"]}' \
+    -X POST --data '{"flags": ["flag{incorrect}", "flag{expired}", "flag{siwlzc8}", "flag{siwlzc8}"]}' \
     {{ webapp_url }}/api/v2/submit
 ```
 
@@ -18,19 +18,19 @@ Contoh response:
 {
     "data": [
         {
-            "flag": "LKSN{incorrect}",
+            "flag": "flag{incorrect}",
             "verdict": "flag is wrong or expired."
         },
         {
-            "flag": "LKSN{expired}",
+            "flag": "flag{expired}",
             "verdict": "flag is wrong or expired."
         },
         {
-            "flag": "LKSN{siwlzc8}",
+            "flag": "flag{siwlzc8}",
             "verdict": "flag is correct."
         },
         {
-            "flag": "LKSN{siwlzc8}",
+            "flag": "flag{siwlzc8}",
             "verdict": "flag already submitted."
         }
     ],
