@@ -96,10 +96,10 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
             Challenge.id.in_(chall_ids)
         ).order_by(Challenge.id)
     ).all()
-    challs_data = {
-        chall.id: {"id": chall.id, "title": chall.title}
+    challs_data = [
+        {"id": chall.id, "title": chall.title}
         for chall, in challs
-    }
+    ]
 
     return results_sorted, challs_data
 
