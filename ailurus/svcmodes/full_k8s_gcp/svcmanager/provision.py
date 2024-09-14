@@ -65,19 +65,10 @@ def create_global_persistentvolumeclaim(
         "kind": "StorageClass",
         "metadata": {
             "name": "filestore-custom-network",
-            "annotations": {
-                "components.gke.io/component-name": "filestorecsi",
-                "components.gke.io/component-version": "0.12.23",
-                "components.gke.io/component-layer": "addon",                
-            },
-            "labels": {
-                "addonmanager.kubernetes.io/mode": "EnsureExists",
-                "k8s-app": "gcp-filestore-csi-driver"
-            },
         },
         "provisioner": "filestore.csi.storage.gke.io",
         "parameters": {
-            "tier": "BASIC_HDD",
+            "tier": "standard",
             "network": "projects/{}/global/networks/{}".format(gcp_config_json["credentials"]["project_id"], gcp_config_json["network"]),
         },
         "volumeBindingMode": "WaitForFirstConsumer",
@@ -210,7 +201,7 @@ def create_service_deployment(
                             "image": checker_image_name,
                             "env": [
                                 {"name": "CHECKER_INTERVAL", "value": "20"},
-                                {"name": "CHECKER_SECRET", "value": get_config("AGENT_CHECKER_SECRET")},
+                                {"name": "CHECKER_SECRET", "value": get_config("CHECKER_AGENT_SECRET")},
                                 {"name": "REPORT_API_ENDPOINT", "value": "{}/api/v2/checkeragent".format(get_app_config("WEBAPP_URL"))},
                                 {"name": "REPORT_CHALL_SLUG", "value": challenge_slug},
                                 {"name": "REPORT_TEAM_ID", "value": str(team_id)},
@@ -292,6 +283,8 @@ def create_service_loadbalancer(
             "name": service_lb_name,
             "annotations": {
                 "networking.gke.io/load-balancer-type": "Internal",
+                "networking.gke.io/internal-load-balancer-allow-global-access": "true",
+                "networking.gke.io/internal-load-balancer-subnet": get_gcp_configuration()["network"],
             },
         },
         "spec": {

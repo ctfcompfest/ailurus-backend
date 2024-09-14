@@ -114,7 +114,7 @@ gcloud beta container --project "$PROJECT_ID" clusters create-auto "${INSTANCE_P
     --enable-master-authorized-networks --master-authorized-networks "${PUBLIC_CIDR},${PLATFORM_CIDR}" \
     --network "projects/$PROJECT_ID/global/networks/${INSTANCE_PREFIX}-network" \
     --subnetwork "projects/$PROJECT_ID/regions/$ZONE/subnetworks/${INSTANCE_PREFIX}-gke-node-subnet" \
-    --cluster-ipv4-cidr "/17" --binauthz-evaluation-mode=DISABLED --async
+    --cluster-ipv4-cidr "/17" --binauthz-evaluation-mode=DISABLED --async --enable-l4-ilb-subsetting
 
 # Display the configuration details for further use
 echo "Update 'gcp-k8s' entry in provision machine section with this detail:"

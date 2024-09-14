@@ -93,7 +93,7 @@ gcloud beta container --project $PROJECT_ID clusters create-auto "$INSTANCE_PREF
     --network "projects/$PROJECT_ID/global/networks/$INSTANCE_PREFIX-network" `
     --subnetwork "projects/$PROJECT_ID/regions/$ZONE/subnetworks/$INSTANCE_PREFIX-gke-node-subnet" `
     --cluster-ipv4-cidr "/17" --binauthz-evaluation-mode=DISABLED --async `
-    --autoprovisioning-network-tags="$INSTANCE_PREFIX-gke-instance"
+    --autoprovisioning-network-tags="$INSTANCE_PREFIX-gke-instance" --enable-l4-ilb-subsetting
 
 # Display the configuration details for further use
 $credentials = Get-Content $KEY_FILE | ConvertFrom-Json
