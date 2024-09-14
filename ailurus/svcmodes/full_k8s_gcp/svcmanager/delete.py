@@ -6,6 +6,7 @@ from typing import List
 from ..models import ManageServicePendingList
 from ..k8s import get_kubernetes_apiclient
 from ..types import ServiceManagerTaskType
+from ..utils import get_gcp_configuration
 
 import kubernetes
 import logging
@@ -31,6 +32,8 @@ def delete_service_loadbalancer(k8s_coreapi: kubernetes.client.CoreV1Api, team_i
             "name": service_lb_name,
             "annotations": {
                 "networking.gke.io/load-balancer-type": "Internal",
+                "networking.gke.io/internal-load-balancer-allow-global-access": "true",
+                "networking.gke.io/internal-load-balancer-subnet": get_gcp_configuration()["loadbalancer_subnet"],
             },
         },
         "spec": {
