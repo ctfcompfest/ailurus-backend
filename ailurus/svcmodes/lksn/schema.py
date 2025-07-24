@@ -35,9 +35,12 @@ class FlagrotatorTaskSchema(TypedDict):
 class TeamChallengeLeaderboardEntry(TypedDict):
     flag_captured: int
     flag_stolen: int
-    attack: str
-    defense: str
-    sla: str
+    attack: float
+    defense: float
+    sla: float
+    attack_group_score: int
+    defense_group_score: int
+    sla_group_score: int
 
 class TeamLeaderboardEntry(TypedDict):
     id: int

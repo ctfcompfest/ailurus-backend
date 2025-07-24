@@ -16,7 +16,7 @@ depends_on = None
 
 
 def upgrade(op):
-    op.create_table('lksn24_service_reset_queue',
+    op.create_table('lksn_service_reset_queue',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('team_id', sa.Integer(), nullable=False),
         sa.Column('is_done', sa.Boolean(), nullable=False, default=False),
@@ -26,5 +26,5 @@ def upgrade(op):
 
 
 def downgrade(op):
-    op.drop_table('lksn24_service_reset_queue')
+    op.drop_table('lksn_service_reset_queue')
 

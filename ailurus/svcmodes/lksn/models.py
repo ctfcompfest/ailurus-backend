@@ -14,7 +14,7 @@ class CheckerAgentReport(db.Model):
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
 
 class ServiceResetQueue(db.Model):
-    __tablename__ = 'lksn24_service_reset_queue'
+    __tablename__ = 'lksn_service_reset_queue'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     team_id: Mapped[int]
