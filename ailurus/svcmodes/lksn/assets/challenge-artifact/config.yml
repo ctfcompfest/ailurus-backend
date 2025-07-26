@@ -30,6 +30,8 @@ parameters:
   VpcId: vpc-0f919cf9e68a60ca5
   NATGatewayId: nat-028761173c067ada7
   MachineSubnetCidrBlock: 10.0.32.0/22
+  
+  # base OS AMI (ubuntu)
   SambaMachineAMI: ami-04a81a99f5ec58529 
   SambaPrivateIpAddress: 10.0.35.1
   SambaMachineType: c5a.large
