@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 checker_agent_blueprint = Blueprint("checker_agent", __name__, url_prefix="/api/v2/checkeragent")
-checker_agent_blueprint.before_request(svcmode_match_only("lksn24"))
+checker_agent_blueprint.before_request(svcmode_match_only("lksn"))
 
 @checker_agent_blueprint.post("/")
 def receive_checker_agent_report():
