@@ -17,6 +17,7 @@ import os
 import requests
 import zipfile
 import traceback
+import time
 
 log = logging.getLogger(__name__)
 
@@ -70,15 +71,18 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
                 Service.team_id == body["team_id"]
             )
         ).scalars().all()
-        flags: List[Flag] = db.session.execute(
-            select(Flag).where(
-                Flag.challenge_id == body["challenge_id"],
-                Flag.team_id == body["team_id"],
-                Flag.tick == body["current_tick"],
-                Flag.round == body["current_round"],
-            )
-        ).scalars().all()
-
+        
+        flag_query = select(Flag).where(
+            Flag.challenge_id == body["challenge_id"],
+            Flag.team_id == body["team_id"],
+            Flag.tick == body["current_tick"],
+            Flag.round == body["current_round"],
+        )
+        flags: List[Flag] = db.session.execute(flag_query).scalars().all()
+        while len(flags) == 0:
+            flags = db.session.execute(flag_query).scalars().all()
+            time.sleep(1)
+             
         service_ip = ServiceSchema().dump(services[0])["detail"]["checker"]["ip"]
         agent_latest_report: CheckerAgentReport = CheckerAgentReport.query.filter_by(
                 ip_source=service_ip
