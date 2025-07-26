@@ -2,6 +2,7 @@
   git:
     repo: "{{ repository.backend }}"
     dest: "/opt/ailurus-backend"
+    version: "{{ repository.backend_branch | default('HEAD') }}"
 
 - name: Generate surround IP Address
   set_fact:

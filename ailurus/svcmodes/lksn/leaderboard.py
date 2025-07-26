@@ -77,12 +77,12 @@ def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderb
             group_score = sorted_scores[0][criteria]
         else:
             group_score = sorted_scores[min_num_people - 1][criteria]
-            max_num_people = 1.5 * min_num_people
+            max_num_people = int(1.5 * min_num_people)
             if sorted_scores[max_num_people][criteria] == group_score:
                 group_score += 0.001 
         for i in range(len(sorted_scores)):
             if sorted_scores[i][criteria] >= group_score:
-                sorted_scores[i][f"{criteria}_group_score"] += 1
+                sorted_scores[i][f"{criteria}_group_score"] = sorted_scores[i].get(f"{criteria}_group_score", 0)
     return sorted_scores
             
 def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
@@ -97,8 +97,15 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
     ).scalars().all()
     teams: List[Team] = Team.query.all()
 
-    team_name_by_id = {team.id: team.name for team in teams}
     score_by_team = dict()
+    for team in teams:
+        score_by_team[team.id] = {
+            "id": team.id,
+            "name": team.name,
+            "total_score": 0,
+            "challenges": {}
+        }
+                
     for chall_id in chall_ids:
         score_by_challs = []
         for team in teams:
@@ -109,16 +116,10 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         
         for team_score in score_by_challs:
             team_id = team_score["team_id"]
-            if team_id not in score_by_team:
-                score_by_team[team_id] = {
-                    "id": team_id,
-                    "name": team_name_by_id[team_id],
-                    "total_score": 0,
-                    "challenges": {}
-                }
-            score_by_team[team_id]["total_score"] += team_score["attack"] + team_score["defense"] + team_score["sla"]
+            score_by_team[team_id]["total_score"] += team_score["attack_group_score"] + team_score["defense_group_score"] + team_score["sla_group_score"]
             score_by_team[team_id]["challenges"][chall_id] = team_score
 
+    results = score_by_team.values()
     # Calculate total score for each team
     results_sorted = sorted(results, key=cmp_to_key(lambda x, y: x["name"] < y["name"]))
     for i in range(len(results_sorted)):

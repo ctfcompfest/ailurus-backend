@@ -3,10 +3,10 @@
   hosts: frontend
   become: true
   roles:
-  - docker-install
+  # - docker-install
   - frontend-setup
-  - name: caddy-setup
-    when: ssl == True
+  # - name: caddy-setup
+  #   when: ssl == True
   - frontend-run
-  - name: caddy-add-directive
-    when: ssl == True
+  # - name: caddy-add-directive
+  #   when: ssl == True
