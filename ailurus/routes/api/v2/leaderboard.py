@@ -25,5 +25,5 @@ def get_public_leaderboard():
         status="success",
         is_freeze=is_freeze,
         data=leaderboard,
-        challenges={ chall.id: chall.title for chall in challenges },
+        challenges=[{"id": chall.id, "title": chall.title} for chall in challenges],
     )

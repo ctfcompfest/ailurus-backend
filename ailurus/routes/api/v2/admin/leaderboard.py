@@ -12,4 +12,4 @@ def get_admin_leaderboard():
     svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
     leaderboard = svcmode.get_leaderboard(freeze_time=freeze_time, is_admin=is_admin_version)
     challenges = Challenge.get_all_released_challenges(get_config("CURRENT_ROUND", 0))
-    return jsonify(status="success", data=leaderboard, challenges={chall.id: chall.title for chall in challenges})
+    return jsonify(status="success", data=leaderboard, challenges=[{"id": chall.id, "title": chall.title} for chall in challenges])
