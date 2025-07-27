@@ -51,7 +51,7 @@ class Challenge(db.Model):
         # Get all challenges that are released from start until the current round
         challs = cls.query.join(ChallengeRelease)\
             .filter(ChallengeRelease.round <= current_round).distinct(ChallengeRelease.challenge_id).all()
-        return [elm[0] for elm in challs]
+        return challs
 
 class ChallengeRelease(db.Model):
     __tablename__ = "challenge_release"
