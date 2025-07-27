@@ -36,7 +36,10 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
             Flag.team_id == team_id,
         )
     ).scalar()
-    defense_percentage = (attack_max_num - flag_stolen) / attack_max_num * 100.00
+
+    defense_percentage = 100
+    if attack_max_num > 0:
+        defense_percentage = (attack_max_num - flag_stolen) / attack_max_num * 100.00
     
     checker_valid = db.session.execute(
         select(func.count(CheckerResult.id)).where(
