@@ -17,7 +17,7 @@ public_services_blueprint = Blueprint("public_services", __name__)
 @public_services_blueprint.get("/services-status/")
 @cache.cached(timeout=30)
 def get_all_services_status():
-    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    chall_release = ChallengeRelease.get_all_released_challenges(get_config("CURRENT_ROUND", 0))
 
     svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
 

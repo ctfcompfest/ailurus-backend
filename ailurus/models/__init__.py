@@ -75,7 +75,13 @@ class ChallengeRelease(db.Model):
             .filter(cls.challenge_id == int(challenge_id)).all()
         return [elm[0] for elm in chall_release]
     
-
+    @classmethod
+    def get_all_released_challenges(cls, current_round: int) -> List[int]:
+        # Get all challenges that are released from start until the current round
+        chall_release = cls.query.with_entities(cls.challenge_id)\
+            .filter(cls.round <= int(current_round)).distinct(cls.challenge_id).all()
+        return [elm[0] for elm in chall_release]
+    
 class Flag(db.Model):
     __tablename__ = "flag"
     __table_args__ = (
