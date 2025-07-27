@@ -82,7 +82,7 @@ def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderb
                 group_score += 0.001 
         for i in range(len(sorted_scores)):
             if sorted_scores[i][criteria] >= group_score:
-                sorted_scores[i][f"{criteria}_group_score"] = sorted_scores[i].get(f"{criteria}_group_score", 0)
+                sorted_scores[i][f"{criteria}_group_score"] = sorted_scores[i].get(f"{criteria}_group_score", 0) + 1
     return sorted_scores
             
 def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
