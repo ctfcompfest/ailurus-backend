@@ -64,6 +64,24 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
     )
 
     checker_detail_result: CheckerResultDetailSchema = {}
+    
+    flag_query = select(Flag).where(
+        Flag.challenge_id == body["challenge_id"],
+        Flag.team_id == body["team_id"],
+        Flag.tick == body["current_tick"],
+        Flag.round == body["current_round"],
+    )
+    flags: List[Flag] = db.session.execute(flag_query).scalars().all()
+    retry_count = 3
+    while len(flags) == 0 and retry_count > 0:
+        flags = db.session.execute(flag_query).scalars().all()
+        retry_count -= 1
+        time.sleep(1)
+    if len(flags) == 0:
+        raise Exception("No flags found for team {} in challenge {} at round {} tick {}".format(
+            body["team_id"], body["challenge_id"], body["current_round"], body["current_tick"]
+        ))
+    
     try:
         log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))
         services: List[Service] = db.session.execute(
@@ -72,22 +90,6 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
             )
         ).scalars().all()
         
-        flag_query = select(Flag).where(
-            Flag.challenge_id == body["challenge_id"],
-            Flag.team_id == body["team_id"],
-            Flag.tick == body["current_tick"],
-            Flag.round == body["current_round"],
-        )
-        flags: List[Flag] = db.session.execute(flag_query).scalars().all()
-        retry_count = 3
-        while len(flags) == 0 and retry_count > 0:
-            flags = db.session.execute(flag_query).scalars().all()
-            retry_count -= 1
-            time.sleep(1)
-        if len(flags) == 0:
-            raise Exception("No flags found for team {} in challenge {} at round {} tick {}".format(
-                body["team_id"], body["challenge_id"], body["current_round"], body["current_tick"]
-            ))
         service_ip = ServiceSchema().dump(services[0])["detail"]["checker"]["ip"]
         agent_latest_report: CheckerAgentReport = CheckerAgentReport.query.filter_by(
                 ip_source=service_ip
