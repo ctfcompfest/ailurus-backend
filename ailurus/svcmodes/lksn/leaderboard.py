@@ -68,23 +68,39 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     return result
 
 def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderboardEntry]):
-    GROUP_THRESHOLD = (0.15, 0.4, 0.75)
+    num_team = len(chall_scores)
+
+    GROUP_THRESHOLD = (0.15, 0.25, 0.35)
+    MIN_PEOPLE_THRESHOLD = [max(int(num_team * threshold), 1) for threshold in GROUP_THRESHOLD]
+    MAX_PEOPLE_THRESHOLD = [max(int(num_team * threshold * 1.5), 1) for threshold in GROUP_THRESHOLD]
+    print(MIN_PEOPLE_THRESHOLD, MAX_PEOPLE_THRESHOLD)
+    
+    last_idx = 0
+    group_score = 3
     sorted_scores = sorted(chall_scores, key=lambda x: x[criteria], reverse=True)
-    for threshold in GROUP_THRESHOLD:
-        min_num_people = int(len(sorted_scores) * threshold)
-        score_variance = set(map(lambda x: x[criteria], sorted_scores[:min_num_people]))
+    for min_people, max_people in zip(MIN_PEOPLE_THRESHOLD, MAX_PEOPLE_THRESHOLD):
+        score_variance = set(map(lambda x: x[criteria], sorted_scores[last_idx:last_idx + min_people]))
         if len(score_variance) == 1:
-            group_score = sorted_scores[0][criteria]
+            threshold_score = sorted_scores[last_idx][criteria]
+        elif last_idx + min_people >= num_team:
+            # If we reach the end of the list, we take the last score
+            threshold_score = sorted_scores[-1][criteria]
         else:
-            group_score = sorted_scores[min_num_people - 1][criteria]
-            max_num_people = int(1.5 * min_num_people)
-            if sorted_scores[max_num_people][criteria] == group_score:
-                group_score += 0.001 
-        for i in range(len(sorted_scores)):
-            if sorted_scores[i][criteria] >= group_score:
-                sorted_scores[i][f"{criteria}_group_score"] = sorted_scores[i].get(f"{criteria}_group_score", 0) + 1
+            threshold_score = sorted_scores[last_idx + min_people - 1][criteria]
+            if sorted_scores[last_idx + max_people][criteria] == threshold_score:
+                # More than 1.5*y has the same score, so we need to increase the group score
+                while sorted_scores[last_idx + max_people][criteria] == threshold_score:
+                    max_people -= 1
+                threshold_score = sorted_scores[last_idx + max_people][criteria]
+        while last_idx < num_team and sorted_scores[last_idx][criteria] >= threshold_score:
+            sorted_scores[last_idx][f"{criteria}_group_score"] = group_score
+            last_idx += 1
+        group_score -= 1
+    while last_idx < num_team:
+        sorted_scores[last_idx][f"{criteria}_group_score"] = 0
+        last_idx += 1
     return sorted_scores
-            
+
 def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
     results: List[TeamLeaderboardEntry] = []
 
