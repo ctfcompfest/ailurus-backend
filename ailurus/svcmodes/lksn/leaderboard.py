@@ -24,7 +24,9 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
             Submission.time_created <= freeze_time,
         )
     ).scalar()
-    attack_percentage = flag_captured / total_flag * 100.00
+    attack_percentage = 100
+    if total_flag > 0:
+        attack_percentage = flag_captured / total_flag * 100.00
     
     # Number of flag stolen from other teams
     flag_stolen = db.session.execute(
