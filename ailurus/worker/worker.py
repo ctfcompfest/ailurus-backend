@@ -55,14 +55,15 @@ def callback_task(queue_name: str, ch: BlockingChannel, method, properties, body
         log.info(f"Receive new task from {queue_name}.")
         log.debug(f"Task body: {body_json}.")
         svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
-    
-        if queue_name == kwargs.get("QUEUE_CHECKER_TASK", "checker_task"):
-            svcmodule.handler_checker_task(body_json, **kwargs)
-        elif queue_name == kwargs.get("QUEUE_FLAG_TASK", "flag_task"):
-            svcmodule.handler_flagrotator_task(body_json, **kwargs)
-        elif queue_name == kwargs.get("QUEUE_SVCMANAGER_TASK", "svcmanager_task"):
-            svcmodule.handler_svcmanager_task(body_json, **kwargs)
-
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-        ch._message_acknowledged = True
+        try:
+            if queue_name == kwargs.get("QUEUE_CHECKER_TASK", "checker_task"):
+                svcmodule.handler_checker_task(body_json, **kwargs)
+            elif queue_name == kwargs.get("QUEUE_FLAG_TASK", "flag_task"):
+                svcmodule.handler_flagrotator_task(body_json, **kwargs)
+            elif queue_name == kwargs.get("QUEUE_SVCMANAGER_TASK", "svcmanager_task"):
+                svcmodule.handler_svcmanager_task(body_json, **kwargs)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            ch._message_acknowledged = True
+        except Exception as e:
+            pass
     log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")

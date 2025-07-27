@@ -79,10 +79,15 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
             Flag.round == body["current_round"],
         )
         flags: List[Flag] = db.session.execute(flag_query).scalars().all()
-        while len(flags) == 0:
+        retry_count = 3
+        while len(flags) == 0 and retry_count > 0:
             flags = db.session.execute(flag_query).scalars().all()
+            retry_count -= 1
             time.sleep(1)
-             
+        if len(flags) == 0:
+            raise Exception("No flags found for team {} in challenge {} at round {} tick {}".format(
+                body["team_id"], body["challenge_id"], body["current_round"], body["current_tick"]
+            ))
         service_ip = ServiceSchema().dump(services[0])["detail"]["checker"]["ip"]
         agent_latest_report: CheckerAgentReport = CheckerAgentReport.query.filter_by(
                 ip_source=service_ip
