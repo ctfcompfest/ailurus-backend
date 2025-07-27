@@ -46,6 +46,12 @@ class Challenge(db.Model):
     testcase_checksum: Mapped[Optional[str]]
     artifact_checksum: Mapped[Optional[str]]
 
+    @classmethod
+    def get_all_released_challenges(cls, current_round: int) -> List[int]:
+        # Get all challenges that are released from start until the current round
+        challs = cls.query.join(ChallengeRelease)\
+            .filter(ChallengeRelease.round <= current_round).distinct(ChallengeRelease.challenge_id).scalars().all()
+        return challs
 
 class ChallengeRelease(db.Model):
     __tablename__ = "challenge_release"
