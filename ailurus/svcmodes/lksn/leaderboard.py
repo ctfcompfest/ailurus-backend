@@ -73,7 +73,6 @@ def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderb
     GROUP_THRESHOLD = (0.15, 0.25, 0.35)
     MIN_PEOPLE_THRESHOLD = [max(int(num_team * threshold), 1) for threshold in GROUP_THRESHOLD]
     MAX_PEOPLE_THRESHOLD = [max(int(num_team * threshold * 1.5), 1) for threshold in GROUP_THRESHOLD]
-    print(MIN_PEOPLE_THRESHOLD, MAX_PEOPLE_THRESHOLD)
     
     last_idx = 0
     group_score = 3
