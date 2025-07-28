@@ -27,6 +27,9 @@ def generator_public_services_status_detail(result_detail: CheckerResultDetailSc
 def handler_checker_task(body: CheckerTaskSchema, **kwargs):
     if not body["testcase_checksum"]:
         return False
+    if body["current_tick"] == 0:
+        return True
+    
     tcroot_folder = os.path.join(get_app_config("DATA_DIR"), "..", "worker_data", "testcases")
     tc_zipfile = os.path.join(tcroot_folder, body["testcase_checksum"] + ".zip")
     tc_folder = os.path.join(tcroot_folder, body["testcase_checksum"])
