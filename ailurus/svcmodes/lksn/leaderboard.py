@@ -91,12 +91,12 @@ def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderb
             threshold_score = sorted_scores[-1][criteria]
         else:
             threshold_score = sorted_scores[last_idx + min_people - 1][criteria]
-            max_right = min(last_idx + max_people, num_team - 1)
-            if sorted_scores[max_right][criteria] == threshold_score:
+            rightmost_idx = last_idx + max_people
+            if sorted_scores[rightmost_idx][criteria] == threshold_score:
                 # More than 1.5*y has the same score, so we need to increase the group score
-                while sorted_scores[max_right][criteria] == threshold_score:
+                while sorted_scores[rightmost_idx][criteria] == threshold_score:
                     max_people -= 1
-                threshold_score = sorted_scores[max_right][criteria]
+                threshold_score = sorted_scores[rightmost_idx][criteria]
         while last_idx < num_team and sorted_scores[last_idx][criteria] >= threshold_score:
             sorted_scores[last_idx][f"{criteria}_group_score"] = group_score
             last_idx += 1
