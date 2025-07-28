@@ -28,6 +28,7 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
     if not body["testcase_checksum"]:
         return False
     if body["current_tick"] == 0:
+        log.info("skip testcase: chall_id={}, team_id={}, round={}, tick={}.".format(body['challenge_id'], body['team_id'], body["current_round"], body['current_tick']))
         return True
     
     tcroot_folder = os.path.join(get_app_config("DATA_DIR"), "..", "worker_data", "testcases")
