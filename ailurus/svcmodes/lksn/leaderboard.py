@@ -3,10 +3,12 @@ from ailurus.utils.config import get_config
 from functools import cmp_to_key
 from sqlalchemy import select, func
 from typing import List
-
 from .schema import TeamLeaderboardEntry, TeamChallengeLeaderboardEntry
 
 import datetime
+import logging
+
+log = logging.getLogger(__name__)
 
 def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_time: datetime.datetime):
     chall: Challenge = Challenge.query.filter_by(id=chall_id).first()
@@ -82,6 +84,7 @@ def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderb
     last_idx = 0
     group_score = 3
     sorted_scores = sorted(chall_scores, key=lambda x: x[criteria], reverse=True)
+
     for min_people, max_people in zip(MIN_PEOPLE_THRESHOLD, MAX_PEOPLE_THRESHOLD):
         score_variance = set(map(lambda x: x[criteria], sorted_scores[last_idx:last_idx + min_people]))
         if len(score_variance) == 1:
@@ -91,12 +94,14 @@ def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderb
             threshold_score = sorted_scores[-1][criteria]
         else:
             threshold_score = sorted_scores[last_idx + min_people - 1][criteria]
-            rightmost_idx = last_idx + max_people
+            rightmost_idx = min(last_idx + max_people, num_team - 1)
             if sorted_scores[rightmost_idx][criteria] == threshold_score:
                 # More than 1.5*y has the same score, so we need to increase the group score
                 while sorted_scores[rightmost_idx][criteria] == threshold_score:
-                    max_people -= 1
+                    rightmost_idx -= 1
+                    
                 threshold_score = sorted_scores[rightmost_idx][criteria]
+
         while last_idx < num_team and sorted_scores[last_idx][criteria] >= threshold_score:
             sorted_scores[last_idx][f"{criteria}_group_score"] = group_score
             last_idx += 1
