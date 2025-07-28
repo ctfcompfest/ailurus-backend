@@ -65,5 +65,7 @@ def callback_task(queue_name: str, ch: BlockingChannel, method, properties, body
             ch.basic_ack(delivery_tag=method.delivery_tag)
             ch._message_acknowledged = True
         except Exception as e:
-            pass
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+            ch._message_acknowledged = False
+            log.error(f"Error processing task {queue_name}: {str(e)}.")
     log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")

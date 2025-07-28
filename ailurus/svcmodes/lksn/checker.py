@@ -78,9 +78,11 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
         retry_count -= 1
         time.sleep(1)
     if len(flags) == 0:
-        raise Exception("No flags found for team {} in challenge {} at round {} tick {}".format(
+        err_msg = "No flags found for team {} in challenge {} at round {} tick {}".format(
             body["team_id"], body["challenge_id"], body["current_round"], body["current_tick"]
-        ))
+        )
+        log.error(f"checker failed: {err_msg}.")
+        raise Exception(err_msg)
     
     try:
         log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))
