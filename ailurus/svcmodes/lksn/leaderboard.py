@@ -48,7 +48,7 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     defense_percentage = 100
     if attack_max_num > 0:
         defense_percentage = (attack_max_num - flag_stolen) / attack_max_num * 100.00
-    print(f"team_id={team_id}, chall_id={chall_id}, flag_captured={flag_captured}, flag_stolen={flag_stolen}, attack_percentage={attack_percentage}, defense_percentage={defense_percentage}", flush=True)
+    
     checker_valid = db.session.execute(
         select(func.count(CheckerResult.id)).where(
             CheckerResult.challenge_id == chall_id,
@@ -151,7 +151,7 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
 
     results = score_by_team.values()
     # Calculate total score for each team
-    results_sorted = sorted(results, key=cmp_to_key(lambda x, y: x["name"] < y["name"]))
+    results_sorted = sorted(results, key=(lambda x: x["name"]))
     for i in range(len(results_sorted)):
         results_sorted[i]["rank"] = 1
     return results_sorted
