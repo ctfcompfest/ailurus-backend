@@ -1,5 +1,5 @@
 from ailurus.models import db, Team, CheckerResult, CheckerStatus, Flag, ChallengeRelease, Challenge, Submission
-from ailurus.utils.config import get_config
+from ailurus.utils.config import get_config, is_contest_finished
 from functools import cmp_to_key
 from sqlalchemy import select, func
 from typing import List
@@ -12,8 +12,12 @@ log = logging.getLogger(__name__)
 
 def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_time: datetime.datetime):
     chall: Challenge = Challenge.query.filter_by(id=chall_id).first()
-    total_flag = get_config('CURRENT_ROUND', 0) * get_config('CURRENT_TICK', 0) * Team.query.count() * chall.num_flag
-    attack_max_num = get_config('CURRENT_ROUND', 0) * get_config('CURRENT_TICK', 0) * (Team.query.count() - 1) * chall.num_flag
+    num_of_session = get_config('CURRENT_ROUND', 0) * get_config('NUMBER_TICK') + get_config('CURRENT_TICK', 0)
+    if is_contest_finished():
+        num_of_session -= 1
+        
+    total_flag = num_of_session * Team.query.count() * chall.num_flag
+    attack_max_num = num_of_session * (Team.query.count() - 1) * chall.num_flag
     
     result: TeamChallengeLeaderboardEntry = {}
     
@@ -44,7 +48,7 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     defense_percentage = 100
     if attack_max_num > 0:
         defense_percentage = (attack_max_num - flag_stolen) / attack_max_num * 100.00
-    
+    print(f"team_id={team_id}, chall_id={chall_id}, flag_captured={flag_captured}, flag_stolen={flag_stolen}, attack_percentage={attack_percentage}, defense_percentage={defense_percentage}", flush=True)
     checker_valid = db.session.execute(
         select(func.count(CheckerResult.id)).where(
             CheckerResult.challenge_id == chall_id,
