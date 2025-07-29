@@ -3,7 +3,7 @@
   hosts: public_scoreboard
   become: true
   roles:
-  # - docker-install
-  # - name: caddy-setup
-  #   when: ssl == True
+  - docker-install
+  - name: caddy-setup
+    when: ssl == True
   - scoreboard-run

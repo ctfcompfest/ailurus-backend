@@ -3,40 +3,40 @@
     domain: "{{ host.scoreboard | split('//') | reverse | first}}"
     upstream: "localhost:3000"
 
-# - name: Clone frontend git repository
-#   git:
-#     repo: "{{ repository.frontend }}"
-#     dest: "/opt/ailurus-frontend"
-#     version: "{{ repository.frontend_branch | default('HEAD') }}"
+- name: Clone frontend git repository
+  git:
+    repo: "{{ repository.frontend }}"
+    dest: "/opt/ailurus-frontend"
+    version: "{{ repository.frontend_branch | default('HEAD') }}"
 
-# - name: Generating environment file
-#   template:
-#     src: "env-file.j2"
-#     dest: /opt/ailurus-frontend/.env
+- name: Generating environment file
+  template:
+    src: "env-file.j2"
+    dest: /opt/ailurus-frontend/.env
 
-# - name: Build frontend Docker image
-#   docker_image:
-#     name: ailurus-frontend
-#     source: build
-#     build:
-#       path: /opt/ailurus-frontend
-#     state: present
-#     force_source: true
+- name: Build frontend Docker image
+  docker_image:
+    name: ailurus-frontend
+    source: build
+    build:
+      path: /opt/ailurus-frontend
+    state: present
+    force_source: true
 
-# - name: Run frontend Docker container
-#   docker_container:
-#     name: ailurus-frontend
-#     image: ailurus-frontend:latest
-#     state: started
-#     restart_policy: always
-#     ports:
-#       - "3000:3000"
+- name: Run frontend Docker container
+  docker_container:
+    name: ailurus-frontend
+    image: ailurus-frontend:latest
+    state: started
+    restart_policy: always
+    ports:
+      - "3000:3000"
 
-# - name: Create Caddyfile folder
-#   file:
-#     path: "/etc/caddy/caddy.d"
-#     state: directory
-#     mode: 0755
+- name: Create Caddyfile folder
+  file:
+    path: "/etc/caddy/caddy.d"
+    state: directory
+    mode: 0755
 
 - name: Create ssl cert folder
   file:
