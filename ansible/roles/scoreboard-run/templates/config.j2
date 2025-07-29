@@ -1,0 +1,31 @@
+{{ domain }} {
+	# Block access to protected API endpoints
+	@blocked path /api/v2/authenticate/* /api/v2/admin/* /api/v2/my/* /api/v2/worker/*
+	respond @blocked "Forbidden" 403
+
+	# Forward API requests (except blocked ones) to private domain with WebSocket upgrade
+	@api_and_socket path /api/* /socket.io/*
+	reverse_proxy @api_and_socket {{ host.backend }} {
+		header_up Host {upstream_hostport}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		
+		# Enable WebSocket support
+		@websocket {
+			header Connection *Upgrade*
+			header Upgrade websocket
+		}
+		transport http {
+			versions h1.1
+		}
+	}
+
+	# Forward all other requests to {{ upstream }}
+	reverse_proxy {{ upstream }} {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

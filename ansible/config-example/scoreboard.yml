@@ -1,0 +1,14 @@
+repository:
+  frontend: https://github.com/ctfcompfest/ailurus-frontend.git
+
+host:
+  backend: https://api.ailurus.pw
+  scoreboard: https://ailurus.pw
+
+ssl: true
+public_ca: false
+ssl_cert_file:
+  cert: /etc/letsencrypt/live/ailurus.pw/fullchain.pem
+  key: /etc/letsencrypt/live/ailurus.pw/privkey.pem
+
+frontend_service_manage_panel: fullserver

@@ -1,5 +1,5 @@
 ---
-- name: Setup and deploy Ailurus frontend and keeper server
+- name: Setup and deploy Ailurus frontend
   hosts: frontend
   become: true
   roles:

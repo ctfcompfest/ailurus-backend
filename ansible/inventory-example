@@ -7,6 +7,9 @@ backend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/pat
 [frontend]
 frontend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
+[public_scoreboard]
+public_scoreboard ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
+
 [worker]
 worker1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_worker=4 vpn_profile_path=/path/to/vpnworker1.conf
 worker2 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_worker=4 vpn_profile_path=/path/to/vpnworker1.conf

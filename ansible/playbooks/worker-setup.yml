@@ -3,7 +3,7 @@
   hosts: worker
   become: true
   roles:
-  - docker-install
+  # - docker-install
   - worker-vpnconnect
   - backend-setup
   - worker-run
