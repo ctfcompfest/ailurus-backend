@@ -1,15 +1,34 @@
-- name: Add caddy certificate and list
-  shell: |
-    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+- name: Ensure APT dependencies are installed for Caddy repository
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - gnupg
+      - software-properties-common
+    state: present
+    update_cache: true
 
-- name: Install caddy
-  apt:
+- name: Add Caddy GPG key
+  ansible.builtin.apt_key:
+    url: 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key'
+    keyring: /etc/apt/keyrings/caddy.gpg
+    state: present
+
+- name: Add Caddy APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/caddy.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main"
+    filename: caddy-stable
+    state: present
+    update_cache: true
+
+- name: Install Caddy
+  ansible.builtin.apt:
     pkg:
       - caddy
     state: latest
+    update_cache: true
 
-- name: Start Caddy service
-  systemd:
+- name: Ensure Caddy service is started and enabled
+  ansible.builtin.systemd:
     name: caddy
     state: started
+    enabled: true
