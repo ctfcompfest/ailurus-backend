@@ -15,7 +15,10 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     num_of_session = get_config('CURRENT_ROUND', 0) * get_config('NUMBER_TICK') + get_config('CURRENT_TICK', 0)
     if is_contest_finished():
         num_of_session -= 1
-        
+
+    if freeze_time and datetime.datetime.now(datetime.timezone.utc) > freeze_time:
+        num_of_session = get_config('FREEZE_ROUND', 0) * get_config('NUMBER_TICK') + get_config('FREEZE_TICK', 0)
+    
     total_flag = num_of_session * Team.query.count() * chall.num_flag
     attack_max_num = num_of_session * (Team.query.count() - 1) * chall.num_flag
     

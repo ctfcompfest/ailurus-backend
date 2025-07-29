@@ -57,6 +57,10 @@ def tick_keeper(app: Flask, callback: Callable, callback_args: List[Any]):
         tick_duration: int = get_config("TICK_DURATION")
         time_now = datetime.now(timezone.utc).replace(microsecond=0)
 
+        if datetime.now(timezone.utc) >= get_config("FREEZE_TIME"):
+            set_config("FREEZE_TICK", get_config("CURRENT_TICK", 0))
+            set_config("FREEZE_ROUND", get_config("CURRENT_ROUND", 1))
+        
         if time_now < last_tick_change or \
             time_now - last_tick_change < timedelta(minutes=tick_duration):
             log.debug("tick-keeper: tick time limit has not been achieved.")
