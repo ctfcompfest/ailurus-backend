@@ -86,7 +86,7 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
             body["team_id"], body["challenge_id"], body["current_round"], body["current_tick"]
         )
         log.error(f"checker failed: {err_msg}.")
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
     
     try:
         log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))

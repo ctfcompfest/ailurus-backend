@@ -62,10 +62,10 @@ def callback_task(queue_name: str, ch: BlockingChannel, method, properties, body
                 svcmodule.handler_flagrotator_task(body_json, **kwargs)
             elif queue_name == kwargs.get("QUEUE_SVCMANAGER_TASK", "svcmanager_task"):
                 svcmodule.handler_svcmanager_task(body_json, **kwargs)
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-            ch._message_acknowledged = True
-        except Exception as e:
-            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
-            ch._message_acknowledged = False
+        except ValueError as e:
+            # ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+            # ch._message_acknowledged = False
             log.error(f"Error processing task {queue_name}: {str(e)}.")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        ch._message_acknowledged = True
     log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")
