@@ -3,7 +3,7 @@
   set_fact:
     number_checker: "{{ hostvars[inventory_hostname]['num_checker'] | int }}"
     number_flagrotator: "{{ hostvars[inventory_hostname]['num_flagrotator'] | int }}"
-    num_svcmanager: "{{ hostvars[inventory_hostname]['num_svcmanager'] | int }}"
+    number_svcmanager: "{{ hostvars[inventory_hostname]['num_svcmanager'] | int }}"
     
 - include_tasks:
     file: run-checker.yml
@@ -23,3 +23,4 @@
   loop_control:
 
     loop_var: worker_id
+
