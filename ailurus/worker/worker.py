@@ -1,3 +1,4 @@
+from ailurus.utils.exception import FlagNotFoundException
 from ailurus.utils.config import get_config, get_app_config
 from ailurus.utils.svcmode import get_svcmode_module
 from pika.adapters.blocking_connection import BlockingChannel
@@ -64,11 +65,13 @@ def checker_task(queue_name: str, ch: BlockingChannel, method, properties, body:
             
             ch.basic_ack(delivery_tag=method.delivery_tag)
             ch._message_acknowledged = True
-        except ValueError as e:
+        except FlagNotFoundException as e:
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
             ch._message_acknowledged = False
             log.error(f"Error processing task {queue_name}: {str(e)}.")
-        
+        except Exception as e:
+            log.error(f"Error processing task {queue_name}: {str(e)}.")
+            
     log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")
 
 def flagrotator_task(queue_name: str, ch: BlockingChannel, method, properties, body: bytes, **kwargs):
@@ -82,9 +85,7 @@ def flagrotator_task(queue_name: str, ch: BlockingChannel, method, properties, b
 
             ch.basic_ack(delivery_tag=method.delivery_tag)
             ch._message_acknowledged = True
-        except ValueError as e:
-            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
-            ch._message_acknowledged = False
+        except Exception as e:
             log.error(f"Error processing task {queue_name}: {str(e)}.")
         
     log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")
@@ -101,7 +102,6 @@ def svcmanager_task(queue_name: str, ch: BlockingChannel, method, properties, bo
         svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
         try:
             svcmodule.handler_svcmanager_task(body_json, **kwargs)
-        except ValueError as e:
+        except Exception as e:
             log.error(f"Error processing task {queue_name}: {str(e)}.")
-        
     log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")

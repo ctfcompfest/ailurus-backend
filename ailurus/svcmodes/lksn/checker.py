@@ -1,3 +1,4 @@
+from ailurus.utils.exception import FlagNotFoundException
 from ailurus.models import db, Service, CheckerResult, CheckerStatus, Flag
 from ailurus.schema import ServiceSchema, FlagSchema
 from ailurus.utils.config import get_config, get_app_config
@@ -86,7 +87,7 @@ def handler_checker_task(body: CheckerTaskSchema, **kwargs):
             body["team_id"], body["challenge_id"], body["current_round"], body["current_tick"]
         )
         log.error(f"checker failed: {err_msg}.")
-        raise ValueError(err_msg)
+        raise FlagNotFoundException(err_msg)
     
     try:
         log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))
