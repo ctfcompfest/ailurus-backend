@@ -2,7 +2,7 @@
 vpn ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
 [backend]
-backend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
+backend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_instance=2
 
 [frontend]
 frontend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
@@ -11,5 +11,5 @@ frontend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/pa
 public_scoreboard ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
 [worker]
-worker1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_worker=4 vpn_profile_path=/path/to/vpnworker1.conf
-worker2 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_worker=4 vpn_profile_path=/path/to/vpnworker1.conf
+worker1 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_checker=4 num_flagrotator=2 num_svcmanager=1 vpn_profile_path=/path/to/vpnworker1.conf
+worker2 ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_checker=4 num_flagrotator=2 num_svcmanager=1 vpn_profile_path=/path/to/vpnworker2.conf

@@ -41,5 +41,9 @@ if __name__ == "__main__":
         socketio.run(webapp, log_output=True, **webapp_opts)
     elif user_arg.command == 'keeper':
         create_keeper_daemon()
-    elif user_arg.command == 'worker':
-        create_worker_daemon()
+    elif user_arg.command == 'checker':
+        create_worker_daemon('checker')
+    elif user_arg.command == 'svcmanager':
+        create_worker_daemon('svcmanager')
+    elif user_arg.command == 'flagrotator':
+        create_worker_daemon('flagrotator')

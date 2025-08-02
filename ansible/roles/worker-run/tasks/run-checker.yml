@@ -1,0 +1,10 @@
+---
+- name: Run checker Docker container
+  docker_container:
+    name: ailurus-checker-{{worker_id}}
+    image: ailurus-backend:latest
+    state: started
+    restart_policy: always
+    command: checker
+    volumes:
+    - "/opt/ailurus-worker/ailurus/worker_data:/opt/app/ailurus/worker_data"

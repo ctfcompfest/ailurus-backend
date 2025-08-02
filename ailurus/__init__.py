@@ -95,7 +95,7 @@ def create_keeper_daemon(env_file=".env"):
     except KeyboardInterrupt:
         return
 
-def create_worker_daemon(env_file=".env"):
+def create_worker_daemon(worker_type: str, env_file=".env"):
     configs = dotenv.dotenv_values(env_file)
     app = create_app(env_file)
 
@@ -105,7 +105,7 @@ def create_worker_daemon(env_file=".env"):
         configs["flask_app"] = app
 
         try:
-            create_worker(**configs)
+            create_worker(worker_type, **configs)
         except KeyboardInterrupt:
             return
     
