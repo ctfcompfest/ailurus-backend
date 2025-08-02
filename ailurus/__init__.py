@@ -25,7 +25,8 @@ def create_logger(logname):
         handlers=[
             logging.FileHandler(logname), # Log to a file
             logging.StreamHandler() # Log to the console
-        ]
+        ],
+        disable_existing_loggers=False,
     )
 
 def setup_jwt_app(app: Flask):
