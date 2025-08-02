@@ -17,7 +17,9 @@ if __name__ == "__main__":
     webapp_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
     webapp_parser.add_argument('--port', type=int, help='the port web app will bind to.')
 
-    worker_parser = subparser.add_parser('worker', help='worker command help')
+    checker_parser = subparser.add_parser('checker', help='worker command help')
+    flagrotator_parser = subparser.add_parser('flagrotator', help='worker command help')
+    svcmanager_parser = subparser.add_parser('svcmanager', help='worker command help')
     keeper_parser = subparser.add_parser('keeper', help='keeper command help')
     
     args = sys.argv[1:]
