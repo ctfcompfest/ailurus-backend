@@ -7,7 +7,7 @@ from ailurus.models import (
 )
 from ailurus.utils.config import get_app_config, get_config, set_config
 from ailurus.utils.config import is_contest_running
-from ailurus.utils.contest import generate_flag
+from ailurus.utils.contest import generate_or_get_flag
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -173,7 +173,7 @@ def flag_keeper(app: Flask):
         taskbodys = []
         for team, chall in itertools.product(teams, release_challs):
             for flag_order in range(chall.num_flag):
-                flag = generate_flag(current_round, current_tick, team, chall, flag_order)
+                flag = generate_or_get_flag(current_round, current_tick, team, chall, flag_order)
                 taskbody = {
                     "flag_value": flag.value,
                     "flag_order": flag.order,
@@ -186,7 +186,6 @@ def flag_keeper(app: Flask):
 
                 flags.append(flag)
                 taskbodys.append(taskbody)
-        db.session.add_all(flags)
         db.session.commit()
         
         log.info(f"flag-keeper: successfully generate {len(flags)} flags.")

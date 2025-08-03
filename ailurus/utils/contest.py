@@ -1,4 +1,5 @@
 from ailurus.models import (
+    db,
     Flag,
     Team,
     Challenge,
@@ -7,7 +8,7 @@ from ailurus.utils.config import get_config, set_config
 from datetime import datetime, timezone
 from secrets import choice
 from string import ascii_lowercase, digits
-
+from sqlalchemy.exc import IntegrityError
 import json
 
 def update_paused_status(newvalue: bool | str):
@@ -57,3 +58,20 @@ def generate_flag(current_round: int, current_tick: int, team: Team, challenge: 
         value = new_flag,
         order = order
     )
+
+def generate_or_get_flag(current_round: int, current_tick: int, team: Team, challenge: Challenge, order: int = 0):
+    try:
+        flag = generate_flag(current_round, current_tick, team, challenge, order)
+        db.session.add(flag)
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        flag = db.session.query(Flag).filter_by(
+            team_id=team.id,
+            challenge_id=challenge.id,
+            round=current_round,
+            tick=current_tick,
+            order=order
+        ).first()
+    
+    return flag
