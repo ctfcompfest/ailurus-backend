@@ -150,12 +150,13 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         
         for team_score in score_by_challs:
             team_id = team_score["team_id"]
-            score_by_team[team_id]["total_score"] += team_score["attack_group_score"] + team_score["defense_group_score"] + team_score["sla_group_score"]
+            # score_by_team[team_id]["total_score"] += team_score["attack_group_score"] + team_score["defense_group_score"] + team_score["sla_group_score"]
+            score_by_team[team_id]["total_score"] += team_score["attack"] + team_score["defense"] + team_score["sla"]
             score_by_team[team_id]["challenges"][chall_id] = team_score
 
     results = score_by_team.values()
     # Calculate total score for each team
-    results_sorted = sorted(results, key=(lambda x: x["name"]))
+    results_sorted = sorted(results, key=(lambda x: x["total_score"]), reverse=True)
     for i in range(len(results_sorted)):
-        results_sorted[i]["rank"] = 1
+        results_sorted[i]["rank"] = i + 1
     return results_sorted
