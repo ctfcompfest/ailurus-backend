@@ -57,7 +57,7 @@ def tick_keeper(app: Flask, callback: Callable, callback_args: List[Any]):
         tick_duration: int = get_config("TICK_DURATION")
         time_now = datetime.now(timezone.utc).replace(microsecond=0)
 
-        if datetime.now(timezone.utc) >= get_config("FREEZE_TIME"):
+        if datetime.now(timezone.utc) >= get_config("FREEZE_TIME") and get_config("FREEZE_TICK", -1) == -1:
             set_config("FREEZE_TICK", get_config("CURRENT_TICK", 0))
             set_config("FREEZE_ROUND", get_config("CURRENT_ROUND", 1))
         

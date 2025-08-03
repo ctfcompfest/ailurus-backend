@@ -122,7 +122,8 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
     results: List[TeamLeaderboardEntry] = []
 
     if is_admin or freeze_time == None:
-        freeze_time = datetime.datetime.now(datetime.timezone.utc)
+        # Add 1 hour offset to prevent freeze time
+        freeze_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
 
     current_round = get_config("CURRENT_ROUND", 0)
     chall_ids: List[int] = db.session.execute(
