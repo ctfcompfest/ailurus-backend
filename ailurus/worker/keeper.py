@@ -7,7 +7,7 @@ from ailurus.models import (
 )
 from ailurus.utils.config import get_app_config, get_config, set_config
 from ailurus.utils.config import is_contest_running
-from ailurus.utils.contest import generate_or_get_flag
+from ailurus.utils.contest import generate_flag_value
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -169,14 +169,13 @@ def flag_keeper(app: Flask):
             ).where(ChallengeRelease.round == current_round)
         ).scalars().all()
 
-        flags: List[Flag] = []
         taskbodys = []
         for team, chall in itertools.product(teams, release_challs):
             for flag_order in range(chall.num_flag):
-                flag = generate_or_get_flag(current_round, current_tick, team, chall, flag_order)
+                flag_value = generate_flag_value(current_round, current_tick, team, chall, flag_order)
                 taskbody = {
-                    "flag_value": flag.value,
-                    "flag_order": flag.order,
+                    "flag_value": flag_value,
+                    "flag_order": flag_order,
                     "challenge_id": chall.id,
                     "team_id": team.id,                    
                     "current_tick": current_tick,
@@ -184,11 +183,9 @@ def flag_keeper(app: Flask):
                     "time_created": time_now.isoformat(),
                 }
 
-                flags.append(flag)
                 taskbodys.append(taskbody)
-        db.session.commit()
         
-        log.info(f"flag-keeper: successfully generate {len(flags)} flags.")
+        log.info(f"flag-keeper: successfully generate {len(taskbodys)} flags.")
         
         for taskbody in taskbodys:
             rabbitmq_channel.basic_publish(
@@ -199,5 +196,5 @@ def flag_keeper(app: Flask):
                 )
             )
         rabbitmq_channel.close()
-        log.info(f"flag-keeper: successfully broadcast {len(flags)} flag task.")
+        log.info(f"flag-keeper: successfully broadcast {len(taskbodys)} flag task.")
     return True

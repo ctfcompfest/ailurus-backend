@@ -1,3 +1,4 @@
+from ailurus.utils.contest import insert_or_overwrite_flag_in_db
 from ailurus.utils.exception import FlagNotFoundException
 from ailurus.utils.config import get_config, get_app_config
 from ailurus.utils.svcmode import get_svcmode_module
@@ -83,6 +84,8 @@ def flagrotator_task(queue_name: str, ch: BlockingChannel, method, properties, b
         try:
             svcmodule.handler_flagrotator_task(body_json, **kwargs)
 
+            insert_or_overwrite_flag_in_db(**body_json)
+            
             ch.basic_ack(delivery_tag=method.delivery_tag)
             ch._message_acknowledged = True
         except Exception as e:
