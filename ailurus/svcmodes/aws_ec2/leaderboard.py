@@ -1,6 +1,5 @@
 from ailurus.models import db, Team, CheckerResult, CheckerStatus, Flag, ChallengeRelease, Challenge, Submission
 from ailurus.utils.config import get_config, is_contest_finished
-from functools import cmp_to_key
 from sqlalchemy import select, func
 from typing import List
 from .schema import TeamLeaderboardEntry, TeamChallengeLeaderboardEntry
@@ -85,43 +84,6 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
         result["sla"] = round(sla_percentage, 2)
     return result
 
-def calculate_group_score(criteria: str, chall_scores: List[TeamChallengeLeaderboardEntry]):
-    num_team = len(chall_scores)
-
-    GROUP_THRESHOLD = (0.15, 0.25, 0.35)
-    MIN_PEOPLE_THRESHOLD = [max(int(num_team * threshold), 1) for threshold in GROUP_THRESHOLD]
-    MAX_PEOPLE_THRESHOLD = [max(int(num_team * threshold * 1.5), 1) for threshold in GROUP_THRESHOLD]
-    
-    last_idx = 0
-    group_score = 3
-    sorted_scores = sorted(chall_scores, key=lambda x: x[criteria], reverse=True)
-
-    for min_people, max_people in zip(MIN_PEOPLE_THRESHOLD, MAX_PEOPLE_THRESHOLD):
-        score_variance = set(map(lambda x: x[criteria], sorted_scores[last_idx:last_idx + min_people]))
-        if len(score_variance) == 1:
-            threshold_score = sorted_scores[last_idx][criteria]
-        elif last_idx + min_people >= num_team:
-            # If we reach the end of the list, we take the last score
-            threshold_score = sorted_scores[-1][criteria]
-        else:
-            threshold_score = sorted_scores[last_idx + min_people - 1][criteria]
-            rightmost_idx = min(last_idx + max_people, num_team - 1)
-            if sorted_scores[rightmost_idx][criteria] == threshold_score:
-                # More than 1.5*y has the same score, so we need to increase the group score
-                while sorted_scores[rightmost_idx][criteria] == threshold_score:
-                    rightmost_idx -= 1
-                    
-                threshold_score = sorted_scores[rightmost_idx][criteria]
-
-        while last_idx < num_team and sorted_scores[last_idx][criteria] >= threshold_score:
-            sorted_scores[last_idx][f"{criteria}_group_score"] = group_score
-            last_idx += 1
-        group_score -= 1
-    while last_idx < num_team:
-        sorted_scores[last_idx][f"{criteria}_group_score"] = 0
-        last_idx += 1
-    return sorted_scores
-
 def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool = False) -> List:
     results: List[TeamLeaderboardEntry] = []
 
@@ -149,12 +111,9 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         for team in teams:
             chall_score_per_team = calculate_team_chall_leaderboard_entry(team.id, chall_id, freeze_time)
             score_by_challs.append(chall_score_per_team)
-        for k in ["attack", "defense", "sla"]:
-            score_by_challs = calculate_group_score(k, score_by_challs)
         
         for team_score in score_by_challs:
             team_id = team_score["team_id"]
-            # score_by_team[team_id]["total_score"] += team_score["attack_group_score"] + team_score["defense_group_score"] + team_score["sla_group_score"]
             score_by_team[team_id]["total_score"] += team_score["attack"] + team_score["defense"] + team_score["sla"]
             score_by_team[team_id]["challenges"][chall_id] = team_score
 
