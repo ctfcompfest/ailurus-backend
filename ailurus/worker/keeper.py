@@ -84,12 +84,16 @@ def tick_keeper(app: Flask, callback: Callable, callback_args: List[Any]):
 
 def checker_keeper(app: Flask):
     with app.app_context():
-        if not is_contest_running():
+        if not is_contest_running() and not get_config("CHECKER_BEFORE_CONTEST", False):
             log.info("checker-keeper: contest is not running.")
             return False
-
+        
         current_tick = get_config("CURRENT_TICK")
         current_round = get_config("CURRENT_ROUND")
+        if not is_contest_running() and get_config("CHECKER_BEFORE_CONTEST", False):
+            current_round = -1
+            current_tick = -1
+            
         log.debug(f"checker-keeper: execute for tick = {current_tick}, round = {current_round}.")
         
         time_now = datetime.now(timezone.utc).replace(microsecond=0)
