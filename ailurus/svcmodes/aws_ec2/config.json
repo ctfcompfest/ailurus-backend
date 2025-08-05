@@ -1,0 +1,4 @@
+{
+    "display": "AWS EC2",
+    "doc": "Full server with challenge and root flag using AWS with samba for the flag server"
+}
