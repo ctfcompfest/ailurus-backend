@@ -196,7 +196,7 @@ def create_or_get_provision_machine(challenge_id, artifact_folder):
     db.session.commit()
     
     # Add some delay to wait samba server run init script
-    time.sleep(30)
+    time.sleep(60)
 
     return provision_machine
 
@@ -303,6 +303,7 @@ def do_provision(body: ServiceManagerTaskSchema, **kwargs):
             chall_detail_entries.append(chall_entry)
     bash_chall_detail = "\n".join(["("] + chall_detail_entries + [")"])
     template_body = template_body.replace("{{Ailurus.Challenges}}", bash_chall_detail)
+    template_body = template_body.replace("{{Ailurus.TeamId}}", body["team_id"])
     template_body = template_body.replace("{{Ailurus.RootChallenge}}", root_chall_detail)
     template_body = template_body.replace("{{Ailurus.CheckerPublicKey}}", provision_machine_detail["CheckerPublicKey"])
     template_body = template_body.replace("{{Ailurus.SambaServerPrivateIp}}", provision_machine_detail["SambaServerPrivateIp"])
