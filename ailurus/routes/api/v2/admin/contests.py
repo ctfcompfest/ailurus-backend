@@ -2,9 +2,10 @@ import base64
 import itertools
 
 import pika
-from ailurus.models import db, Submission, Flag, Solve, CheckerResult, ScorePerTick, Config, Team, Challenge
-from ailurus.utils.contest import generate_or_get_flag
-from ailurus.utils.config import get_app_config
+from sqlalchemy import select
+from ailurus.models import ChallengeRelease, db, Submission, Flag, Solve, CheckerResult, ScorePerTick, Config, Team, Challenge
+from ailurus.utils.contest import generate_flagrotator_task
+from ailurus.utils.config import get_app_config, get_config
 from flask import Blueprint, jsonify, request
 from typing import List
 
@@ -30,6 +31,34 @@ def reset_game_contest_data():
     db.session.commit()
     return jsonify(status="success", message="Game contest data has been reset."), 200
 
+
+@contest_blueprint.post('/rotate-flag/')
+def reset_game_contest_data():
+    """ Force rotate flag for current tick and round
+    """
+    if not request.json or not request.json.get("confirm", False):
+        return jsonify(status="failed", message="Action force rotate flag should be confirmed."), 400
+    
+    current_tick = get_config("CURRENT_TICK", 0)
+    current_round = get_config("CURRENT_TICK", 0)
+    if current_tick <= 0 or current_round <= 0:
+        return jsonify(status="failed", message="Game has not started yet."), 400
+    
+    teams: List[Team] = Team.query.all()
+    release_challs: List[Challenge] = db.session.execute(
+        select(
+            Challenge
+        ).join(
+            ChallengeRelease,
+            ChallengeRelease.challenge_id == Challenge.id
+        ).where(ChallengeRelease.round == current_round)
+    ).scalars().all()
+    
+    generate_flagrotator_task(teams, release_challs, current_round, current_tick)
+    
+    return jsonify(status="success", message="Task to force rotate flag has been created."), 200
+
+
 @contest_blueprint.post('/dry-run/')
 def dry_run_contest():
     """ Dry run the contest to check if the checker and worker is valid.
@@ -46,42 +75,12 @@ def dry_run_contest():
     challenges = db.session.query(Challenge).filter(Challenge.id.in_(challenge_list)).all()
 
     # Generate dry run flags and flagrotator tasks
-    flags: List[Flag] = []
-    taskbodys = []
-    for team, chall in itertools.product(teams, challenges):
-        for flag_order in range(chall.num_flag):
-            flag = generate_or_get_flag(current_tick, current_round, team, chall, flag_order)
-            taskbody = {
-                "flag_value": flag.value,
-                "flag_order": flag.order,
-                "challenge_id": chall.id,
-                "team_id": team.id,                    
-                "current_tick": current_tick,
-                "current_round": current_round,
-                "time_created": time_now.isoformat(),
-            }
-            
-            flags.append(flag)
-            taskbodys.append(taskbody)
-        db.session.commit()
+    generate_flagrotator_task(teams, challenges, current_round, current_tick)
     
+    # Create dry run checker tasks
     rabbitmq_conn = pika.BlockingConnection(
         pika.URLParameters(get_app_config("RABBITMQ_URI"))
     )
-    rabbitmq_channel = rabbitmq_conn.channel()
-    rabbitmq_channel.queue_declare(get_app_config("QUEUE_FLAG_TASK", "flag_task"), durable=True)
-    
-    for taskbody in taskbodys:
-        rabbitmq_channel.basic_publish(
-            exchange='',
-            routing_key=get_app_config('QUEUE_FLAG_TASK', "flag_task"),
-            body=base64.b64encode(
-                json.dumps(taskbody).encode()
-            )
-        )
-    rabbitmq_channel.close()
-    
-    # Create dry run checker tasks
     rabbitmq_channel = rabbitmq_conn.channel()
     rabbitmq_channel.queue_declare(get_app_config("QUEUE_CHECKER_TASK", "checker_task"), durable=True)
     

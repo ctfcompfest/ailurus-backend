@@ -1,14 +1,22 @@
+import base64
+import itertools
+import logging
+from typing import List
+
+import pika
 from ailurus.models import (
     db,
     Flag,
     Team,
     Challenge,
 )
-from ailurus.utils.config import get_config, set_config
+from ailurus.utils.config import get_app_config, get_config, set_config
 from datetime import datetime, timezone
 from secrets import choice
 from string import ascii_lowercase, digits
 import json
+
+log = logging.getLogger(__name__)
 
 def update_paused_status(newvalue: bool | str):
     if isinstance(newvalue, str):
@@ -76,4 +84,43 @@ def insert_or_overwrite_flag_in_db(flag_value: str, current_round: int, current_
     db.session.commit()
     db.session.refresh(flag)
     return flag
+
+def generate_flagrotator_task(teams: List[Team], challenges: List[Challenge], current_round: int, current_tick: int):
+    taskbodys = []
+    time_now = datetime.now(timezone.utc).replace(microsecond=0)
+    for team, chall in itertools.product(teams, challenges):
+        for flag_order in range(chall.num_flag):
+            flag_value = generate_flag_value(current_tick, current_round, team, chall, flag_order)
+            taskbody = {
+                "flag_value": flag_value,
+                "flag_order": flag_order,
+                "challenge_id": chall.id,
+                "team_id": team.id,                    
+                "current_tick": current_tick,
+                "current_round": current_round,
+                "time_created": time_now.isoformat(),
+            }
+            
+            taskbodys.append(taskbody)
     
+    rabbitmq_conn = pika.BlockingConnection(
+        pika.URLParameters(get_app_config("RABBITMQ_URI"))
+    )
+    rabbitmq_channel = rabbitmq_conn.channel()
+    rabbitmq_channel.queue_declare(get_app_config("QUEUE_FLAG_TASK", "flag_task"), durable=True)
+    log.info("Successfully connect to RabbitMQ.")
+    
+    for taskbody in taskbodys:
+        rabbitmq_channel.basic_publish(
+            exchange='',
+            routing_key=get_app_config('QUEUE_FLAG_TASK', "flag_task"),
+            body=base64.b64encode(
+                json.dumps(taskbody).encode()
+            )
+        )
+    
+    log.info(f"successfully generate {len(taskbodys)} flags.")
+    
+    rabbitmq_channel.close()
+    rabbitmq_conn.close()
+    return taskbodys

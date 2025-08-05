@@ -7,7 +7,7 @@ from ailurus.models import (
 )
 from ailurus.utils.config import get_app_config, get_config, set_config
 from ailurus.utils.config import is_contest_running
-from ailurus.utils.contest import generate_flag_value
+from ailurus.utils.contest import generate_flagrotator_task
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -148,14 +148,6 @@ def flag_keeper(app: Flask):
             log.info("flag-keeper: invalid execution because last tick change is too old.")
             return False
 
-        rabbitmq_conn = pika.BlockingConnection(
-            pika.URLParameters(get_app_config("RABBITMQ_URI"))
-        )
-        rabbitmq_channel = rabbitmq_conn.channel()
-        rabbitmq_channel.queue_declare(get_app_config("QUEUE_FLAG_TASK", "flag_task"), durable=True)
-        
-        log.info("Successfully connect to RabbitMQ.")
-
         current_tick: int = get_config("CURRENT_TICK")
         current_round: int = get_config("CURRENT_ROUND")
         
@@ -169,32 +161,7 @@ def flag_keeper(app: Flask):
             ).where(ChallengeRelease.round == current_round)
         ).scalars().all()
 
-        taskbodys = []
-        for team, chall in itertools.product(teams, release_challs):
-            for flag_order in range(chall.num_flag):
-                flag_value = generate_flag_value(current_round, current_tick, team, chall, flag_order)
-                taskbody = {
-                    "flag_value": flag_value,
-                    "flag_order": flag_order,
-                    "challenge_id": chall.id,
-                    "team_id": team.id,                    
-                    "current_tick": current_tick,
-                    "current_round": current_round,
-                    "time_created": time_now.isoformat(),
-                }
-
-                taskbodys.append(taskbody)
+        taskbodys = generate_flagrotator_task(teams, release_challs, current_round, current_tick)
         
-        log.info(f"flag-keeper: successfully generate {len(taskbodys)} flags.")
-        
-        for taskbody in taskbodys:
-            rabbitmq_channel.basic_publish(
-                exchange='',
-                routing_key=get_app_config('QUEUE_FLAG_TASK', "flag_task"),
-                body=base64.b64encode(
-                    json.dumps(taskbody).encode()
-                )
-            )
-        rabbitmq_channel.close()
         log.info(f"flag-keeper: successfully broadcast {len(taskbodys)} flag task.")
     return True
