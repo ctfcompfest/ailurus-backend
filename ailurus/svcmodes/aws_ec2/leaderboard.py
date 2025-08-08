@@ -10,7 +10,9 @@ import logging
 log = logging.getLogger(__name__)
 
 def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_time: datetime.datetime):
-    chall: Challenge = Challenge.query.filter_by(id=chall_id).first()
+    ATTACK_WEIGHT = 1
+    DEFENSE_WEIGHT = 3
+    
     num_of_session = get_config('CURRENT_ROUND', 0) * get_config('NUMBER_TICK') + get_config('CURRENT_TICK', 0)
     if is_contest_finished():
         num_of_session -= 1
@@ -18,10 +20,23 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     if freeze_time and datetime.datetime.now(datetime.timezone.utc) > freeze_time:
         num_of_session = get_config('FREEZE_ROUND', 0) * get_config('NUMBER_TICK') + get_config('FREEZE_TICK', 0)
     
-    total_flag = num_of_session * Team.query.count() * chall.num_flag
-    attack_max_num = num_of_session * (Team.query.count() - 1) * chall.num_flag
     
     result: TeamChallengeLeaderboardEntry = {}
+    
+    query_distinct_attack_session = select(Submission.tick, Submission.round).join(
+            Flag, Flag.id == Submission.flag_id
+        ).where(
+            Flag.team_id == team_id,
+            Submission.team_id != team_id,
+            Submission.verdict == True,
+            Submission.challenge_id == chall_id,
+            Submission.time_created <= freeze_time,
+        ).distinct()
+    q.subquery()
+    num_broken_tick = db.session.execute(
+        select(func.count()).select_from(query_distinct_attack_session.subquery())
+    ).scalar()
+    num_secure_tick = num_of_session - num_broken_tick
     
     # Number of flag captured including self
     flag_captured = db.session.execute(
@@ -32,9 +47,6 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
             Submission.time_created <= freeze_time,
         )
     ).scalar()
-    attack_percentage = 100
-    if total_flag > 0:
-        attack_percentage = flag_captured / total_flag * 100.00
     
     # Number of flag stolen from other teams
     flag_stolen = db.session.execute(
@@ -47,10 +59,6 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
         )
     ).scalar()
 
-    defense_percentage = 100
-    if attack_max_num > 0:
-        defense_percentage = (attack_max_num - flag_stolen) / attack_max_num * 100.00
-    
     checker_valid = db.session.execute(
         select(func.count(CheckerResult.id)).where(
             CheckerResult.challenge_id == chall_id,
@@ -76,8 +84,8 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     result["team_id"] = team_id
     result["flag_captured"] = flag_captured
     result["flag_stolen"] = flag_stolen
-    result["attack"] = round(attack_percentage, 2)
-    result["defense"] = round(defense_percentage, 2)
+    result["attack"] = flag_captured * ATTACK_WEIGHT
+    result["defense"] = num_secure_tick * DEFENSE_WEIGHT
     result["sla"] = 100
     if (checker_valid + checker_faulty) != 0:
         sla_percentage = checker_valid / (checker_valid + checker_faulty) * 100
@@ -114,7 +122,7 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         
         for team_score in score_by_challs:
             team_id = team_score["team_id"]
-            score_by_team[team_id]["total_score"] += team_score["attack"] + team_score["defense"] + team_score["sla"]
+            score_by_team[team_id]["total_score"] += (team_score["attack"] + team_score["defense"]) * team_score["sla"]
             score_by_team[team_id]["challenges"][chall_id] = team_score
 
     results = score_by_team.values()
