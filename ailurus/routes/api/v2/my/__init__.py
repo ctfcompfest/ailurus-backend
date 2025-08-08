@@ -4,6 +4,7 @@ from ailurus.utils.security import validteam_only, current_team
 from ailurus.models import db, ManageServiceUnlockMode, CheckerResult, CheckerStatus, ChallengeRelease, Solve
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func
+from typing import Tuple
 
 import json
 
