@@ -1,4 +1,4 @@
-"""seed checker_before_contest config
+"""seed defense phase feature config
 
 Revision ID: b4bda61d486f
 Revises: b265af5c2d6c
@@ -26,8 +26,8 @@ def upgrade():
     
     op.bulk_insert(config_table, [
         {
-            "key": "CHECKER_BEFORE_CONTEST",
-            "value": "false"
+            "key": "ATTACK_TIME",
+            "value": "2037-10-10T10:10:10Z"
         }
     ])
 

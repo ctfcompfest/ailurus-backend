@@ -6,7 +6,7 @@ from ailurus.models import (
     Flag,
 )
 from ailurus.utils.config import get_app_config, get_config, set_config
-from ailurus.utils.config import is_contest_running
+from ailurus.utils.config import is_contest_running, is_defense_phased
 from ailurus.utils.contest import generate_flagrotator_task
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -14,7 +14,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from datetime import datetime, timezone, timedelta
 from flask import Flask
-from sqlalchemy import select
+from sqlalchemy import select, func
 from typing import List, Any, Callable
 
 import atexit
@@ -52,7 +52,11 @@ def tick_keeper(app: Flask, callback: Callable, callback_args: List[Any]):
         if not is_contest_running():
             log.info("tick-keeper: contest is not running.")
             return False
-
+        
+        if is_defense_phased():
+            log.info("tick-keeper: defense phased, skip modifying tick and directly call flag_keeper")
+            return callback(*callback_args)
+        
         last_tick_change: datetime = get_config("LAST_TICK_CHANGE", datetime(year=1990, month=1, day=1, tzinfo=timezone.utc))
         tick_duration: int = get_config("TICK_DURATION")
         time_now = datetime.now(timezone.utc).replace(microsecond=0)
@@ -84,37 +88,38 @@ def tick_keeper(app: Flask, callback: Callable, callback_args: List[Any]):
 
 def checker_keeper(app: Flask):
     with app.app_context():
-        if not is_contest_running() and not get_config("CHECKER_BEFORE_CONTEST", False):
+        if not is_contest_running():
             log.info("checker-keeper: contest is not running.")
             return False
         
-        current_tick = get_config("CURRENT_TICK")
-        current_round = get_config("CURRENT_ROUND")
-        if not is_contest_running() and get_config("CHECKER_BEFORE_CONTEST", False):
-            current_round = -1
-            current_tick = -1
-            
-        log.debug(f"checker-keeper: execute for tick = {current_tick}, round = {current_round}.")
-        
-        time_now = datetime.now(timezone.utc).replace(microsecond=0)
-    
         rabbitmq_conn = pika.BlockingConnection(
             pika.URLParameters(get_app_config("RABBITMQ_URI"))
         )
         rabbitmq_channel = rabbitmq_conn.channel()
-        rabbitmq_channel.queue_declare(get_app_config("QUEUE_CHECKER_TASK", "checker_task"), durable=True)
-        
+        rabbitmq_channel.queue_declare(get_app_config("QUEUE_CHECKER_TASK", "checker_task"), durable=True)        
         log.info("Successfully connect to RabbitMQ.")
 
+        current_tick = get_config("CURRENT_TICK")
+        current_round = get_config("CURRENT_ROUND")
+        log.debug(f"checker-keeper: execute for tick = {current_tick}, round = {current_round}.")
+        
+        time_now = datetime.now(timezone.utc).replace(microsecond=0)
+        
+        if is_defense_phased():
+            current_round = -1
+            current_tick = -1    
+
+        release_challs_query = select(
+            Challenge
+        ).join(
+            ChallengeRelease,
+            ChallengeRelease.challenge_id == Challenge.id
+        )
+        if current_round != -1:
+            release_challs_query = release_challs_query.where(ChallengeRelease.round == current_round)
+
+        release_challs: List[Challenge] = db.session.execute(release_challs_query).scalars().all()
         teams: List[Team] = Team.query.all()
-        release_challs: List[Challenge] = db.session.execute(
-            select(
-                Challenge
-            ).join(
-                ChallengeRelease,
-                ChallengeRelease.challenge_id == Challenge.id
-            ).where(ChallengeRelease.round == current_round)
-        ).scalars().all()
         
         for chall, team in itertools.product(release_challs, teams):
             task_body = {
@@ -146,6 +151,20 @@ def flag_keeper(app: Flask):
             log.info("flag-keeper: contest is not running.")
             return False
         
+        if is_defense_phased():
+            flag_counter = db.session.execute(
+                select(func.count(Flag.id)).where(
+                    Flag.round == -1,
+                    Flag.tick == -1
+                )
+            ).scalar()
+            if flag_counter > 0:
+                return log.info("flag-keeper: skip generate new flag for defense phase")
+            teams: List[Team] = Team.query.all()
+            challs: List[Challenge] = Challenge.query.all()
+            taskbodys = generate_flagrotator_task(teams, challs, -1, -1)
+            return log.info(f"flag-keeper: successfully broadcast {len(taskbodys)} flag task for defense phase.")
+                  
         last_tick_change: datetime = get_config("LAST_TICK_CHANGE", datetime(year=1990, month=1, day=1, tzinfo=timezone.utc))
         time_now = datetime.now(timezone.utc).replace(microsecond=0)
         if time_now - last_tick_change > timedelta(seconds=20):

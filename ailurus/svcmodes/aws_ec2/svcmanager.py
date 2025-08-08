@@ -1,5 +1,5 @@
 from ailurus.models import db, Challenge, Service, Team, ProvisionMachine
-from ailurus.utils.config import get_app_config, is_contest_running
+from ailurus.utils.config import get_app_config, is_contest_running, is_defense_phased
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from typing import List, Dict
@@ -28,6 +28,8 @@ log = logging.getLogger(__name__)
 
 
 def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
+    if is_defense_phased(): return ""
+
     # All challenge will point to the same service
     first_challenge: Challenge = Challenge.query.order_by(Challenge.id).first()
     chall_id = first_challenge.id 
