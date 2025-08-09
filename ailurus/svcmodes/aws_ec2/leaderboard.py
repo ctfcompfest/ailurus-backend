@@ -13,12 +13,12 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     ATTACK_WEIGHT = 1
     DEFENSE_WEIGHT = 3
     
-    num_of_session = (get_config('CURRENT_ROUND', 0) - 1) * get_config('NUMBER_TICK') + get_config('CURRENT_TICK', 0)
+    num_of_session = (get_config('CURRENT_ROUND', 1) - 1) * get_config('NUMBER_TICK') + get_config('CURRENT_TICK', 0)
     if is_contest_finished():
         num_of_session -= 1
 
     if freeze_time and datetime.datetime.now(datetime.timezone.utc) > freeze_time:
-        num_of_session = (get_config('FREEZE_ROUND', 0) - 1) * get_config('NUMBER_TICK') + get_config('FREEZE_TICK', 0)
+        num_of_session = (get_config('FREEZE_ROUND', 1) - 1) * get_config('NUMBER_TICK') + get_config('FREEZE_TICK', 0)
     
     
     result: TeamChallengeLeaderboardEntry = {}
