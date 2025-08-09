@@ -200,6 +200,9 @@ auth_services_blueprint.before_request(validteam_only)
 @auth_services_blueprint.get("/services/")
 @cache.cached(timeout=60)
 def get_all_services():
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
     svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
     release_challs: List[Challenge] = db.session.execute(
             select(
@@ -207,7 +210,7 @@ def get_all_services():
             ).join(
                 ChallengeRelease,
                 ChallengeRelease.challenge_id == Challenge.id
-            ).where(ChallengeRelease.round == get_config("CURRENT_ROUND", 0))
+            ).where(ChallengeRelease.round == current_round)
         ).scalars().all()
     teams: List[Team] = Team.query.all()
     
@@ -236,6 +239,9 @@ def get_all_services_from_team(team_id):
     if not team:
         return jsonify(status="not found", message="team not found."), 404
     
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
     svcmodule = get_svcmode_module(get_config("SERVICE_MODE"))
     release_challs: List[Challenge] = db.session.execute(
             select(
@@ -243,7 +249,7 @@ def get_all_services_from_team(team_id):
             ).join(
                 ChallengeRelease,
                 ChallengeRelease.challenge_id == Challenge.id
-            ).where(ChallengeRelease.round == get_config("CURRENT_ROUND", 0))
+            ).where(ChallengeRelease.round == current_round)
         ).scalars().all()
     
     response = {}
@@ -266,6 +272,9 @@ def get_all_services_from_team(team_id):
 @auth_services_blueprint.get("/challenges/<int:challenge_id>/services/")
 @cache.cached(timeout=60)
 def get_all_services_from_challenge(challenge_id):
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
     chall: Challenge = db.session.execute(
             select(
                 Challenge
@@ -273,7 +282,7 @@ def get_all_services_from_challenge(challenge_id):
                 ChallengeRelease,
                 ChallengeRelease.challenge_id == Challenge.id
             ).where(
-                ChallengeRelease.round == get_config("CURRENT_ROUND", 0),
+                ChallengeRelease.round == current_round,
                 Challenge.id == challenge_id
             )
         ).scalars().first()
@@ -307,6 +316,9 @@ def get_all_services_from_team_and_chall(team_id, challenge_id):
     if not team:
         return jsonify(status="not found", message="team not found."), 404
     
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
     chall: Challenge = db.session.execute(
             select(
                 Challenge
@@ -314,7 +326,7 @@ def get_all_services_from_team_and_chall(team_id, challenge_id):
                 ChallengeRelease,
                 ChallengeRelease.challenge_id == Challenge.id,
             ).where(
-                ChallengeRelease.round == get_config("CURRENT_ROUND", 0),
+                ChallengeRelease.round == current_round,
                 Challenge.id == challenge_id,
             )
         ).scalars().first()
