@@ -2,7 +2,7 @@ import base64
 import itertools
 
 import pika
-from sqlalchemy import select
+from sqlalchemy import select, update
 from ailurus.models import ChallengeRelease, db, Submission, Flag, Solve, CheckerResult, ScorePerTick, Config, Team, Challenge
 from ailurus.utils.contest import generate_flagrotator_task
 from ailurus.utils.config import get_app_config, get_config
@@ -26,7 +26,10 @@ def reset_game_contest_data():
     db.session.query(CheckerResult).delete()
     db.session.query(Solve).delete()
     db.session.query(Submission).delete()
-    db.session.query(Config).where(Config.key.in_(["CURRENT_TICK", "CURRENT_ROUND", "FREEZE_TICK", "FREEZE_ROUND"])).delete()
+    db.session.query(Config).where(Config.key.in_([
+        "CURRENT_TICK", "CURRENT_ROUND", "FREEZE_TICK", "FREEZE_ROUND", "LAST_PAUSED", "LAST_TICK_CHANGE"
+    ])).delete()
+    db.session.execute(update(Config).values(value="false").where(Config.key == "IS_CONTEST_PAUSED"))
     db.session.query(Flag).delete()
     db.session.commit()
     return jsonify(status="success", message="Game contest data has been reset."), 200
