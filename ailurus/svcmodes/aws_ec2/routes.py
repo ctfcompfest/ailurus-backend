@@ -11,7 +11,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-checker_agent_blueprint = Blueprint("checker_agent", __name__, url_prefix="/api/v2/checkeragent")
+checker_agent_blueprint = Blueprint("awsec2_checker_agent", __name__, url_prefix="/api/v2/checkeragent")
 checker_agent_blueprint.before_request(svcmode_match_only("aws_ec2"))
 
 @checker_agent_blueprint.post("/")

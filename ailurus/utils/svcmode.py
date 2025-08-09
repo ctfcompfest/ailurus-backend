@@ -1,3 +1,5 @@
+from ailurus.utils.config import get_app_config
+
 import ailurus.svcmodes
 import flask
 import importlib
@@ -26,8 +28,14 @@ def load_svcmode_module(service_mode: str, app: flask.Flask):
         return None
     
 def load_all_svcmode(app: flask.Flask):
+    LOAD_SVCMODES = get_app_config("LOAD_SVCMODE").split(",")
+    
     svcmode_dir = os.path.dirname(ailurus.svcmodes.__file__)
     for elm in os.listdir(svcmode_dir):
+        if elm not in LOAD_SVCMODES:
+            print(f"Module {elm} are not in list LOAD_SVCMODE. Skipping...")
+            continue
+
         realpath = os.path.join(svcmode_dir, elm)
         cfgfile_path = os.path.join(realpath, "config.json")
         if not os.path.isdir(realpath) or \

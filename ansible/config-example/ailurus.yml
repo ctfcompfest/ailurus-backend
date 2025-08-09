@@ -14,6 +14,7 @@ ssl_cert_file:
 
 # Random string for Flask SECRET_KEY
 secret_key: random-string
+backend_load_svcmode: aws_ec2
 frontend_service_manage_panel: fullserver
 
 database:
