@@ -33,7 +33,7 @@ def reset_game_contest_data():
 
 
 @contest_blueprint.post('/rotate-flag/')
-def reset_game_contest_data():
+def rotate_flag_current_tick_round_endpoint():
     """ Force rotate flag for current tick and round
     """
     if not request.json or not request.json.get("confirm", False):
