@@ -6,8 +6,6 @@ from sqlalchemy import ForeignKey, UniqueConstraint, Index, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional
 
-from ailurus.utils.config import is_defense_phased
-
 import enum
 
 db = SQLAlchemy()
@@ -67,9 +65,6 @@ class ChallengeRelease(db.Model):
     
     @classmethod
     def get_challenges_from_round(cls, current_round: int) -> List:
-        if is_defense_phased():
-            current_round = 1
-
         chall_release = cls.query.with_entities(cls.challenge_id)\
             .filter(cls.round == int(current_round)).all()
         return [elm[0] for elm in chall_release]

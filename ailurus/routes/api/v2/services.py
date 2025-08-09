@@ -1,5 +1,5 @@
 from ailurus.models import db, Challenge, ChallengeRelease, CheckerResult, CheckerStatus, Team, Service
-from ailurus.utils.config import get_config
+from ailurus.utils.config import get_config, is_defense_phased
 from ailurus.utils.security import validteam_only
 from ailurus.utils.svcmode import get_svcmode_module
 from ailurus.utils.cache import cache
@@ -62,7 +62,11 @@ def get_all_services_status_from_team(team_id):
     if not team:
         return jsonify(status="not found.", message="team not found."), 404
 
-    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+        
+    chall_release = ChallengeRelease.get_challenges_from_round(current_round)
 
     svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
     latest_id = func.max(CheckerResult.id).label("latest_id")
@@ -99,7 +103,11 @@ def get_all_services_status_from_team(team_id):
 @public_services_blueprint.get("/challenges/<int:challenge_id>/services-status/")
 @cache.cached(timeout=30)
 def get_all_services_status_from_challenge(challenge_id):
-    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+        
+    chall_release = ChallengeRelease.get_challenges_from_round(current_round)
 
     if challenge_id not in chall_release:
         return jsonify(status="not found.", message="challenge not found."), 404
@@ -142,7 +150,11 @@ def get_all_services_status_from_team_and_chall(team_id, challenge_id):
     if not team:
         return jsonify(status="not found.", message="team not found."), 404
 
-    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+        
+    chall_release = ChallengeRelease.get_challenges_from_round(current_round)
     if challenge_id not in chall_release:
         return jsonify(status="not found.", message="challenge not found."), 404
 

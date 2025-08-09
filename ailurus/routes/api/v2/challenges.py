@@ -1,5 +1,5 @@
 from ailurus.models import db, Challenge, ChallengeRelease
-from ailurus.utils.config import get_config
+from ailurus.utils.config import get_config, is_defense_phased
 from ailurus.utils.cache import cache
 from flask import Blueprint, jsonify
 from flask_jwt_extended import (
@@ -16,6 +16,9 @@ public_challenge_blueprint = Blueprint("public_challenge", __name__, url_prefix=
 @cache.cached(timeout=60)
 def get_all_visible_challenges():
     current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+        
     challs: List[Tuple[Challenge]] = db.session.execute(
         select(Challenge).where(
             Challenge.id.in_(
@@ -33,6 +36,9 @@ def get_detail_challenges(challenge_id):
     verify_jwt_in_request(optional=True)
 
     current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+        
     visible_challenge_ids = ChallengeRelease.get_challenges_from_round(current_round)
     if challenge_id not in visible_challenge_ids:
         return jsonify(status="not found", message="challenge not found."), 404

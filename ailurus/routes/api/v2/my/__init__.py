@@ -1,4 +1,4 @@
-from ailurus.utils.config import get_config
+from ailurus.utils.config import get_config, is_defense_phased
 from ailurus.utils.svcmode import get_svcmode_module
 from ailurus.utils.security import validteam_only, current_team
 from ailurus.models import db, ManageServiceUnlockMode, CheckerResult, CheckerStatus, ChallengeRelease, Solve
@@ -13,7 +13,10 @@ myapi_blueprint.before_request(validteam_only)
 
 @myapi_blueprint.get("/solves/")
 def get_my_solves():
-    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+    chall_release = ChallengeRelease.get_challenges_from_round(current_round)
     solves = Solve.query.with_entities(Solve.challenge_id).filter(
         Solve.team_id == current_team.id,
         Solve.challenge_id.in_(chall_release),
@@ -24,7 +27,10 @@ def get_my_solves():
 
 @myapi_blueprint.get("/allow-manage-services/")
 def get_allowed_manage():
-    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+    chall_release = ChallengeRelease.get_challenges_from_round(current_round)
     solves = Solve.query.with_entities(Solve.challenge_id).filter(
         Solve.team_id == current_team.id,
         Solve.challenge_id.in_(chall_release),
@@ -39,7 +45,10 @@ def get_allowed_manage():
 
 @myapi_blueprint.route("/challenges/<int:challenge_id>/service-manager/", methods=["GET", "POST"])
 def handle_service_manager(challenge_id):
-    chall_releases = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND"))
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+    chall_releases = ChallengeRelease.get_challenges_from_round(current_round)
     if challenge_id not in chall_releases:
         return jsonify(status="not found", message="challenge not found."), 404
     
@@ -65,8 +74,11 @@ def handle_service_manager(challenge_id):
 @myapi_blueprint.get("/challenges/<int:challenge_id>/services-status/")
 def get_service_status_by_challenge_id(challenge_id):
     team = current_team
-
-    chall_release = ChallengeRelease.get_challenges_from_round(get_config("CURRENT_ROUND", 0))
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+        
+    chall_release = ChallengeRelease.get_challenges_from_round(current_round)
     if challenge_id not in chall_release:
         return jsonify(status="not found.", message="challenge not found."), 404
 
