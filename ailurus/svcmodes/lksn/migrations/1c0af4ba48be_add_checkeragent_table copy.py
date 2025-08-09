@@ -31,12 +31,15 @@ def upgrade(op):
         sa.column("key", sa.String()),
         sa.column("value", sa.String())
     )
-    op.bulk_insert(config_table, [
-        {
-            "key": "CHECKER_AGENT_SECRET",
-            "value": "secret"
-        },
-    ])
+    try:
+        op.bulk_insert(config_table, [
+            {
+                "key": "CHECKER_AGENT_SECRET",
+                "value": "secret"
+            },
+        ])
+    except Exception:
+        pass
 
 
 def downgrade(op):
