@@ -71,6 +71,8 @@ def checker_task(queue_name: str, ch: BlockingChannel, method, properties, body:
             ch._message_acknowledged = False
             log.error(f"Error processing task {queue_name}: {str(e)}.")
         except Exception as e:
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            ch._message_acknowledged = True
             log.error(f"Error processing task {queue_name}: {str(e)}.")
             
     log.info(f"Complete processing task {queue_name}: {method.delivery_tag}.")
