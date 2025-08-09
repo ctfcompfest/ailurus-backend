@@ -11,5 +11,4 @@ monkey.patch_all()
 webapp = create_webapp_daemon()
 with webapp.app_context():
     flask_migrate.upgrade()
-    
-app = socketio.WSGIApp(socketio, webapp)
+    app = socketio.WSGIApp(socketio, webapp)
