@@ -1,5 +1,6 @@
 bind = "0.0.0.0:5000"
-workers = 5
+workers = 1
+threads = 100
 wsgi_app = "wsgi:app"
 worker_class = "geventwebsocket.gunicorn.workers.GeventWebSocketWorker"
 timeout = 30
