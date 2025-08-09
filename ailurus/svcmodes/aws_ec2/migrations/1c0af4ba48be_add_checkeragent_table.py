@@ -31,15 +31,13 @@ def upgrade(op):
         sa.column("key", sa.String()),
         sa.column("value", sa.String())
     )
-    try:
-        op.bulk_insert(config_table, [
-            {
-                "key": "CHECKER_AGENT_SECRET",
-                "value": "secret"
-            },
-        ])
-    except Exception:
-        pass
+
+    op.bulk_insert(config_table, [
+        {
+            "key": "AWSEC2:CHECKER_AGENT_SECRET",
+            "value": "secret"
+        },
+    ])
 
 
 def downgrade(op):

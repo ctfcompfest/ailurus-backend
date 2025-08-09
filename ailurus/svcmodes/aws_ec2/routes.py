@@ -25,7 +25,7 @@ def receive_checker_agent_report():
         return jsonify(status="failed", message="missing required field.")
 
     try:
-        claim = jwt.decode(request_data, get_config("CHECKER_AGENT_SECRET"), algorithms="HS256", leeway=5, options={"verify_iat": True, "verify_signature": True})
+        claim = jwt.decode(request_data, get_config("AWSEC2:CHECKER_AGENT_SECRET"), algorithms="HS256", leeway=5, options={"verify_iat": True, "verify_signature": True})
         
         report = CheckerAgentReport(
             ip_source=source_ip,
