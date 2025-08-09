@@ -121,7 +121,7 @@ def create_webapp_daemon(env_file=".env"):
         # limiter.init_app(app)
         
         # Socket
-        socketio.init_app(app)
+        socketio.init_app(app, message_queue=app.config["CACHE_REDIS_URL"])
 
         # API
         app.register_blueprint(app_routes)
