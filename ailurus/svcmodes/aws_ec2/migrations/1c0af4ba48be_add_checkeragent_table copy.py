@@ -16,7 +16,7 @@ depends_on = None
 
 
 def upgrade(op):
-    op.create_table('checker_agent_report',
+    op.create_table('awsec2_checker_agent_report',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('ip_source', sa.String(), nullable=False),
         sa.Column('selinux_status', sa.Boolean(), nullable=False),
@@ -40,5 +40,5 @@ def upgrade(op):
 
 
 def downgrade(op):
-    op.drop_table('checker_agent_report')
+    op.drop_table('awsec2_checker_agent_report')
 

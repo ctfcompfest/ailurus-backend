@@ -4,7 +4,7 @@ from sqlalchemy import Text, TIMESTAMP, func, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
 class CheckerAgentReport(db.Model):
-    __tablename__ = 'checker_agent_report'
+    __tablename__ = 'awsec2_checker_agent_report'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     ip_source: Mapped[str]
