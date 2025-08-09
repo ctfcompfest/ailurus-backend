@@ -1,4 +1,4 @@
-from ailurus.utils.config import get_config, is_contest_started
+from ailurus.utils.config import get_config, is_contest_started, is_defense_phased
 from ailurus.utils.svcmode import get_svcmode_module
 from ailurus.models import Challenge
 from flask import Blueprint, jsonify
@@ -19,7 +19,11 @@ def get_public_leaderboard():
 
     svcmode = get_svcmode_module(get_config("SERVICE_MODE"))
     leaderboard = svcmode.get_leaderboard(freeze_time=freeze_time)
-    challenges = Challenge.get_all_released_challenges(get_config("CURRENT_ROUND", 0))
+    
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+    challenges = Challenge.get_all_released_challenges(current_round)
     
     return jsonify(
         status="success",
