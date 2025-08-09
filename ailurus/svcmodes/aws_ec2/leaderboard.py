@@ -1,5 +1,5 @@
 from ailurus.models import db, Team, CheckerResult, CheckerStatus, Flag, ChallengeRelease, Challenge, Submission
-from ailurus.utils.config import get_config, is_contest_finished
+from ailurus.utils.config import get_config, is_contest_finished, is_defense_phased
 from sqlalchemy import select, func
 from typing import List
 from .schema import TeamLeaderboardEntry, TeamChallengeLeaderboardEntry
@@ -100,6 +100,8 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         freeze_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
 
     current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
     chall_ids: List[int] = db.session.execute(
         select(ChallengeRelease.challenge_id).where(ChallengeRelease.round <= current_round).distinct(ChallengeRelease.challenge_id)
     ).scalars().all()
