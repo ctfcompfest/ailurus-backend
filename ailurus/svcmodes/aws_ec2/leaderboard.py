@@ -32,7 +32,6 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
             Submission.challenge_id == chall_id,
             Submission.time_created <= freeze_time,
         ).distinct()
-    q.subquery()
     num_broken_tick = db.session.execute(
         select(func.count()).select_from(query_distinct_attack_session.subquery())
     ).scalar()
