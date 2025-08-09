@@ -7,5 +7,5 @@ webapp = create_webapp_daemon()
 with webapp.app_context():
     flask_migrate.upgrade()
     
-sio = socketio.AsyncServer()
+sio = socketio.Server()
 app = socketio.WSGIApp(sio, webapp)
