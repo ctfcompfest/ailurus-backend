@@ -144,13 +144,58 @@
                 },
                 "SecurityGroupIngress": [
                     {
-                        "CidrIp": "10.0.0.0/16",
+                        "CidrIp": {
+                            "Fn::Join": [
+                                "/",
+                                [
+                                    {
+                                        "Ref": "SambaPrivateIpAddress"
+                                    },
+                                    "32"
+                                ]
+                            ]
+                        },
                         "IpProtocol": "tcp",
                         "FromPort": 0,
                         "ToPort": 65535
                     },
                     {
-                        "CidrIp": "10.0.0.0/16",
+                        "CidrIp": {
+                            "Fn::Join": [
+                                "/",
+                                [
+                                    {
+                                        "Ref": "SambaPrivateIpAddress"
+                                    },
+                                    "32"
+                                ]
+                            ]
+                        },
+                        "IpProtocol": "udp",
+                        "FromPort": 0,
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.47.0/24",
+                        "IpProtocol": "tcp",
+                        "FromPort": 0,
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.47.0/24",
+                        "IpProtocol": "udp",
+                        "FromPort": 0,
+                        "ToPort": 65535
+                    },
+                    
+                    {
+                        "CidrIp": "10.0.38.0/23",
+                        "IpProtocol": "tcp",
+                        "FromPort": 0,
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.38.0/23",
                         "IpProtocol": "udp",
                         "FromPort": 0,
                         "ToPort": 65535
