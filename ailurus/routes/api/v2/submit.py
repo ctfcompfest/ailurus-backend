@@ -1,5 +1,5 @@
 from ailurus.models import db, Challenge, ChallengeRelease, Flag, ManageServiceUnlockMode, Solve, Submission, Team
-from ailurus.utils.config import is_contest_running, is_scoreboard_freeze, get_config
+from ailurus.utils.config import is_contest_running, is_scoreboard_freeze, get_config, is_defense_phased
 from ailurus.utils.contest import calculate_submission_score
 from ailurus.utils.security import validteam_only, current_team
 from ailurus.utils.socket import send_attack_event
@@ -75,7 +75,9 @@ def submit_flags(team: Team, flags: List[str]):
 def bulk_submit_flag():
     if not is_contest_running():
         return jsonify(status="failed", message="contest is not running."), 400
-    
+    if is_defense_phased():
+        return jsonify(status="failed", message="flag submission are not allowed in defense phase."), 400
+        
     if "flags" in request.json:
         flags = request.get_json().get("flags")
         max_submit = get_config("MAX_BULK_SUBMIT", 100)

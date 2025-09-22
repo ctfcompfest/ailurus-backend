@@ -1,0 +1,10 @@
+---
+- name: Run flagrotator Docker container
+  docker_container:
+    name: ailurus-flagrotator-{{worker_id}}
+    image: ailurus-backend:latest
+    state: started
+    restart_policy: always
+    command: flagrotator
+    volumes:
+    - "/opt/ailurus-worker/ailurus/worker_data:/opt/app/ailurus/worker_data"

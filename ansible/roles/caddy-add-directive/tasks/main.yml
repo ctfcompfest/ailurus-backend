@@ -6,21 +6,21 @@
 
 - name: Create ssl cert folder
   file:
-    path: "/etc/caddy/ssl"
+    path: "/etc/caddy/ssl/{{ domain }}"
     state: directory
     mode: 0755
 
 - name: Copy ssl cert to target system
   copy:
     src: "{{ ssl_cert_file.cert }}"
-    dest: /etc/caddy/ssl/cert
+    dest: "/etc/caddy/ssl/{{ domain }}/cert"
     mode: 0644
   when: not public_ca
 
 - name: Copy ssl key to target system
   copy:
     src: "{{ ssl_cert_file.key }}"
-    dest: /etc/caddy/ssl/key
+    dest: "/etc/caddy/ssl/{{ domain }}/key"
     mode: 0644
   when: not public_ca
 

@@ -1,0 +1,144 @@
+{
+  "Parameters": {
+    "EventSlug": {
+      "Type": "String",
+      "Default": "Ailurus",
+      "Description": "A friendly environment name that will be used for namespacing all cluster resources."
+    },
+    "TeamId": {
+      "Type": "String",
+      "Default": "1",
+      "Description": "Team ID to identify team resources as a string."
+    },
+    "MachineAMI": {
+      "Type": "String",
+      "Default": "ami-0afd0b2f1ea7e2974",
+      "Description": "The AMI ID for CTF challenge machine that will be created using EC2."
+    },
+    "MachinePrivateIpAddress": {
+      "Type": "String",
+      "Default": "10.0.1.1",
+      "Description": "Assigned internal IP address. Be cautious, must assigned uniquely per instance."
+    },
+    "MachineType": {
+      "Type": "String",
+      "Default": "c5a.large",
+      "Description": "Machine type name for EC2."
+    },
+    "MachineSecurityGroupId": {
+      "Type": "String",
+      "Description": "Security group ID created before for all teams instances."
+    },
+    "MachineSubnetId": {
+      "Type": "String",
+      "Description": "Subnet ID created before for all teams instances."
+    },
+    "MachinePublicKey": {
+      "Type": "String",
+      "Default": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICfp1F7DhdWZdqkYaUGCZcBsLmJeu9izpIyGpmmg7eCz example",
+      "Description": "Predefined SSH public key that will be installed in teams machine."
+    }
+  },
+  "Resources": {
+    "KeyPair": {
+      "Type": "AWS::EC2::KeyPair",
+      "Properties": {
+        "KeyName": {
+          "Fn::Join": [
+            "",
+            [
+              "KeyPair",
+              {
+                "Ref": "EventSlug"
+              },
+              {
+                "Ref": "TeamId"
+              }
+            ]
+          ]
+        },
+        "PublicKeyMaterial": {
+          "Ref": "MachinePublicKey"
+        },
+        "Tags": [
+          {
+            "Key": "ManagedBy",
+            "Value": {
+              "Ref": "EventSlug"
+            }
+          }
+        ]
+      }
+    },
+    "Ec2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "MachineAMI"
+        },
+        "KeyName": {
+          "Ref": "KeyPair"
+        },
+        "InstanceType": {
+          "Ref": "MachineType"
+        },
+        "PrivateIpAddress": {
+          "Ref": "MachinePrivateIpAddress"
+        },
+        "SecurityGroupIds": [
+          {
+            "Ref": "MachineSecurityGroupId"
+          }
+        ],
+        "SubnetId": {
+          "Ref": "MachineSubnetId"
+        },
+        "Tags": [
+        {
+          "Key": "Name",
+          "Value": {
+            "Fn::Join": [
+              "",
+              [
+                "machine",
+                {
+                  "Ref": "EventSlug"
+                },
+                {
+                  "Ref": "TeamId"
+                }
+              ]
+            ]
+          }
+        },
+          {
+            "Key": "ManagedBy",
+            "Value": {
+              "Ref": "EventSlug"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": "#!/bin/bash \nCHECKER_PUBKEY=\"{{Ailurus.CheckerPublicKey}}\" \nSAMBA_IP=\"{{Ailurus.SambaServerPrivateIp}}\" \n \nROOT_CHALLENGE={{Ailurus.RootChallenge}} \n# The example value of ROOT_CHALLENGE env variable: \n# \"slug1,owner1,share_name1,/path1/to/mount/flagdir\" \n \nCHALLENGES={{Ailurus.Challenges}} \n# The example value of CHALLENGES env variable: \n# ( \n#     \"slug1,owner1,share_name1,/path1/to/mount/flagdir\" \n#     \"slug2,owner2,share_name2,/path1/to/mount/flagdir\" \n# ) \n \n# Inject checker SSH public key to ctf user \necho \"${CHECKER_PUBKEY}\" >> /home/ctf/.ssh/authorized_keys \n \n# Install samba mount requirements \napt install -y cifs-utils smbclient \n \ncheck_samba_connection() { \n    smbclient -L \"//${SAMBA_IP}/${CHALL_SHARENAME}\" -U \"samba-lksn%s4mb4p@ssw0rd\" >/dev/null 2>&1 \n} \nwhile ! check_samba_connection; do \n    echo \"Failed to connect to Samba server. Retrying in 2 seconds...\" \n    sleep 2 \ndone \n \nfor CHALL in ${CHALLENGES[@]}; do \n    IFS=',' read -r CHALL_SLUG CHALL_OWNER CHALL_SHARENAME CHALL_PATH <<< \"${CHALL}\" \n     \n    # Mounting flag \n    mount -t cifs \"//${SAMBA_IP}/${CHALL_SHARENAME}\" ${CHALL_PATH} -o username=samba-lksn,password=s4mb4p@ssw0rd,uid=${CHALL_OWNER},forceuid,gid=${CHALL_OWNER},forcegid,file_mode=0770,dir_mode=0770 \ndone \n \n# Mounting flag \nIFS=',' read -r CHALL_SLUG CHALL_OWNER CHALL_SHARENAME CHALL_PATH <<< \"${ROOT_CHALLENGE}\" \nmount -t cifs \"//${SAMBA_IP}/${CHALL_SHARENAME}\" ${CHALL_PATH} -o username=samba-lksn,password=s4mb4p@ssw0rd,uid=${CHALL_OWNER},forceuid,gid=${CHALL_OWNER},forcegid,file_mode=0770,dir_mode=0770\n\n# Delete instance user data to initialize the instance \nrm -rf /var/lib/cloud/instance/user-data.txt* \nrm -rf /var/lib/cloud/instances/**/user-data.txt* \nrm -rf /var/log/cloud-init.log \nrm -rf /var/log/cloud-init-output.log \n \n# Clear history command \nLOCATIONS=( \n    \"/home/ubuntu\"  \n    \"/home/ctf\" \n    \"/root\" \n) \n \nfor LOC in ${LOCATIONS[@]}; do \n    sudo sh -c \"rm -f ${LOC}/.sudo_as_admin_successful && cat /dev/null > ${LOC}/.bash_history && rm ${LOC}/.viminfo && rm ${LOC}/.python_history\"\ndone \nhistory -c"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "MachineInstanceId": {
+      "Value": {
+        "Ref": "Ec2Instance"
+      },
+      "Description": "Instance ID of the EC2 instance"
+    },
+    "MachinePrivateIp": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Ec2Instance",
+          "PrivateIp"
+        ]
+      },
+      "Description": "Private IP address of the EC2 instance"
+    }
+  }
+}

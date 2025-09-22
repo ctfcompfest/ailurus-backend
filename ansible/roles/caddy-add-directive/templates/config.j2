@@ -1,6 +1,6 @@
 {{ domain }} {
     reverse_proxy {{ upstream }}
 {% if ssl and not public_ca %}
-    tls /etc/caddy/ssl/cert /etc/caddy/ssl/key
+    tls /etc/caddy/ssl/{{ domain }}/cert /etc/caddy/ssl/{{ domain }}/key
 {% endif%}
 }

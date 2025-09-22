@@ -46,6 +46,12 @@ class Challenge(db.Model):
     testcase_checksum: Mapped[Optional[str]]
     artifact_checksum: Mapped[Optional[str]]
 
+    @classmethod
+    def get_all_released_challenges(cls, current_round: int) -> List[int]:
+        # Get all challenges that are released from start until the current round
+        challs = cls.query.join(ChallengeRelease)\
+            .filter(ChallengeRelease.round <= current_round).distinct(ChallengeRelease.challenge_id).all()
+        return challs
 
 class ChallengeRelease(db.Model):
     __tablename__ = "challenge_release"
@@ -69,7 +75,13 @@ class ChallengeRelease(db.Model):
             .filter(cls.challenge_id == int(challenge_id)).all()
         return [elm[0] for elm in chall_release]
     
-
+    @classmethod
+    def get_all_released_challenges(cls, current_round: int) -> List[int]:
+        # Get all challenges that are released from start until the current round
+        chall_release = cls.query.with_entities(cls.challenge_id)\
+            .filter(cls.round <= int(current_round)).distinct(cls.challenge_id).all()
+        return [elm[0] for elm in chall_release]
+    
 class Flag(db.Model):
     __tablename__ = "flag"
     __table_args__ = (
@@ -96,7 +108,8 @@ class Submission(db.Model):
     value: Mapped[str] = mapped_column(Text)
     verdict: Mapped[bool]
     point: Mapped[float] = mapped_column(Double, default=0.0)
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
 
 class Solve(db.Model):
     __tablename__ = "solve"
@@ -107,7 +120,7 @@ class Solve(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
     challenge_id: Mapped[int] = mapped_column(ForeignKey("challenge.id"))
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
     @classmethod
     def is_solved(cls, team_id: int, chall_id: int) -> list:
@@ -136,7 +149,7 @@ class Service(db.Model):
     order: Mapped[int]
     secret: Mapped[str]
     detail: Mapped[str] = mapped_column(Text, doc="JSON format service detail configuration.")
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     
     @classmethod
     def is_teamservice_exist(cls, team_id, challenge_id):
@@ -160,19 +173,7 @@ class CheckerResult(db.Model):
     tick: Mapped[int]
     status: Mapped[CheckerStatus] = mapped_column(Enum(CheckerStatus), default=CheckerStatus.QUEUE)
     detail: Mapped[str] = mapped_column(Text, doc="JSON format checker result detail.")
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
-
-
-class CheckerAgentReport(db.Model):
-    __tablename__ = "checker_agent_report"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
-    challenge_id: Mapped[int] = mapped_column(ForeignKey("challenge.id"))
-    source_ip: Mapped[str]
-    report: Mapped[str] = mapped_column(Text, doc="JSON format agent checker result detail.")
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
-
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
 class TeamActivityLog(db.Model):
     __tablename__ = "team_activity_log"
@@ -182,7 +183,7 @@ class TeamActivityLog(db.Model):
     team_name: Mapped[str]
     activity: Mapped[str] = mapped_column(String(32), doc="Activity log code.")
     detail: Mapped[str] = mapped_column(Text, doc="JSON format team activity log detail.")
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
 
 class ScorePerTick(db.Model):
@@ -199,6 +200,6 @@ class ScorePerTick(db.Model):
     attack_score: Mapped[float] = mapped_column(Double, default=0.0)
     defense_score: Mapped[float] = mapped_column(Double, default=0.0)
     sla: Mapped[float] = mapped_column(Double, default=1.0)
-    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
-
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+      
     team: Mapped["Team"] = relationship('Team', foreign_keys="ScorePerTick.team_id", lazy='joined')

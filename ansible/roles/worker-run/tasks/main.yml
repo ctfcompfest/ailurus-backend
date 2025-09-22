@@ -1,10 +1,24 @@
 ---
 - name: Get number of workers
   set_fact:
-    number_worker: "{{ hostvars[inventory_hostname]['num_worker'] | int }}"
+    number_checker: "{{ hostvars[inventory_hostname]['num_checker'] | int }}"
+    number_flagrotator: "{{ hostvars[inventory_hostname]['num_flagrotator'] | int }}"
+    number_svcmanager: "{{ hostvars[inventory_hostname]['num_svcmanager'] | int }}"
     
 - include_tasks:
-    file: run.yml
-  loop: "{{ range(1, (number_worker | int) + 1) | list }}"
+    file: run-checker.yml
+  loop: "{{ range(1, (number_checker | int) + 1) | list }}"
+  loop_control:
+    loop_var: worker_id
+
+- include_tasks:
+    file: run-flagrotator.yml
+  loop: "{{ range(1, (number_flagrotator | int) + 1) | list }}"
+  loop_control:
+    loop_var: worker_id
+  
+- include_tasks:
+    file: run-svcmanager.yml
+  loop: "{{ range(1, (number_svcmanager | int) + 1) | list }}"
   loop_control:
     loop_var: worker_id

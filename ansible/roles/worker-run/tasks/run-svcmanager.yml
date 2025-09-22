@@ -1,0 +1,10 @@
+---
+- name: Run svcmanager Docker container
+  docker_container:
+    name: ailurus-svcmanager-{{worker_id}}
+    image: ailurus-backend:latest
+    state: started
+    restart_policy: always
+    command: svcmanager
+    volumes:
+    - "/opt/ailurus-worker/ailurus/worker_data:/opt/app/ailurus/worker_data"

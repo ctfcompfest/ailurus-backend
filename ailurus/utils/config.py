@@ -74,6 +74,11 @@ def is_contest_started():
     time_now = datetime.now(timezone.utc)
     return (start_time and time_now >= start_time)
 
+def is_defense_phased():
+    attack_time: datetime = get_config("ATTACK_TIME")
+    time_now = datetime.now(timezone.utc)
+    return is_contest_started() and attack_time and time_now < attack_time
+
 def is_contest_paused():
     is_paused: bool = get_config("IS_CONTEST_PAUSED")
     return is_paused

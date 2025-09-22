@@ -1,0 +1,9 @@
+---
+- name: Setup and deploy Ailurus Public Scoreboard
+  hosts: public_scoreboard
+  become: true
+  roles:
+  - docker-install
+  - name: caddy-setup
+    when: ssl == True
+  - scoreboard-run

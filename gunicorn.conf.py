@@ -1,0 +1,11 @@
+bind = "0.0.0.0:5000"
+workers = 1
+threads = 100
+wsgi_app = "wsgi:app"
+worker_class = "geventwebsocket.gunicorn.workers.GeventWebSocketWorker"
+timeout = 30
+loglevel = "info"
+accesslog = "-"
+errorlog = "-"
+capture_output = True
+preload_app = True

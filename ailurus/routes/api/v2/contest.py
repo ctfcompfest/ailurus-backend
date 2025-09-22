@@ -3,7 +3,8 @@ from ailurus.utils.config import (
     is_contest_running,
     is_contest_finished,
     is_contest_paused,
-    is_contest_started
+    is_contest_started,
+    is_defense_phased,
 )
 from flask import Blueprint, jsonify
 from ailurus.utils.cache import cache
@@ -15,6 +16,8 @@ contestinfo_blueprint = Blueprint("contestinfo", __name__, url_prefix="/contest"
 def get_contest_info():
     if not is_contest_started():
         event_status = "not started"
+    elif is_defense_phased():
+        event_status = "defense phase"
     elif is_contest_running():
         event_status = "running"
     elif is_contest_finished():

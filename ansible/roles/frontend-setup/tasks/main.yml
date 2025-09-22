@@ -2,6 +2,7 @@
   git:
     repo: "{{ repository.frontend }}"
     dest: "/opt/ailurus-frontend"
+    version: "{{ repository.frontend_branch | default('HEAD') }}"
 
 - name: Generating environment file
   template:

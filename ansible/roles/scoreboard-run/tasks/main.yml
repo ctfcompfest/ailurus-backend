@@ -1,0 +1,74 @@
+---
+- set_fact:
+    domain: "{{ host.scoreboard | split('//') | reverse | first}}"
+    upstream: "localhost:3000"
+
+- name: Clone frontend git repository
+  git:
+    repo: "{{ repository.frontend }}"
+    dest: "/opt/ailurus-frontend"
+    version: "{{ repository.frontend_branch | default('HEAD') }}"
+
+- name: Generating environment file
+  template:
+    src: "env-file.j2"
+    dest: /opt/ailurus-frontend/.env
+
+- name: Build frontend Docker image
+  docker_image:
+    name: ailurus-frontend
+    source: build
+    build:
+      path: /opt/ailurus-frontend
+    state: present
+    force_source: true
+
+- name: Run frontend Docker container
+  docker_container:
+    name: ailurus-frontend
+    image: ailurus-frontend:latest
+    state: started
+    restart_policy: always
+    ports:
+      - "3000:3000"
+
+- name: Create Caddyfile folder
+  file:
+    path: "/etc/caddy/caddy.d"
+    state: directory
+    mode: 0755
+
+- name: Create ssl cert folder
+  file:
+    path: "/etc/caddy/ssl/{{ domain }}"
+    state: directory
+    mode: 0755
+
+- name: Copy ssl cert to target system
+  copy:
+    src: "{{ ssl_cert_file.cert }}"
+    dest: "/etc/caddy/ssl/{{ domain }}/cert"
+    mode: 0644
+  when: not public_ca
+
+- name: Copy ssl key to target system
+  copy:
+    src: "{{ ssl_cert_file.key }}"
+    dest: "/etc/caddy/ssl/{{ domain }}/key"
+    mode: 0644
+  when: not public_ca
+
+- name: Create config file
+  template:
+    src: config.j2
+    dest: /etc/caddy/caddy.d/{{domain}}
+
+- name: Combine configuration files to Caddyfile
+  assemble:
+    src: /etc/caddy/caddy.d
+    dest: /etc/caddy/Caddyfile
+
+- name: Restart Caddy service
+  systemd:
+    name: caddy
+    state: restarted

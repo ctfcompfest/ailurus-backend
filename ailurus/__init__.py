@@ -25,7 +25,7 @@ def create_logger(logname):
         handlers=[
             logging.FileHandler(logname), # Log to a file
             logging.StreamHandler() # Log to the console
-        ]
+        ],
     )
 
 def setup_jwt_app(app: Flask):
@@ -72,6 +72,9 @@ def create_app(env_file=".env"):
         db.init_app(app)
         migrate.init_app(app, db)
         init_data_dir(app)
+                
+        # Load all svcmode
+        load_all_svcmode(app)
     return app
 
 def create_keeper_daemon(env_file=".env"):
@@ -92,7 +95,7 @@ def create_keeper_daemon(env_file=".env"):
     except KeyboardInterrupt:
         return
 
-def create_worker_daemon(env_file=".env"):
+def create_worker_daemon(worker_type: str, env_file=".env"):
     configs = dotenv.dotenv_values(env_file)
     app = create_app(env_file)
 
@@ -104,7 +107,7 @@ def create_worker_daemon(env_file=".env"):
         load_all_svcmode(app)
 
         try:
-            create_worker(**configs)
+            create_worker(worker_type, **configs)
         except KeyboardInterrupt:
             return
     
@@ -115,12 +118,13 @@ def create_webapp_daemon(env_file=".env"):
 
         # Security
         setup_jwt_app(app)
+
         CORS(app)
         cache.init_app(app)
         # limiter.init_app(app)
         
         # Socket
-        socketio.init_app(app)
+        socketio.init_app(app, message_queue=app.config["CACHE_REDIS_URL"])
 
         # API
         app.register_blueprint(app_routes)
