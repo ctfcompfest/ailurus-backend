@@ -1,3 +1,4 @@
+# Publicly accessible repositories
 repository:
   backend: https://github.com/ctfcompfest/ailurus-backend.git
   frontend: https://github.com/ctfcompfest/ailurus-frontend.git
@@ -6,8 +7,14 @@ host:
   backend: https://api.ailurus.pw
   frontend: https://ailurus.pw
 
+# Whether you want to set SSL for both host
 ssl: true
+
+# True: if it has public IP
+# False: if it only has private IP
 public_ca: false
+
+# If ssl=true and public_ca=false, specifying ssl certificate is mandatory
 ssl_cert_file:
   cert: /etc/letsencrypt/live/ailurus.pw/fullchain.pem
   key: /etc/letsencrypt/live/ailurus.pw/privkey.pem
@@ -18,10 +25,13 @@ backend_load_svcmode: aws_ec2
 frontend_service_manage_panel: fullserver
 
 database:
-  username: postgresql
-  password: postgresql
-  db_name: postgresql
+  username: postgres
+  password: postgres
+  db_name: postgres
 
 rabbitmq:
   username: rabbitmq
   password: rabbitmq
+
+redis:
+  password: P@ssw0rd

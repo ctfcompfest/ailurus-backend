@@ -1,0 +1,23 @@
+flag_path: /flag
+ssh_port: 22
+expose_ports:
+- port: 80
+  protocol: TCP
+resources:
+  cpu: 500m
+  memory: 64Mi
+env:
+- name: ENV_KEY
+  value: environment value
+persistent_paths:
+- /bin
+- /etc
+- /home
+- /lib
+- /opt
+- /root
+- /sbin
+- /srv
+- /tmp
+- /usr
+- /var

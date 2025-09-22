@@ -12,10 +12,11 @@ sys.path.insert(0, current_dir)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Manage script for running Ailurus Backend services.')
     subparser = parser.add_subparsers(dest="command", help='subcommand help')
-
+    
     webapp_parser = subparser.add_parser('webapp', help='webapp command help')
     webapp_parser.add_argument('--host', type=str, help='the interface web app will bind to.')
     webapp_parser.add_argument('--port', type=int, help='the port web app will bind to.')
+    webapp_parser.add_argument('--spawn', type=int, help='the number of web app worker need to be spawn.')
 
     # Worker
     subparser.add_parser('checker', help='worker command help')

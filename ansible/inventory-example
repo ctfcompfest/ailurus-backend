@@ -2,7 +2,7 @@
 vpn ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
 [backend]
-backend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key num_instance=2
+backend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key
 
 [frontend]
 frontend ansible_host=1.2.3.4 ansible_user=root ansible_ssh_private_key_file=/path/to/private/key

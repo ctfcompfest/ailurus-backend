@@ -1,0 +1,6 @@
+google-auth
+google-cloud-build
+google-cloud-container
+google-cloud-storage
+docker
+kubernetes

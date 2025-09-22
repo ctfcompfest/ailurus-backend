@@ -1,6 +1,7 @@
 from ailurus.utils.config import get_config, is_contest_started, is_defense_phased
 from ailurus.utils.svcmode import get_svcmode_module
 from ailurus.models import Challenge
+
 from flask import Blueprint, jsonify
 from ailurus.utils.cache import cache
 

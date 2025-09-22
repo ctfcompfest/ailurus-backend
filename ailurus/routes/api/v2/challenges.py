@@ -1,6 +1,7 @@
 from ailurus.models import db, Challenge, ChallengeRelease
 from ailurus.utils.config import get_config, is_defense_phased
 from ailurus.utils.cache import cache
+
 from flask import Blueprint, jsonify
 from flask_jwt_extended import (
     verify_jwt_in_request,

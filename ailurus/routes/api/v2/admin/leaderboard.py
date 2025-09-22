@@ -1,6 +1,7 @@
 from ailurus.models import Challenge
 from ailurus.utils.config import get_config, is_defense_phased
 from ailurus.utils.svcmode import get_svcmode_module
+
 from flask import Blueprint, request, jsonify
 
 leaderboard_blueprint = Blueprint("admin_leaderboard", __name__)
@@ -18,3 +19,4 @@ def get_admin_leaderboard():
     challenges = Challenge.get_all_released_challenges(current_round)
 
     return jsonify(status="success", data=leaderboard, challenges=[{"id": chall.id, "title": chall.title} for chall in challenges])
+

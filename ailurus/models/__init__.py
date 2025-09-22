@@ -110,6 +110,7 @@ class Submission(db.Model):
     point: Mapped[float] = mapped_column(Double, default=0.0)
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
+
 class Solve(db.Model):
     __tablename__ = "solve"
     __table_args__ = (
@@ -174,7 +175,6 @@ class CheckerResult(db.Model):
     detail: Mapped[str] = mapped_column(Text, doc="JSON format checker result detail.")
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
-
 class TeamActivityLog(db.Model):
     __tablename__ = "team_activity_log"
     
@@ -201,5 +201,5 @@ class ScorePerTick(db.Model):
     defense_score: Mapped[float] = mapped_column(Double, default=0.0)
     sla: Mapped[float] = mapped_column(Double, default=1.0)
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
-
+      
     team: Mapped["Team"] = relationship('Team', foreign_keys="ScorePerTick.team_id", lazy='joined')

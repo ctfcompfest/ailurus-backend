@@ -1,33 +1,67 @@
-- name: Add Docker GPG apt Key and repository
-  shell: |
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    chmod a+r /etc/apt/keyrings/docker.asc
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+- name: Ensure dependencies for repository setup are installed
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
 
-- name: Update apt and install docker-ce
-  apt:
+- name: Create /etc/apt/keyrings directory if it doesn't exist
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Add Docker's official GPG key for Debian
+  ansible.builtin.shell:
+    cmd: "curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+
+- name: Set permissions for Docker GPG key
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/docker.gpg
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Add Docker APT repository for Debian (using deb822 format)
+  ansible.builtin.apt_repository:
+    # NOTE: explicitly use 'amd64' for Debian's canonical architecture.
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install Docker Engine, CLI, Containerd, and Compose Plugin
+  ansible.builtin.apt:
     pkg:
       - docker-ce
       - docker-ce-cli
       - containerd.io
       - docker-compose-plugin
     state: latest
+
+- name: Install docker python module (via apt)
+  ansible.builtin.apt:
+    name: python3-docker
+    state: present
     update_cache: true
+  become: true
 
-- name: Install docker python module
-  pip:
-    name: docker
-    extra_args: --break-system-packages
-
-- name: Adding user '{{ ansible_user }}' to group docker
-  user:
+- name: Add user '{{ ansible_user }}' to the docker group
+  ansible.builtin.user:
     name: "{{ ansible_user }}"
     groups: docker
     append: yes
 
-- name: Reset ssh connection
-  meta: reset_connection
+- name: Reset SSH connection to apply new group membership
+  ansible.builtin.meta:
+    reset_connection

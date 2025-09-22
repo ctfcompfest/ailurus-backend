@@ -103,6 +103,8 @@ def create_worker_daemon(worker_type: str, env_file=".env"):
         create_logger(os.path.join(app.config["DATA_DIR"], "logs", "worker.log"))
 
         configs["flask_app"] = app
+        # Load all svcmode
+        load_all_svcmode(app)
 
         try:
             create_worker(worker_type, **configs)
@@ -116,7 +118,8 @@ def create_webapp_daemon(env_file=".env"):
 
         # Security
         setup_jwt_app(app)
-        CORS(app, methods=["GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"])
+
+        CORS(app)
         cache.init_app(app)
         # limiter.init_app(app)
         
@@ -125,6 +128,9 @@ def create_webapp_daemon(env_file=".env"):
 
         # API
         app.register_blueprint(app_routes)
+        
+        # Load all svcmode
+        load_all_svcmode(app)
 
         # Keeper
         create_keeper(app)

@@ -8,11 +8,13 @@ from ailurus.models import (
     CheckerStatus,
     Challenge,
     ChallengeRelease,
+    CheckerAgentReport,
 )
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow import pre_load, post_dump, fields
 from werkzeug.security import generate_password_hash
 from marshmallow.exceptions import ValidationError
+from typing import TypedDict
 
 import json
 
@@ -135,3 +137,29 @@ class ChallengeSchema(SQLAlchemyAutoSchema):
 class FlagSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Flag
+
+class CheckerAgentReportSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = CheckerAgentReport
+    
+    @pre_load
+    def dumps_report(self, data, **kwargs):
+        if 'report' in data and isinstance(data['report'], (dict, list)):
+            data['report'] = json.dumps(data['report'])
+        return data
+    
+    @post_dump
+    def parse_report(self, data, **kwargs):
+        data['report'] = json.loads(data['report'])
+        return data
+    
+class CheckerTaskType(TypedDict):
+    time_limit: int
+    challenge_id: int
+    challenge_slug: str
+    team_id: int
+    testcase_checksum: str
+    artifact_checksum: str
+    current_tick: int
+    current_round: int
+    time_created: str
