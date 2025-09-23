@@ -1,4 +1,4 @@
-from ailurus.models import Team, Challenge, Service,CheckerResult
+from ailurus.models import Team, Challenge, Service
 from ailurus.utils.config import get_config, get_app_config
 from typing import List, Dict, Mapping, Any
 
@@ -8,6 +8,9 @@ import json
 import os
 import secrets
 import time
+
+def load(app: flask.Flask):
+    pass
 
 def generator_public_services_info(team: Team, challenge: Challenge, services: List[Service]) -> Dict | List | str:
     return [json.loads(service.detail) for service in services]

@@ -1,5 +1,5 @@
 from ailurus.models import db, Team, CheckerResult, CheckerStatus, Flag, ChallengeRelease, Submission, Challenge
-from ailurus.utils.config import get_config
+from ailurus.utils.config import get_config, is_defense_phased
 from functools import cmp_to_key
 from sqlalchemy import select, func
 from typing import List, Tuple
@@ -102,6 +102,15 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
         for chall, in challs
     ]
 
+    current_round = get_config("CURRENT_ROUND", 0)
+    if is_defense_phased():
+        current_round = 1
+    challenges = Challenge.get_all_released_challenges(current_round)
+    challs_data = [
+        {"id": chall.id, "title": chall.title}
+        for chall, in challenges
+    ]
+    
     return results_sorted, challs_data
 
 def calculate_submission_score(attacker: Team, defender: Team, challenge: Challenge, flag: Flag):
