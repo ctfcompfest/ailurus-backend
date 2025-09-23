@@ -1,0 +1,1410 @@
+
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Ailurus Backend API",
+    "version": "2.0.0",
+    "description": "This is the API documentation for the Ailurus CTF platform backend."
+  },
+  "servers": [
+    {
+      "url": "/api/v2"
+    }
+  ],
+  "tags": [
+    {
+      "name": "authenticate",
+      "description": "User authentication"
+    },
+    {
+      "name": "challenges",
+      "description": "Challenge information"
+    },
+    {
+      "name": "checkeragent",
+      "description": "Checker agent related operations"
+    },
+    {
+      "name": "contest",
+      "description": "Contest information"
+    },
+    {
+      "name": "docs",
+      "description": "Documentation"
+    },
+    {
+      "name": "leaderboard",
+      "description": "Leaderboard information"
+    },
+    {
+      "name": "services",
+      "description": "Service status and information"
+    },
+    {
+      "name": "submit",
+      "description": "Flag submission"
+    },
+    {
+      "name": "teams",
+      "description": "Team information"
+    },
+    {
+        "name": "admin",
+        "description": "Admin operations"
+    },
+    {
+        "name": "my",
+        "description": "Operations related to the current user"
+    }
+  ],
+  "paths": {
+    "/authenticate/": {
+      "post": {
+        "tags": ["authenticate"],
+        "summary": "Login to get an access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/authenticate/token-check/": {
+      "post": {
+        "tags": ["authenticate"],
+        "summary": "Check if the access token is valid",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token is valid"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/challenges/": {
+      "get": {
+        "tags": ["challenges"],
+        "summary": "Get all visible challenges",
+        "responses": {
+          "200": {
+            "description": "A list of visible challenges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Challenge"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/challenges/{challenge_id}/": {
+      "get": {
+        "tags": ["challenges"],
+        "summary": "Get detail of a challenge",
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Challenge details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ChallengeDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Challenge not found"
+          }
+        }
+      }
+    },
+    "/checkeragent/": {
+      "post": {
+        "tags": ["checkeragent"],
+        "summary": "Receive a report from a checker agent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "team_id": {
+                    "type": "integer"
+                  },
+                  "challenge_slug": {
+                    "type": "string"
+                  },
+                  "report": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report received"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/contest/info/": {
+      "get": {
+        "tags": ["contest"],
+        "summary": "Get contest information",
+        "responses": {
+          "200": {
+            "description": "Contest information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ContestInfo"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs/{page}/": {
+      "get": {
+        "tags": ["docs"],
+        "summary": "Get a documentation page",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Documentation page content"
+          },
+          "404": {
+            "description": "Page not found"
+          }
+        }
+      }
+    },
+    "/leaderboard/": {
+      "get": {
+        "tags": ["leaderboard"],
+        "summary": "Get the public leaderboard",
+        "responses": {
+          "200": {
+            "description": "Public leaderboard data"
+          }
+        }
+      }
+    },
+    "/services-status/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get the status of all services",
+        "responses": {
+          "200": {
+            "description": "Service status data"
+          }
+        }
+      }
+    },
+    "/teams/{team_id}/services-status/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get the status of all services for a specific team",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service status data"
+          },
+          "404": {
+            "description": "Team not found"
+          }
+        }
+      }
+    },
+    "/challenges/{challenge_id}/services-status/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get the status of all services for a specific challenge",
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service status data"
+          },
+          "404": {
+            "description": "Challenge not found"
+          }
+        }
+      }
+    },
+    "/teams/{team_id}/challenges/{challenge_id}/services-status/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get the status of a service for a specific team and challenge",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service status data"
+          },
+          "404": {
+            "description": "Team or challenge not found"
+          }
+        }
+      }
+    },
+    "/services/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get information about all services",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service information"
+          }
+        }
+      }
+    },
+    "/teams/{team_id}/services/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get information about all services for a specific team",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service information"
+          },
+          "404": {
+            "description": "Team not found"
+          }
+        }
+      }
+    },
+    "/challenges/{challenge_id}/services/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get information about all services for a specific challenge",
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service information"
+          },
+          "404": {
+            "description": "Challenge not found"
+          }
+        }
+      }
+    },
+    "/teams/{team_id}/challenges/{challenge_id}/services/": {
+      "get": {
+        "tags": ["services"],
+        "summary": "Get information about a service for a specific team and challenge",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service information"
+          },
+          "404": {
+            "description": "Team or challenge not found"
+          }
+        }
+      }
+    },
+    "/submit/": {
+      "post": {
+        "tags": ["submit"],
+        "summary": "Submit one or more flags",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "flag": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "flags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Flag submission result"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/teams/": {
+      "get": {
+        "tags": ["teams"],
+        "summary": "Get all teams",
+        "responses": {
+          "200": {
+            "description": "A list of teams",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Team"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teams/{team_id}/": {
+      "get": {
+        "tags": ["teams"],
+        "summary": "Get detail of a team",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Team details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Team"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Team not found"
+          }
+        }
+      }
+    },
+    "/admin/challenges/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get all challenges (admin)",
+            "responses": {
+                "200": {
+                    "description": "A list of challenges"
+                }
+            }
+        },
+        "post": {
+            "tags": ["admin"],
+            "summary": "Create bulk challenges (admin)",
+            "responses": {
+                "200": {
+                    "description": "Challenges created"
+                }
+            }
+        }
+    },
+    "/admin/challenges/{challenge_id}/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get detail of a challenge (admin)",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Challenge details"
+                }
+            }
+        },
+        "patch": {
+            "tags": ["admin"],
+            "summary": "Patch detail of a challenge (admin)",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Challenge updated"
+                }
+            }
+        },
+        "delete": {
+            "tags": ["admin"],
+            "summary": "Delete a challenge by id (admin)",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Challenge deleted"
+                }
+            }
+        }
+    },
+    "/admin/challenges/{challenge_id}/testcase/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get testcase for a challenge (admin)",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Testcase file"
+                }
+            }
+        },
+        "post": {
+            "tags": ["admin"],
+            "summary": "Upload testcase for a challenge (admin)",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Testcase uploaded"
+                }
+            }
+        }
+    },
+    "/admin/challenges/{challenge_id}/artifact/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get artifact for a challenge (admin)",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Artifact file"
+                }
+            }
+        },
+        "post": {
+            "tags": ["admin"],
+            "summary": "Upload artifact for a challenge (admin)",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Artifact uploaded"
+                }
+            }
+        }
+    },
+    "/admin/checkresults/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get check results (admin)",
+            "responses": {
+                "200": {
+                    "description": "A list of check results"
+                }
+            }
+        }
+    },
+    "/admin/configs/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get all configs (admin)",
+            "responses": {
+                "200": {
+                    "description": "A list of configs"
+                }
+            }
+        }
+    },
+    "/admin/configs/{config_key}/": {
+        "patch": {
+            "tags": ["admin"],
+            "summary": "Update a config (admin)",
+            "parameters": [
+                {
+                    "name": "config_key",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Config updated"
+                }
+            }
+        }
+    },
+    "/admin/contests/reset-game/": {
+        "post": {
+            "tags": ["admin"],
+            "summary": "Reset game contest data (admin)",
+            "requestBody": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "confirm": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "Game contest data reset"
+                }
+            }
+        }
+    },
+    "/admin/contests/rotate-flag/": {
+        "post": {
+            "tags": ["admin"],
+            "summary": "Force rotate flag for current tick and round (admin)",
+            "requestBody": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "confirm": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "Flag rotation task created"
+                }
+            }
+        }
+    },
+    "/admin/contests/dry-run/": {
+        "post": {
+            "tags": ["admin"],
+            "summary": "Dry run the contest (admin)",
+            "requestBody": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "teams": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "challenges": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": "Dry run triggered"
+                }
+            }
+        }
+    },
+    "/admin/leaderboard/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get the admin leaderboard",
+            "responses": {
+                "200": {
+                    "description": "Admin leaderboard data"
+                }
+            }
+        }
+    },
+    "/admin/machines/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get all provision machines (admin)",
+            "responses": {
+                "200": {
+                    "description": "A list of provision machines"
+                }
+            }
+        },
+        "post": {
+            "tags": ["admin"],
+            "summary": "Create bulk provision machines (admin)",
+            "responses": {
+                "200": {
+                    "description": "Provision machines created"
+                }
+            }
+        }
+    },
+    "/admin/machines/{machine_id}/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get detail of a provision machine (admin)",
+            "parameters": [
+                {
+                    "name": "machine_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Provision machine details"
+                }
+            }
+        },
+        "patch": {
+            "tags": ["admin"],
+            "summary": "Update a provision machine (admin)",
+            "parameters": [
+                {
+                    "name": "machine_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Provision machine updated"
+                }
+            }
+        },
+        "delete": {
+            "tags": ["admin"],
+            "summary": "Delete a provision machine (admin)",
+            "parameters": [
+                {
+                    "name": "machine_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Provision machine deleted"
+                }
+            }
+        }
+    },
+    "/admin/services/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get services (admin)",
+            "responses": {
+                "200": {
+                    "description": "A list of services"
+                }
+            }
+        }
+    },
+    "/admin/services-manager/": {
+        "post": {
+            "tags": ["admin"],
+            "summary": "Handle services manager (admin)",
+            "responses": {
+                "200": {
+                    "description": "Services manager handled"
+                }
+            }
+        }
+    },
+    "/admin/teams/{team_id}/challenges/{challenge_id}/service-manager/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Handle service manager for a team and challenge (admin)",
+            "parameters": [
+                {
+                    "name": "team_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                },
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Service manager handled"
+                }
+            }
+        },
+        "post": {
+            "tags": ["admin"],
+            "summary": "Handle service manager for a team and challenge (admin)",
+            "parameters": [
+                {
+                    "name": "team_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                },
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Service manager handled"
+                }
+            }
+        }
+    },
+    "/admin/submissions/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get submissions (admin)",
+            "responses": {
+                "200": {
+                    "description": "A list of submissions"
+                }
+            }
+        }
+    },
+    "/admin/teams/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get all teams (admin)",
+            "responses": {
+                "200": {
+                    "description": "A list of teams"
+                }
+            }
+        },
+        "post": {
+            "tags": ["admin"],
+            "summary": "Create bulk teams (admin)",
+            "responses": {
+                "200": {
+                    "description": "Teams created"
+                }
+            }
+        }
+    },
+    "/admin/teams/{team_id}/": {
+        "get": {
+            "tags": ["admin"],
+            "summary": "Get detail of a team (admin)",
+            "parameters": [
+                {
+                    "name": "team_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Team details"
+                }
+            }
+        },
+        "patch": {
+            "tags": ["admin"],
+            "summary": "Update a team (admin)",
+            "parameters": [
+                {
+                    "name": "team_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Team updated"
+                }
+            }
+        },
+        "delete": {
+            "tags": ["admin"],
+            "summary": "Delete a team (admin)",
+            "parameters": [
+                {
+                    "name": "team_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Team deleted"
+                }
+            }
+        }
+    },
+    "/my/solves/": {
+        "get": {
+            "tags": ["my"],
+            "summary": "Get your solves",
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "A list of your solves"
+                }
+            }
+        }
+    },
+    "/my/allow-manage-services/": {
+        "get": {
+            "tags": ["my"],
+            "summary": "Get your allowed manage services",
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "A list of your allowed manage services"
+                }
+            }
+        }
+    },
+    "/my/challenges/{challenge_id}/service-manager/": {
+        "get": {
+            "tags": ["my"],
+            "summary": "Handle your service manager for a challenge",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Service manager handled"
+                }
+            }
+        },
+        "post": {
+            "tags": ["my"],
+            "summary": "Handle your service manager for a challenge",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Service manager handled"
+                }
+            }
+        }
+    },
+    "/my/challenges/{challenge_id}/services-status/": {
+        "get": {
+            "tags": ["my"],
+            "summary": "Get your service status by challenge id",
+            "parameters": [
+                {
+                    "name": "challenge_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Your service status"
+                }
+            }
+        }
+    },
+    "/my/submissions/": {
+        "get": {
+            "tags": ["my"],
+            "summary": "Get your submissions",
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "A list of your submissions"
+                }
+            }
+        }
+    },
+    "/my/attacks/": {
+        "get": {
+            "tags": ["my"],
+            "summary": "Get your attacks",
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "A list of your attacks"
+                }
+            }
+        }
+    },
+    "/my/defenses/": {
+        "get": {
+            "tags": ["my"],
+            "summary": "Get your defenses",
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "A list of your defenses"
+                }
+            }
+        }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Challenge": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "ChallengeDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "description_raw": {
+            "type": "string"
+          }
+        }
+      },
+      "ContestInfo": {
+        "type": "object",
+        "properties": {
+          "event_name": {
+            "type": "string"
+          },
+          "logo_url": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "number_round": {
+            "type": "integer"
+          },
+          "number_tick": {
+            "type": "integer"
+          },
+          "current_round": {
+            "type": "integer"
+          },
+          "current_tick": {
+            "type": "integer"
+          },
+          "event_status": {
+            "type": "string"
+          }
+        }
+      },
+      "Team": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

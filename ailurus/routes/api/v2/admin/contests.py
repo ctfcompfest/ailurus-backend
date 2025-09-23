@@ -30,6 +30,7 @@ def reset_game_contest_data():
         "CURRENT_TICK", "CURRENT_ROUND", "FREEZE_TICK", "FREEZE_ROUND", "LAST_PAUSED", "LAST_TICK_CHANGE"
     ])).delete()
     db.session.execute(update(Config).values(value="false").where(Config.key == "IS_CONTEST_PAUSED"))
+    db.session.execute(update(Config).values(value="2037-01-01T00:00:00Z").where(Config.key == "START_TIME"))
     db.session.query(Flag).delete()
     db.session.commit()
     return jsonify(status="success", message="Game contest data has been reset."), 200
