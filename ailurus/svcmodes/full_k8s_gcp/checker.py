@@ -1,6 +1,8 @@
-from ailurus.models import db, CheckerResult, CheckerStatus, Service, Flag, CheckerAgentReport
-from ailurus.schema import CheckerTaskType, ServiceSchema, FlagSchema, CheckerAgentReportSchema
-from ailurus.utils.checker import execute_check_function_with_timelimit
+from ailurus.models import db, CheckerResult, CheckerStatus, Service, Flag
+from ailurus.schema import ServiceSchema, FlagSchema
+from .types import CheckerTaskType
+from .models import CheckerAgentReport
+from .schema import CheckerAgentReportSchema
 
 from sqlalchemy import select
 from typing import List
@@ -14,48 +16,83 @@ import importlib
 import logging
 import os
 import traceback
+from multiprocessing.pool import ThreadPool
+from multiprocessing import TimeoutError as MpTimeoutError
 
 log = logging.getLogger(__name__)
+
+
+def execute_check_function_with_timelimit(func, func_params, timelimit: int):
+    pool = ThreadPool(processes=1)
+    job = pool.apply_async(func, args=func_params)
+    pool.close()
+    try:
+        verdict = job.get(timelimit)
+        return verdict
+    except MpTimeoutError as e:
+        raise TimeoutError(str(e))
+    finally:
+        pool.terminate()
+
 
 def handler_checker_task(body: CheckerTaskType, **kwargs):
     if not body["testcase_checksum"]:
         return False
-    tc_folder = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["testcase_checksum"], "testcase")
+    tc_folder = init_challenge_asset(
+        body["challenge_id"],
+        body["challenge_slug"],
+        body["testcase_checksum"],
+        "testcase",
+    )
     checker_folder = os.path.join(tc_folder, "checker")
 
     checker_spec = importlib.util.spec_from_file_location(
-        "ailurus.worker_data.testcases.checker.{}".format(body['testcase_checksum']),
-        os.path.join(checker_folder, "__init__.py")
+        "ailurus.worker_data.testcases.checker.{}".format(body["testcase_checksum"]),
+        os.path.join(checker_folder, "__init__.py"),
     )
     checker_module = importlib.util.module_from_spec(checker_spec)
     checker_spec.loader.exec_module(checker_module)
     checker_result = CheckerResult(
-        team_id = body["team_id"],
-        challenge_id = body["challenge_id"],
-        round = body["current_round"],
-        tick = body["current_tick"],
+        team_id=body["team_id"],
+        challenge_id=body["challenge_id"],
+        round=body["current_round"],
+        tick=body["current_tick"],
     )
 
     checker_detail_result: CheckerResultDetailType = {}
     try:
-        log.info("executing testcase: chall_id={}, team_id={}.".format(body['challenge_id'], body['team_id']))
-        services: List[Service] = db.session.execute(
-            select(Service).where(
-                Service.team_id == body["team_id"]
+        log.info(
+            "executing testcase: chall_id={}, team_id={}.".format(
+                body["challenge_id"], body["team_id"]
             )
-        ).scalars().all()
-        flags: List[Flag] = db.session.execute(
-            select(Flag).where(
-                Flag.challenge_id == body["challenge_id"],
-                Flag.team_id == body["team_id"],
-                Flag.tick == body["current_tick"],
-                Flag.round == body["current_round"],
+        )
+        services: List[Service] = (
+            db.session.execute(
+                select(Service).where(Service.team_id == body["team_id"])
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
+        flags: List[Flag] = (
+            db.session.execute(
+                select(Flag).where(
+                    Flag.challenge_id == body["challenge_id"],
+                    Flag.team_id == body["team_id"],
+                    Flag.tick == body["current_tick"],
+                    Flag.round == body["current_round"],
+                )
+            )
+            .scalars()
+            .all()
+        )
 
-        agent_latest_report: CheckerAgentReport = CheckerAgentReport.query.filter_by(
-            challenge_id=body["challenge_id"], team_id=body["team_id"]
-        ).order_by(CheckerAgentReport.time_created.desc()).first()
+        agent_latest_report: CheckerAgentReport = (
+            CheckerAgentReport.query.filter_by(
+                challenge_id=body["challenge_id"], team_id=body["team_id"]
+            )
+            .order_by(CheckerAgentReport.time_created.desc())
+            .first()
+        )
 
         checker_status, checker_detail = execute_check_function_with_timelimit(
             checker_module.main,
@@ -64,12 +101,14 @@ def handler_checker_task(body: CheckerTaskType, **kwargs):
                 FlagSchema().dump(flags, many=True),
                 CheckerAgentReportSchema().dump(agent_latest_report),
             ],
-            body.get("time_limit", 10)
+            body.get("time_limit", 10),
         )
 
         checker_detail_result["checker_output"] = checker_detail
         checker_detail_result["status_detail"] = checker_detail["status_detail"]
-        checker_result.status = CheckerStatus.VALID if checker_status else CheckerStatus.FAULTY
+        checker_result.status = (
+            CheckerStatus.VALID if checker_status else CheckerStatus.FAULTY
+        )
     except TimeoutError as e:
         log.error(f"checker failed: {str(e)}.")
         checker_detail_result["status_detail"] = "not reachable"
@@ -80,8 +119,10 @@ def handler_checker_task(body: CheckerTaskType, **kwargs):
         checker_detail_result["status_detail"] = "internal error"
         checker_detail_result["exception"] = str(e)
         checker_result.status = CheckerStatus.FAULTY
-    
-    checker_detail_result["time_finished"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    checker_detail_result["time_finished"] = datetime.datetime.now(
+        datetime.timezone.utc
+    ).isoformat()
     checker_result.detail = json.dumps(checker_detail_result)
 
     db.session.add(checker_result)
