@@ -1,4 +1,3 @@
-from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
@@ -8,7 +7,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade(op):
     op.create_table(
         "gcpk8s_checker_agent_report",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -36,7 +35,7 @@ def upgrade():
     )
 
 
-def downgrade():
+def downgrade(op):
     op.drop_table("gcpk8s_checker_agent_report")
 
     config_table = sa.table(
