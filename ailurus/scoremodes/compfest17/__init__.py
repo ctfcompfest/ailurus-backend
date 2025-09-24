@@ -14,52 +14,26 @@ def calculate_attack_score(total_submissions: int) -> float:
     if total_submissions <= 0:
         return 0.0
     
+    ranges = [
+        (141, 10.0),
+        (82, 5.0),
+        (112, 3.33),
+        (112, 2.5),
+        (112, 2.0),
+        (112, 1.66),
+        (112, 1.42),
+        (112, 1.25),
+        (113, 1.11),
+    ]
+    
     attack_score = 0.0
     remaining = total_submissions
     
-    if remaining > 0:
-        count_in_range = min(remaining, 141)
-        attack_score += count_in_range * 10.0
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 82)
-        attack_score += count_in_range * 5.0
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 112)
-        attack_score += count_in_range * 3.33
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 112)
-        attack_score += count_in_range * 2.5
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 112)
-        attack_score += count_in_range * 2.0
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 112)
-        attack_score += count_in_range * 1.66
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 112)
-        attack_score += count_in_range * 1.42
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 112) 
-        attack_score += count_in_range * 1.25
-        remaining -= count_in_range
-    
-    if remaining > 0:
-        count_in_range = min(remaining, 113)
-        attack_score += count_in_range * 1.11
+    for range_size, points in ranges:
+        if remaining <= 0:
+            break
+        count_in_range = min(remaining, range_size)
+        attack_score += count_in_range * points
         remaining -= count_in_range
     
     if remaining > 0:
