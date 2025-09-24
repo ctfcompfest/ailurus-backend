@@ -18,7 +18,7 @@ def calculate_attack_score(total_submissions: int) -> float:
     remaining = total_submissions
     
     if remaining > 0:
-        count_in_range = min(remaining, 142)
+        count_in_range = min(remaining, 141)
         attack_score += count_in_range * 10.0
         remaining -= count_in_range
     
@@ -58,7 +58,7 @@ def calculate_attack_score(total_submissions: int) -> float:
         remaining -= count_in_range
     
     if remaining > 0:
-        count_in_range = min(remaining, 112)
+        count_in_range = min(remaining, 113)
         attack_score += count_in_range * 1.11
         remaining -= count_in_range
     
