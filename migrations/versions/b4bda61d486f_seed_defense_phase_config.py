@@ -1,7 +1,7 @@
 """seed defense phase feature config
 
 Revision ID: b4bda61d486f
-Revises: b265af5c2d6c
+Revises: 198a881141f4
 Create Date: 2025-08-05 21:57:09.686577
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'b4bda61d486f'
-down_revision = 'b265af5c2d6c'
+down_revision = '198a881141f4'
 branch_labels = None
 depends_on = None
 
