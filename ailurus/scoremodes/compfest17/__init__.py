@@ -106,21 +106,24 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     defense_score = 0.0
     DEF = 10.0
     
+    stolen_ticks = db.session.execute(
+        select(Submission.tick, func.count(Submission.id).label('stolen_count'))
+        .join(Flag, Flag.id == Submission.flag_id)
+        .where(
+            Submission.verdict == True,
+            Submission.team_id != team_id,
+            Submission.challenge_id == chall_id,
+            Submission.time_created <= freeze_time,
+            Flag.team_id == team_id,
+            Submission.tick <= current_tick
+        )
+        .group_by(Submission.tick)
+    ).all()
+    
+    stolen_tick_set = {tick for tick, count in stolen_ticks if count > 0}
+    
     for tick in range(1, current_tick + 1):
-        flag_stolen_in_tick = db.session.execute(
-            select(func.count(Submission.id))
-            .join(Flag, Flag.id == Submission.flag_id)
-            .where(
-                Submission.verdict == True,
-                Submission.team_id != team_id,
-                Submission.challenge_id == chall_id,
-                Submission.tick == tick,
-                Submission.time_created <= freeze_time,
-                Flag.team_id == team_id,
-            )
-        ).scalar() or 0
-        
-        is_not_stolen = 1 if flag_stolen_in_tick == 0 else 0
+        is_not_stolen = 1 if tick not in stolen_tick_set else 0
         defense_score += DEF * is_not_stolen
     
     defense_score *= n_team_solved
