@@ -1,5 +1,6 @@
 from ailurus.models import db, CheckerResult, CheckerStatus, Service, Flag
 from ailurus.schema import ServiceSchema, FlagSchema
+from ailurus.utils.checker import execute_check_function_with_timelimit
 from .types import CheckerTaskType
 from .models import CheckerAgentReport
 from .schema import CheckerAgentReportSchema
@@ -20,19 +21,6 @@ from multiprocessing.pool import ThreadPool
 from multiprocessing import TimeoutError as MpTimeoutError
 
 log = logging.getLogger(__name__)
-
-
-def execute_check_function_with_timelimit(func, func_params, timelimit: int):
-    pool = ThreadPool(processes=1)
-    job = pool.apply_async(func, args=func_params)
-    pool.close()
-    try:
-        verdict = job.get(timelimit)
-        return verdict
-    except MpTimeoutError as e:
-        raise TimeoutError(str(e))
-    finally:
-        pool.terminate()
 
 
 def handler_checker_task(body: CheckerTaskType, **kwargs):
