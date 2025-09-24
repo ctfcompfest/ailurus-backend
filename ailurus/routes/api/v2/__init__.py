@@ -10,10 +10,8 @@ from ailurus.routes.api.v2.submit import submit_blueprint
 from ailurus.routes.api.v2.teams import public_team_blueprint
 from ailurus.routes.api.v2.worker import worker_blueprint
 from ailurus.routes.api.v2.services import auth_services_blueprint, public_services_blueprint
-from ailurus.routes.api.v2.checkeragent import checkeragent_blueprint
 
 apiv2_blueprint = Blueprint("apiv2", __name__, url_prefix="/v2")
-apiv2_blueprint.register_blueprint(checkeragent_blueprint)
 apiv2_blueprint.register_blueprint(adminapi_blueprint)
 apiv2_blueprint.register_blueprint(auth_services_blueprint)
 apiv2_blueprint.register_blueprint(authenticate_blueprint)
