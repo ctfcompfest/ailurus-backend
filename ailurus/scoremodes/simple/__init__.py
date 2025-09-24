@@ -108,7 +108,7 @@ def get_leaderboard(freeze_time: datetime.datetime | None = None, is_admin: bool
     challenges = Challenge.get_all_released_challenges(current_round)
     challs_data = [
         {"id": chall.id, "title": chall.title}
-        for chall, in challenges
+        for chall in challenges
     ]
     
     return results_sorted, challs_data
