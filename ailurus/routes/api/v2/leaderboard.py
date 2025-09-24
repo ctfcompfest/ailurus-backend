@@ -17,7 +17,7 @@ def get_public_leaderboard():
     freeze_time = get_config("FREEZE_TIME")
     is_freeze = datetime.now(timezone.utc) >= freeze_time
 
-    scoremode = get_scoremode_module(get_config("SERVICE_MODE"))
+    scoremode = get_scoremode_module(get_config("SCORE_SCRIPT"))
     leaderboard, challenges = scoremode.get_leaderboard(freeze_time=freeze_time)
     
     return jsonify(

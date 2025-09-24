@@ -9,7 +9,7 @@ leaderboard_blueprint = Blueprint("admin_leaderboard", __name__)
 def get_admin_leaderboard():
     freeze_time = get_config("FREEZE_TIME")
     is_admin_version = not request.args.get("freeze")
-    scoremode = get_scoremode_module(get_config("SERVICE_MODE"))
+    scoremode = get_scoremode_module(get_config("SCORE_SCRIPT"))
     leaderboard, challenges = scoremode.get_leaderboard(freeze_time=freeze_time, is_admin=is_admin_version)
 
     return jsonify(status="success", data=leaderboard, challenges=challenges)
