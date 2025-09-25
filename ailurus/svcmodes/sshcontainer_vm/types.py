@@ -3,13 +3,13 @@ import datetime
 
 class ServiceManagerTaskType(TypedDict):
     action: str
-    initiator: str
     artifact_checksum: str
     testcase_checksum: str
     challenge_id: int
     challenge_slug: str
     team_id: int
-    time_created: str
+    created_at: str
+    created_by: str
 
 
 class ServiceDetailType(TypedDict):
