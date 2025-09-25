@@ -23,6 +23,7 @@ def upgrade(op):
         sa.Column('is_done', sa.Boolean(), nullable=False, default=False),
         sa.Column('created_at', sa.TIMESTAMP(), nullable=False, server_default=sa.func.now()),
         sa.Column('created_by', sa.String(30), nullable=False, server_default="admin"),
+        sa.Column('completed_at', sa.TIMESTAMP(), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
 

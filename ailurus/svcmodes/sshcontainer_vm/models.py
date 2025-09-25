@@ -11,5 +11,6 @@ class ManageServicePendingList(db.Model):
     team_id: Mapped[int]
     challenge_id: Mapped[int]
     is_done: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    completed_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     created_by: Mapped[str] = mapped_column(String(30), server_default="admin")

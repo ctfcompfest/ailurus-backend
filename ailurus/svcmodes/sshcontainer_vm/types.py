@@ -4,9 +4,7 @@ import datetime
 class ServiceManagerTaskType(TypedDict):
     action: str
     artifact_checksum: str
-    testcase_checksum: str
     challenge_id: int
-    challenge_slug: str
     team_id: int
     created_at: str
     created_by: str
