@@ -20,6 +20,7 @@ class ServiceDetailType(TypedDict):
 
     credentials: ServiceDetailCred
     public_addresses: List[ExposeService]
+    machine_id: int
 
 
 class FlagrotatorTaskType(TypedDict):
