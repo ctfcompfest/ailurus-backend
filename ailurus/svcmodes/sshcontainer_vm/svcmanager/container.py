@@ -48,8 +48,7 @@ def get_provision_machine(team_id: int, challenge_id: int):
             name=team.name
         ).first()
 
-    if machine_match_algo == "random":
-        raise NotImplementedError("Machine match algo error")
+    raise NotImplementedError("Machine match algo error")
 
 
 def generate_port_base_number(team_id: int, challenge_id: int):
@@ -82,6 +81,7 @@ def generate_port_base_number(team_id: int, challenge_id: int):
             num_chall_services += chall.num_service + 1
         base_number = num_chall_services + 40000
         return base_number
+    raise NotImplementedError("Machine match algo error")
 
 
 def get_deployed_machine(team_id: int, challenge_id: int):
@@ -90,7 +90,7 @@ def get_deployed_machine(team_id: int, challenge_id: int):
         challenge_id=challenge_id,
     ).first()
     if not service:
-        raise ValueError(f"Service for team_id={team_id}, chall_id={chall_id} not found")
+        raise ValueError(f"Service for team_id={team_id}, chall_id={challenge_id} not found")
     service_detail: ServiceDetailType = json.loads(service.detail)
     machine_id = service_detail["machine_id"]
     

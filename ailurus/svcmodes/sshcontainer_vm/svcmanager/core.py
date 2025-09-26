@@ -15,6 +15,14 @@ def do_provision(body: ServiceManagerTaskType, **kwargs):
     team_id = body["team_id"]
     chall_id = body["challenge_id"]
     artifact_checksum = body["artifact_checksum"]
+    
+    existing_service = Service.query.filter_by(
+        team_id=team_id,
+        challenge_id=chall_id,
+    ).first()
+    if existing_service:
+        log.info(f"Service for team_id={team_id}, chall_id={chall_id} exist.")
+        return False    
     try:
         service = prepare_container(team_id, chall_id, artifact_checksum)
         db.session.add(service)
