@@ -7,7 +7,7 @@ from ailurus.utils.cors import CORS
 from ailurus.utils.socket import socketio
 from ailurus.utils.svcmode import load_all_svcmode
 from ailurus.worker import create_keeper, create_worker
-from flask import Flask
+from flask import Flask, request
 from flask_jwt_extended import JWTManager
 
 import dotenv
@@ -129,9 +129,21 @@ def create_webapp_daemon(env_file=".env"):
         # API
         app.register_blueprint(app_routes)
         
-        # Load all svcmode
-        load_all_svcmode(app)
-
+        @app.after_request
+        def log_request(response):
+            if request.path == '/socket.io/':
+                return response
+            
+            log_line = (
+                f'{request.remote_addr} - - '
+                f'[{datetime.datetime.now().strftime("%d/%b/%Y:%H:%M:%S %z")}] '
+                f'""{request.method} {request.path} {request.environ.get("SERVER_PROTOCOL")}"" '
+                f'{response.status_code} {response.content_length} '
+                f'""{request.referrer or "-"}" " "{request.user_agent}""'
+            )
+            app.logger.info(log_line)
+            return response
+        
         # Keeper
         create_keeper(app)
     return app

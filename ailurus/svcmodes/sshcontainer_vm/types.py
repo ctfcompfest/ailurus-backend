@@ -49,3 +49,7 @@ class CheckerResultDetailType(TypedDict):
     exception: str
     checker_output: Dict
     time_finished: datetime.datetime
+
+class MachineDetail(TypedDict):
+    username: str
+    private_key: str

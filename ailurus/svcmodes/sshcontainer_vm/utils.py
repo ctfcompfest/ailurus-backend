@@ -1,9 +1,14 @@
+from base64 import b64decode
+from io import StringIO
+import re
+from typing import List
 from ailurus.utils.config import get_app_config, get_config
 
 import logging
 import os
 import requests
 import zipfile
+import paramiko
 
 log = logging.getLogger(__name__)
 
@@ -32,3 +37,77 @@ def init_challenge_asset(chall_id, asset_checksum=None, asset_type="artifact"):
             log.debug(f"extracting {asset_type} zipfile to {asset_folder}.")
             asset_type_zip_file.extractall(asset_folder)
     return asset_folder
+
+def rebuild_private_key(private_key: str):
+    sshkey_split = private_key.split("\n")
+    sshkey_header = sshkey_split[0]
+
+    if sshkey_header.find("RSA") != -1:
+        key_mode = "ssh-rsa"
+    elif sshkey_header.find("OPENSSH") != -1:
+        sshkey = "".join(sshkey_split[1:-1])
+        # Find "ssh-<something>" except "ssh-key"
+        key_mode = re.search(b"ssh-(?!key)[A-Za-z0-9]+", b64decode(sshkey.encode())).group(0).decode()
+    
+    keyfile = StringIO(private_key)
+    if key_mode == "ssh-ed25519":
+        return paramiko.Ed25519Key.from_private_key(keyfile)
+    if key_mode == "ssh-ecdsa":
+        return paramiko.ECDSAKey.from_private_key(keyfile)
+    if key_mode == "ssh-dss":
+        return paramiko.DSSKey.from_private_key(keyfile)
+    if key_mode == "ssh-rsa":
+        return paramiko.RSAKey.from_private_key(keyfile)
+    
+    raise ValueError(f"could not recognize {key_mode} as a key type.")
+
+def execute_remote_command(host: str, port: int, username: str, private_key: str, cmds: List[str]):
+    private_key_obj = rebuild_private_key(private_key)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+        ssh.connect(hostname=host, port=port, username=username, pkey=private_key_obj, timeout=5)
+        for cmd in cmds:
+            ssh.exec_command(cmd)
+        ssh.close()
+        log.info(f"Remote command successfully executed")
+        return True
+    except paramiko.AuthenticationException:
+        log.error(f"Authentication failed for {host}")
+        return None
+    except paramiko.SSHException as e:
+        log.error(f"Unable to establish SSH connection to {host}: {str(e)}")
+        return None
+    except TimeoutError as e:
+        log.error(f"Timeout when establish SSH connection to {host}: {str(e)}")
+        return None
+    except Exception as e:
+        log.error(f"Some error occured: {str(e)}")
+        return None
+
+def copy_file_to_remote(host: str, port: int, username: str, private_key: str, source_path: str, dest_path: str):
+    private_key_obj = rebuild_private_key(private_key)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+        ssh.connect(hostname=host, port=port, username=username, pkey=private_key_obj, timeout=5)
+        ftp_client = ssh.open_sftp()
+        ftp_client.put(source_path, dest_path)
+        ftp_client.close()
+        ssh.close()
+        log.info(f"File {source_path} successfully copy to {dest_path}")
+        return True
+    except paramiko.AuthenticationException:
+        log.error(f"Authentication failed for {host}")
+        return None
+    except paramiko.SSHException as e:
+        log.error(f"Unable to establish SSH connection to {host}: {str(e)}")
+        return None
+    except TimeoutError as e:
+        log.error(f"Timeout when establish SSH connection to {host}: {str(e)}")
+        return None
+    except Exception as e:
+        log.error(f"Some error occured: {str(e)}")
+        return None
