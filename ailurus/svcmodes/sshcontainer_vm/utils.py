@@ -12,6 +12,9 @@ import paramiko
 
 log = logging.getLogger(__name__)
 
+def generate_remote_folder_name(team_id: int, challenge_id: int):
+    return f"/opt/ailurus-container/t{team_id}-c{challenge_id}"
+
 def init_challenge_asset(chall_id, asset_checksum=None, asset_type="artifact"):
     if asset_checksum == None: return None
 

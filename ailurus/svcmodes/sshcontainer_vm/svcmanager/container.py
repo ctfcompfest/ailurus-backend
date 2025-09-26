@@ -3,7 +3,12 @@ from ailurus.models import Challenge, Service, ProvisionMachine, Team
 from ailurus.utils.config import get_app_config, get_config
 
 from ..types import ServiceDetailType, MachineDetail
-from ..utils import init_challenge_asset, execute_remote_command, copy_file_to_remote
+from ..utils import (
+    init_challenge_asset,
+    execute_remote_command,
+    copy_file_to_remote, 
+    generate_remote_folder_name,
+)
 
 from typing import List
 
@@ -15,9 +20,6 @@ import tarfile
 
 log = logging.getLogger(__name__)
 
-
-def generate_remote_folder_name(team_id: int, challenge_id: int):
-    return f"/opt/ailurus-container/t{team_id}-c{challenge_id}"
 
 def generate_team_artifact_path(team_id: int, chall_id: int, artifact_checksum: str):
     assetroot_folder = os.path.join(get_app_config("DATA_DIR"), "..", "worker_data", "artifacts")
