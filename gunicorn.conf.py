@@ -8,4 +8,4 @@ loglevel = "info"
 accesslog = "-"
 errorlog = "-"
 capture_output = True
-preload_app = True
+preload_app = False

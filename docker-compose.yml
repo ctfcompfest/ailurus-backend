@@ -46,9 +46,25 @@ services:
     restart: always
     depends_on:
     - webapp
-  worker:
+  checker:
     build: .
-    command: worker
+    command: checker
+    restart: always
+    volumes:
+    - "./:/opt/app/"
+    depends_on:
+    - webapp
+  svcmanager:
+    build: .
+    command: svcmanager
+    restart: always
+    volumes:
+    - "./:/opt/app/"
+    depends_on:
+    - webapp
+  flagrotator:
+    build: .
+    command: flagrotator
     restart: always
     volumes:
     - "./:/opt/app/"
