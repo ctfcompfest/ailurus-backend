@@ -193,9 +193,9 @@ def run_container(team_id: int, challenge_id: int, artifact_checksum: str):
         cmds=run_cmds,
     )
     if not exec_status:
-        log.info(f"Failed to run service for team_id={team_id}, chall_id={chall_id}")
+        log.info(f"Failed to run service for team_id={team_id}, chall_id={challenge_id}")
         return False
-    log.info(f"Successfully run service for team_id={team_id}, chall_id={chall_id}")
+    log.info(f"Successfully run service for team_id={team_id}, chall_id={challenge_id}")
     return True
 
 
@@ -215,9 +215,9 @@ def delete_container(team_id: int, challenge_id: int):
         cmds=delete_cmds,
     )
     if not exec_status:
-        log.info(f"Failed to delete service for team_id={team_id}, chall_id={chall_id}")
+        log.info(f"Failed to delete service for team_id={team_id}, chall_id={challenge_id}")
         return False
-    log.info(f"Successfully delete service for team_id={team_id}, chall_id={chall_id}")
+    log.info(f"Successfully delete service for team_id={team_id}, chall_id={challenge_id}")
     return True
 
 
@@ -236,7 +236,7 @@ def restart_container(team_id: int, challenge_id: int):
         cmds=restart_cmds,
     )
     if not exec_status:
-        log.info(f"Failed to restart service for team_id={team_id}, chall_id={chall_id}")
+        log.info(f"Failed to restart service for team_id={team_id}, chall_id={challenge_id}")
         return False
-    log.info(f"Successfully restart service for team_id={team_id}, chall_id={chall_id}")
+    log.info(f"Successfully restart service for team_id={team_id}, chall_id={challenge_id}")
     return True

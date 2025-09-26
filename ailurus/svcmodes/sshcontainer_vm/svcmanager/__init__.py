@@ -104,14 +104,14 @@ def handler_svcmanager_task(body: ServiceManagerTaskType, **kwargs):
     log.info("execute %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
     try:
         if body["action"] == "provision" and body["created_by"] == "admin":
-            kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["artifact_checksum"], "artifact")
+            kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["artifact_checksum"], "artifact")
             do_provision(body, **kwargs)
         
         if body["action"] == "delete" and body["created_by"] == "admin":
             do_delete(body, **kwargs)
         
         if body["action"] == "reset":
-            kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["artifact_checksum"], "artifact")
+            kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["artifact_checksum"], "artifact")
             do_reset(body, **kwargs)
         
         if body["action"] == "restart":
