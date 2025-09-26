@@ -1,5 +1,4 @@
 from ailurus.models import ProvisionMachine, Service
-from ailurus.utils.config import get_config, get_app_config
 
 from .utils import execute_remote_command, generate_remote_folder_name
 from .types import FlagrotatorTaskType, ServiceDetailType, MachineDetail

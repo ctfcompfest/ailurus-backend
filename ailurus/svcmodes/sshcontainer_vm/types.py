@@ -14,12 +14,9 @@ class ServiceDetailType(TypedDict):
     ServiceDetailCred = TypedDict(
         "ServiceDetailCreds", {"Address": str, "Username": str, "Password": str}
     )
-    ExposeService = TypedDict(
-        "ExposeService", {"Address": str, "Protocol": str}
-    )
 
     credentials: ServiceDetailCred
-    public_addresses: List[ExposeService]
+    public_addresses: List[str]
     machine_id: int
 
 
