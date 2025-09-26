@@ -94,7 +94,7 @@ def copy_file_to_remote(host: str, port: int, username: str, private_key: str, s
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
-    execute_remote_command(host, port, username, private_key, [f"mkdir -p {os.path.dirname(dest_path)}"])
+    execute_remote_command(host, port, username, private_key, [f"sudo mkdir -p {os.path.dirname(dest_path)}"])
     
     try:
         ssh.connect(hostname=host, port=port, username=username, pkey=private_key_obj, timeout=5)

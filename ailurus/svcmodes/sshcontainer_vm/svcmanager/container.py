@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 def generate_team_artifact_path(team_id: int, chall_id: int, artifact_checksum: str):
     assetroot_folder = os.path.join(get_app_config("DATA_DIR"), "..", "worker_data", "artifacts")
-    asset_folder = os.path.join(assetroot_folder, f"t{team_id}-c{chall_id}-{artifact_checksum}")
+    asset_folder = os.path.join(assetroot_folder, f"t{team_id}-c{chall_id}")
     return asset_folder
 
 def get_provision_machine(team_id: int, challenge_id: int):
@@ -185,9 +185,9 @@ def run_container(team_id: int, challenge_id: int, artifact_checksum: str):
         return
 
     run_cmds = [
-        f"mkdir -p {os.path.dirname(folder_name)}",
-        f"tar -xz -C {os.path.dirname(folder_name)} -f {folder_name}.tar && rm -f {folder_name}.tar",
-        f"cd {folder_name} && docker compose up --build -d",
+        f"sudo mkdir -p {os.path.dirname(folder_name)}",
+        f"sudo tar -xz -C {os.path.dirname(folder_name)} -f {folder_name}.tar && sudo rm -f {folder_name}.tar",
+        f"sudo docker compose -f {folder_name}/docker-compose.yml up --build -d",
     ]    
     exec_status = execute_remote_command(
         host=machine.host,
@@ -208,8 +208,8 @@ def delete_container(team_id: int, challenge_id: int):
     machine = get_deployed_machine(team_id, challenge_id)
     machine_cred: MachineDetail = json.loads(machine.detail)
     delete_cmds = [
-        f"cd {folder_name} && docker compose down --volumes",
-        f"rm -rf {folder_name}",
+        f"docker compose -f {folder_name}/docker-compose.yml down --volumes",
+        f"sudo rm -rf {folder_name}",
     ]
     exec_status = execute_remote_command(
         host=machine.host,
@@ -230,7 +230,7 @@ def restart_container(team_id: int, challenge_id: int):
     machine = get_deployed_machine(team_id, challenge_id)
     machine_cred: MachineDetail = json.loads(machine.detail)
     restart_cmds = [
-        f"cd {folder_name} && docker compose restart",
+        f"docker compose -f {folder_name}/docker-compose.yml restart",
     ]    
     exec_status = execute_remote_command(
         host=machine.host,
