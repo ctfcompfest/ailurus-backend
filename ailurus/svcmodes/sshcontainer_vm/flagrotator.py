@@ -20,10 +20,10 @@ def handler_flagrotator_task(body: FlagrotatorTaskType, **kwargs):
     
     machine: ProvisionMachine = ProvisionMachine.query.filter_by(
         id=service_detail["machine_id"],
-    )
+    ).first()
     machine_cred: MachineDetail = json.loads(machine.detail)
     flagrotate_cmd = [
-        f"echo '{flag_value}' > {remote_path}",
+        f"echo '{flag_value}' | sudo tee {remote_path}/flag/flag.txt",
     ]
     
     exec_status = execute_remote_command(
