@@ -131,7 +131,7 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
     }
     for idx, port in enumerate(templating_var["EXPOSE_PORT"]):
         mapping[f"EXPOSE_PORT_{idx}"] = port
-    compose_content = compose_content.format(mapping)
+    compose_content = compose_content.format(**mapping)
 
     with open(os.path.join(team_artifact_path, "docker-compose.yml"), "w") as f:
         f.write(compose_content)
