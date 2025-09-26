@@ -1,25 +1,23 @@
 from typing import TypedDict, List, Dict
 import datetime
 
-
 class ServiceManagerTaskType(TypedDict):
     action: str
-    initiator: str
     artifact_checksum: str
-    testcase_checksum: str
     challenge_id: int
-    challenge_slug: str
     team_id: int
-    time_created: str
+    created_at: str
+    created_by: str
 
 
 class ServiceDetailType(TypedDict):
-    ServiceDetailCreds = TypedDict(
-        "ServiceDetailCreds", {"Address": str, "Username": str, "Private Key": str}
+    ServiceDetailCred = TypedDict(
+        "ServiceDetailCreds", {"Address": str, "Username": str, "Password": str}
     )
 
-    credentials: ServiceDetailCreds
+    credentials: ServiceDetailCred
     public_addresses: List[str]
+    machine_id: int
 
 
 class FlagrotatorTaskType(TypedDict):
@@ -49,3 +47,7 @@ class CheckerResultDetailType(TypedDict):
     exception: str
     checker_output: Dict
     time_finished: datetime.datetime
+
+class MachineDetail(TypedDict):
+    username: str
+    private_key: str

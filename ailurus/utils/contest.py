@@ -11,6 +11,7 @@ from ailurus.models import (
     Challenge,
 )
 from ailurus.utils.config import get_app_config, get_config, set_config
+from ailurus.utils.scoremode import get_scoremode_module
 
 from datetime import datetime, timezone
 from secrets import choice

@@ -1,42 +1,33 @@
-from ailurus.models import db, CheckerResult, CheckerStatus, Service, Flag
-from ailurus.schema import ServiceSchema, FlagSchema
+from ailurus.models import CheckerAgentReport, db, Flag, Service, CheckerResult, CheckerStatus
+from ailurus.schema import CheckerAgentReportSchema, FlagSchema, ServiceSchema
 from ailurus.utils.checker import execute_check_function_with_timelimit
-from .types import CheckerTaskType
-from .models import CheckerAgentReport
-from .schema import CheckerAgentReportSchema
 
-from sqlalchemy import select
-from typing import List
-
+from .types import CheckerTaskType, CheckerResultDetailType
 from .utils import init_challenge_asset
-from .types import CheckerResultDetailType
 
 import datetime
-import json
 import importlib
+import json
 import logging
 import os
 import traceback
-from multiprocessing.pool import ThreadPool
-from multiprocessing import TimeoutError as MpTimeoutError
+from sqlalchemy import select
+from typing import List
 
 log = logging.getLogger(__name__)
-
 
 def handler_checker_task(body: CheckerTaskType, **kwargs):
     if not body["testcase_checksum"]:
         return False
     tc_folder = init_challenge_asset(
         body["challenge_id"],
-        body["challenge_slug"],
         body["testcase_checksum"],
         "testcase",
     )
-    checker_folder = os.path.join(tc_folder, "checker")
 
     checker_spec = importlib.util.spec_from_file_location(
-        "ailurus.worker_data.testcases.checker.{}".format(body["testcase_checksum"]),
-        os.path.join(checker_folder, "__init__.py"),
+        "ailurus.worker_data.testcases.{}".format(body["testcase_checksum"]),
+        os.path.join(tc_folder, "__init__.py"),
     )
     checker_module = importlib.util.module_from_spec(checker_spec)
     checker_spec.loader.exec_module(checker_module)

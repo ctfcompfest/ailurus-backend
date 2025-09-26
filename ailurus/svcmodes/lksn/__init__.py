@@ -9,5 +9,5 @@ from .routes import checker_agent_blueprint
 import flask
 
 def load(app: flask.Flask):
-    upgrade("lksn")
+    upgrade()
     app.register_blueprint(checker_agent_blueprint)

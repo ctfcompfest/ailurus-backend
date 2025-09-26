@@ -177,3 +177,4 @@ migrations-old
 .adce_data
 .data
 worker_data
+.DS_Store

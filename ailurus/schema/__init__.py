@@ -1,4 +1,5 @@
 from ailurus.models import (
+    CheckerAgentReport,
     Team,
     Service,
     Submission,
@@ -8,7 +9,6 @@ from ailurus.models import (
     CheckerStatus,
     Challenge,
     ChallengeRelease,
-    CheckerAgentReport,
 )
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow import pre_load, post_dump, fields
@@ -114,6 +114,21 @@ class CheckerResultSchema(SQLAlchemyAutoSchema):
     def parse_detail(self, data, **kwargs):
         data['detail'] = json.loads(data['detail'])
         return data
+    
+class CheckerAgentReportSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = CheckerAgentReport
+
+    @pre_load
+    def dumps_report(self, data, **kwargs):
+        if "report" in data and isinstance(data["report"], (dict, list)):
+            data["report"] = json.dumps(data["report"])
+        return data
+
+    @post_dump
+    def parse_report(self, data, **kwargs):
+        data["report"] = json.loads(data.get("report", "{}"))
+        return data
 
 class ChallengeSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -137,21 +152,6 @@ class ChallengeSchema(SQLAlchemyAutoSchema):
 class FlagSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Flag
-
-class CheckerAgentReportSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = CheckerAgentReport
-    
-    @pre_load
-    def dumps_report(self, data, **kwargs):
-        if 'report' in data and isinstance(data['report'], (dict, list)):
-            data['report'] = json.dumps(data['report'])
-        return data
-    
-    @post_dump
-    def parse_report(self, data, **kwargs):
-        data['report'] = json.loads(data['report'])
-        return data
     
 class CheckerTaskType(TypedDict):
     time_limit: int

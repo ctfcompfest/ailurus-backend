@@ -2,7 +2,7 @@ from ailurus.models import db, Challenge, ChallengeRelease
 from ailurus.schema import ChallengeSchema
 from ailurus.utils.config import get_app_config
 from ailurus.utils.file import compute_md5
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from marshmallow.exceptions import ValidationError
 from typing import List
 from sqlalchemy import delete
@@ -97,6 +97,21 @@ def patch_detail_challenge(challenge_id):
 
     return jsonify(status="success", data=challenge_schema.dump(chall))
 
+@challenge_blueprint.get("/<int:challenge_id>/testcase/")
+def get_testcase_challenge(challenge_id):
+    chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
+    if not chall:
+        return jsonify(status="not found", message="challenge not found."), 404
+    if chall.testcase_checksum == None:
+        return jsonify(status="failed", message="testcase not found."), 400
+    tczip_path = os.path.join(get_app_config("DATA_DIR"), "challenges", f"testcase-{chall.id}.zip")
+    return send_file(
+        tczip_path,
+        as_attachment=True,
+        download_name=f"testcase-{chall.id}.zip"
+    )
+
+
 @challenge_blueprint.post("/<int:challenge_id>/testcase/")
 def upload_testcase_challenge(challenge_id):
     chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
@@ -118,6 +133,21 @@ def upload_testcase_challenge(challenge_id):
 
     db.session.commit()
     return jsonify(status="success", data=challenge_schema.dump(chall))
+
+
+@challenge_blueprint.get("/<int:challenge_id>/artifact/")
+def get_artifact_challenge(challenge_id):
+    chall: Challenge | None = Challenge.query.filter_by(id=challenge_id).first()
+    if not chall:
+        return jsonify(status="not found", message="challenge not found."), 404
+    if chall.artifact_checksum == None:
+        return jsonify(status="failed", message="artifact not found."), 400
+    artifactzip_path = os.path.join(get_app_config("DATA_DIR"), "challenges", f"artifact-{chall.id}.zip")
+    return send_file(
+        artifactzip_path,
+        as_attachment=True,
+        download_name=f"artifact-{chall.id}.zip"
+    )
 
 
 @challenge_blueprint.post("/<int:challenge_id>/artifact/")

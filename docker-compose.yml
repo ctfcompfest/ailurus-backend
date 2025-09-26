@@ -30,7 +30,7 @@ services:
       --requirepass P@ssw0rd
   webapp:
     build: .
-    command: webapp --spawn 10
+    command: webapp
     restart: always
     ports:
     - "5000:5000"
@@ -46,11 +46,30 @@ services:
     restart: always
     depends_on:
     - webapp
-  worker:
+  flagrotator:
     build: .
-    command: worker
+    command: flagrotator
     restart: always
     volumes:
     - "./:/opt/app/"
     depends_on:
-    - webapp
+    - db
+    - rabbitmq
+  checker:
+    build: .
+    command: checker
+    restart: always
+    volumes:
+    - "./:/opt/app/"
+    depends_on:
+    - db
+    - rabbitmq
+  svcmanager:
+    build: .
+    command: svcmanager
+    restart: always
+    volumes:
+    - "./:/opt/app/"
+    depends_on:
+    - db
+    - rabbitmq

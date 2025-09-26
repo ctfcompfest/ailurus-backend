@@ -2,13 +2,23 @@ from typing import List, TypedDict, Dict, Tuple, Any
 import datetime
 import requests
 
+class ServiceDetailType(TypedDict):
+    ServiceDetailCred = TypedDict(
+        "ServiceDetailCreds", {"Address": str, "Username": str, "Password": str}
+    )
+
+    credentials: ServiceDetailCred
+    public_addresses: List[str]
+    machine_id: int
+
+
 class ServiceType(TypedDict):
     id: int
     team_id: int
     challenge_id: int
     order: int
     secret: str
-    detail: Dict[str, Any]
+    detail: ServiceDetailType
     time_created: datetime.datetime
 
 class FlagType(TypedDict):
@@ -38,6 +48,7 @@ def create_result(stt):
     }
 
 def main(services: List[ServiceType], flags: List[FlagType], checker_agent_report: CheckerAgentReportType | None) -> Tuple[bool, Dict]:
+    secret = services[0]["secret"]
     service_addresses: List[str] = services[0]["detail"]['public_addresses']
     if checker_agent_report is None:
         return create_result("agent lost")
