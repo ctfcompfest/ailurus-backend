@@ -24,11 +24,10 @@ def handler_checker_task(body: CheckerTaskType, **kwargs):
         body["testcase_checksum"],
         "testcase",
     )
-    checker_folder = os.path.join(tc_folder, "checker")
 
     checker_spec = importlib.util.spec_from_file_location(
         "ailurus.worker_data.testcases.{}".format(body["testcase_checksum"]),
-        os.path.join(checker_folder, "__init__.py"),
+        os.path.join(tc_folder, "__init__.py"),
     )
     checker_module = importlib.util.module_from_spec(checker_spec)
     checker_spec.loader.exec_module(checker_module)
