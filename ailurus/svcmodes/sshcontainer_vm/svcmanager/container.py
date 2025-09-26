@@ -172,7 +172,7 @@ def run_container(team_id: int, challenge_id: int, artifact_checksum: str):
         username=machine_cred["username"],
         private_key=machine_cred["private_key"],
         source_path=zip_team_artifacts,
-        dest_path=f"{folder_name}.zip",
+        dest_path=f"{folder_name}.tar",
     )
     if not exec_status:
         log.info(f"Failed to copy artifact for team_id={team_id}, chall_id={challenge_id}")
