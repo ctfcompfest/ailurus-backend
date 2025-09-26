@@ -21,7 +21,6 @@ def handler_checker_task(body: CheckerTaskType, **kwargs):
         return False
     tc_folder = init_challenge_asset(
         body["challenge_id"],
-        body["challenge_slug"],
         body["testcase_checksum"],
         "testcase",
     )
