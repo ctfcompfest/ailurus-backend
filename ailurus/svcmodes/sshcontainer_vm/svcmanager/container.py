@@ -124,13 +124,14 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
     with open(os.path.join(team_artifact_path, "docker-compose.yml")) as f:
         compose_content = f.read()
     
-    for key, val in templating_var.items():
-        if isinstance(val, str):
-            compose_content = compose_content.format(**{key:val})
-        if isinstance(val, list):
-            for idx, elm in enumerate(val):
-                new_key = f"{key}_{idx}"
-                compose_content = compose_content.format(**{new_key:elm})
+    mapping = {
+        "SECRET": templating_var["SECRET"],
+        "SSH_PASSWORD": templating_var["SSH_PASSWORD"],
+        "SSH_PORT": templating_var["SSH_PORT"],
+    }
+    for idx, port in enumerate(templating_var["EXPOSE_PORT"]):
+        mapping[f"EXPOSE_PORT_{idx}"] = port
+    compose_content = compose_content.format(mapping)
 
     with open(os.path.join(team_artifact_path, "docker-compose.yml"), "w") as f:
         f.write(compose_content)
