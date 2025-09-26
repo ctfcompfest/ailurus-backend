@@ -2,9 +2,10 @@ from ailurus.models import db
 from ailurus.models import Challenge, Service, ProvisionMachine, Team
 from ailurus.utils.config import get_config, get_app_config, is_contest_running
 
-from .models import ManageServicePendingList
-from .types import ServiceDetailType, ServiceManagerTaskType, MachineDetail
-from .utils import init_challenge_asset, execute_remote_command
+from ..models import ManageServicePendingList
+from ..types import ServiceDetailType, ServiceManagerTaskType, MachineDetail
+from ..utils import init_challenge_asset, execute_remote_command, copy_file_to_remote
+from .core import do_delete, do_provision, do_reset, do_restart
 
 from sqlalchemy import false as sql_false
 from typing import Mapping, Any
@@ -127,111 +128,3 @@ def handler_svcmanager_task(body: ServiceManagerTaskType, **kwargs):
         db.session.commit()
     
     log.info("finish executing %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
-
-def generate_folder_name(team_id: int, challenge_id: int):
-    return f"/opt/ailurus-container/t{team_id}-c{challenge_id}"
-
-def get_provision_machine(team_id: int, challenge_id: int):
-    machine_match_algo = get_config("SSHVM:MACHINE_MATCH_NAME", "challenge_slug")
-    if machine_match_algo == "challenge_slug":
-        challenge: Challenge = Challenge.query.filter_by(
-            id=challenge_id
-        ).first()
-        if not challenge:
-            raise ValueError("Challenge not found")
-        return ProvisionMachine.query.filter_by(
-            name=challenge.slug
-        ).first()
-
-    if machine_match_algo == "team_name":
-        team: Team = Team.query.filter_by(
-            id=team_id
-        ).first()
-        if not team:
-            raise ValueError("Team not found")
-        return ProvisionMachine.query.filter_by(
-            name=team.name
-        ).first()
-
-    if machine_match_algo == "random":
-        raise NotImplementedError("Machine match algo error")
-
-def do_provision(body: ServiceManagerTaskType, **kwargs):
-    pass
-
-def do_delete(body: ServiceManagerTaskType, **kwargs):
-    team_id = body["team_id"]
-    chall_id = body["challenge_id"]
-    folder_name = generate_folder_name(team_id, chall_id)
-    service: Service = Service.query.filter_by(
-        team_id=team_id,
-        challenge_id=chall_id,
-    ).first()
-    if not service:
-        raise ValueError(f"Service for team_id={team_id}, chall_id={chall_id} not found")
-    service_detail: ServiceDetailType = json.loads(service.detail)
-    machine_id = service_detail["machine_id"]
-    
-    machine: ProvisionMachine = ProvisionMachine.query.filter_by(
-        id=machine_id
-    ).first()
-    if not service:
-        raise ValueError(f"Provision machine for service_id={service.id} with machine_id={machine_id} not found")
-    
-    machine_cred: MachineDetail = json.loads(machine.detail)
-    delete_cmds = [
-        f"cd {folder_name} && docker compose down --volumes",
-        f"rm -rf {folder_name}",
-    ]    
-    exec_status = execute_remote_command(
-        host=machine.host,
-        port=machine.port,
-        username=machine_cred["username"],
-        private_key=machine_cred["private_key"],
-        cmds=delete_cmds,
-    )
-    if not exec_status:
-        log.info(f"Failed to delete service for team_id={team_id}, chall_id={chall_id}")
-        return
-    
-    db.session.delete(service)
-    db.session.commit()
-    log.info(f"Successfully delete service for team_id={team_id}, chall_id={chall_id}")
-    
-    
-def do_reset(body: ServiceManagerTaskType, **kwargs):
-    pass
-
-
-def do_restart(body: ServiceManagerTaskType, **kwargs):
-    team_id = body["team_id"]
-    chall_id = body["challenge_id"]
-    folder_name = generate_folder_name(team_id, chall_id)
-    service: Service = Service.query.filter_by(
-        team_id=team_id,
-        challenge_id=chall_id,
-    ).first()
-    if not service:
-        raise ValueError(f"Service for team_id={team_id}, chall_id={chall_id} not found")
-    service_detail: ServiceDetailType = json.loads(service.detail)
-    machine_id = service_detail["machine_id"]
-    
-    machine: ProvisionMachine = ProvisionMachine.query.filter_by(
-        id=machine_id
-    ).first()
-    if not service:
-        raise ValueError(f"Provision machine for service_id={service.id} with machine_id={machine_id} not found")
-    
-    machine_cred: MachineDetail = json.loads(machine.detail)
-    restart_cmds = [
-        f"cd {folder_name} && docker compose restart",
-    ]    
-    exec_status = execute_remote_command(
-        host=machine.host,
-        port=machine.port,
-        username=machine_cred["username"],
-        private_key=machine_cred["private_key"],
-        cmds=restart_cmds,
-    )
-    if exec_status:
-        log.info(f"Successfully restart service for team_id={team_id}, chall_id={chall_id}")
