@@ -102,29 +102,31 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
 
 def handler_svcmanager_task(body: ServiceManagerTaskType, **kwargs):
     log.info("execute %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
-
-    if body["action"] == "provision" and body["created_by"] == "admin":
-        kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["artifact_checksum"], "artifact")
-        do_provision(body, **kwargs)
+    try:
+        if body["action"] == "provision" and body["created_by"] == "admin":
+            kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["artifact_checksum"], "artifact")
+            do_provision(body, **kwargs)
+        
+        if body["action"] == "delete" and body["created_by"] == "admin":
+            do_delete(body, **kwargs)
+        
+        if body["action"] == "reset":
+            kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["artifact_checksum"], "artifact")
+            do_reset(body, **kwargs)
+        
+        if body["action"] == "restart":
+            do_restart(body, **kwargs)
+        log.info("finish executing %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
+    except Exception as e:
+        raise e
+    finally:
+        pending_list = ManageServicePendingList.query.filter_by(
+            team_id=body["team_id"],
+            challenge_id=body["challenge_id"],
+            is_done=False,
+        ).first()
+        if pending_list:
+            pending_list.is_done = True
+            pending_list.completed_at = datetime.datetime.now(datetime.timezone.utc)
+            db.session.commit()
     
-    if body["action"] == "delete" and body["created_by"] == "admin":
-        do_delete(body, **kwargs)
-    
-    if body["action"] == "reset":
-        kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["artifact_checksum"], "artifact")
-        do_reset(body, **kwargs)
-    
-    if body["action"] == "restart":
-        do_restart(body, **kwargs)
-    
-    pending_list = ManageServicePendingList.query.filter_by(
-        team_id=body["team_id"],
-        challenge_id=body["challenge_id"],
-        is_done=False,
-    ).first()
-    if pending_list:
-        pending_list.is_done = True
-        pending_list.completed_at = datetime.datetime.now(datetime.timezone.utc)
-        db.session.commit()
-    
-    log.info("finish executing %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
