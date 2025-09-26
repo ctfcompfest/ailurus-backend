@@ -61,8 +61,8 @@ def generate_port_base_number(team_id: int, challenge_id: int):
         if not challenge:
             raise ValueError("Challenge not found")
         
-        num_team_below = Team.query.filter_by(
-            id < team_id
+        num_team_below = Team.query.filter(
+            Team.id < team_id
         ).count()
         base_number = num_team_below * (challenge.num_service + 1) + 40000
         return base_number
@@ -73,8 +73,8 @@ def generate_port_base_number(team_id: int, challenge_id: int):
         ).first()
         if not team:
             raise ValueError("Team not found")
-        challenges_below: List[Challenge] = Challenge.query.filter_by(
-            id < challenge_id
+        challenges_below: List[Challenge] = Challenge.query.filter(
+            Challenge.id < challenge_id
         ).all()
         num_chall_services = 0
         for chall in challenges_below:
@@ -105,7 +105,7 @@ def get_deployed_machine(team_id: int, challenge_id: int):
 def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
     artifact_path = init_challenge_asset(challenge_id, artifact_checksum)
     
-    challenge: Challenge = Challenge.query.filter_by(id = challenge_id)
+    challenge: Challenge = Challenge.query.filter_by(id = challenge_id).first()
     
     port_base_number = generate_port_base_number(team_id, challenge_id)
     machine: ProvisionMachine = get_provision_machine(team_id, challenge_id)
