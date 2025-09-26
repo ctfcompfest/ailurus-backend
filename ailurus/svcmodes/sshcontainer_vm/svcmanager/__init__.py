@@ -103,11 +103,11 @@ def handler_svcmanager_request(**kwargs) -> flask.Response:
 def handler_svcmanager_task(body: ServiceManagerTaskType, **kwargs):
     log.info("execute %s task for team_id=%s chall_id=%s", body["action"], body["team_id"], body["challenge_id"])
 
-    if body["action"] == "provision" and body["initiator"] == "admin":
+    if body["action"] == "provision" and body["created_by"] == "admin":
         kwargs['artifact_folder'] = init_challenge_asset(body["challenge_id"], body["challenge_slug"], body["artifact_checksum"], "artifact")
         do_provision(body, **kwargs)
     
-    if body["action"] == "delete" and body["initiator"] == "admin":
+    if body["action"] == "delete" and body["created_by"] == "admin":
         do_delete(body, **kwargs)
     
     if body["action"] == "reset":
