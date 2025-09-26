@@ -112,8 +112,8 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
     templating_var = {
         "SSH_PORT": port_base_number,
         "EXPOSE_PORT": [port_base_number + i + 1 for i in range(challenge.num_service)],
-        "SECRET": secrets.token_hex(3),
-        "SSH_PASSWORD": secrets.token_hex(6),
+        "SECRET": secrets.token_hex(8),
+        "SSH_PASSWORD": secrets.token_hex(8),
     }
     
     # copy artifact path to team artifact

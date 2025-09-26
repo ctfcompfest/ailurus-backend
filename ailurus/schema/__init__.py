@@ -127,7 +127,7 @@ class CheckerAgentReportSchema(SQLAlchemyAutoSchema):
 
     @post_dump
     def parse_report(self, data, **kwargs):
-        data["report"] = json.loads(data["report"])
+        data["report"] = json.loads(data.get("report", "{}"))
         return data
 
 class ChallengeSchema(SQLAlchemyAutoSchema):
