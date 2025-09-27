@@ -147,8 +147,9 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
     with tarfile.open(team_artifact_path + ".tar", "w:gz") as tar:
         tar.add(team_artifact_path, arcname=os.path.basename(team_artifact_path))
     shutil.rmtree(team_artifact_path)
+    tar_team_artifacts = f"{generate_team_artifact_path(team_id, challenge_id, artifact_checksum)}.tar"
     delete_cmds = [
-        f"sudo rm -rf {folder_name}*",
+        f"sudo rm -rf {team_artifact_path}*",
     ]
     exec_status = execute_remote_command(
         host=machine.host,
@@ -163,7 +164,7 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
         username=machine_cred["username"],
         private_key=machine_cred["private_key"],
         source_path=tar_team_artifacts,
-        dest_path=f"{folder_name}.tar",
+        dest_path=f"{team_artifact_path}.tar",
     )
     if not exec_status:
         log.info(f"Failed to copy artifact for team_id={team_id}, chall_id={challenge_id}")
@@ -195,7 +196,6 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
 def run_container(team_id: int, challenge_id: int, artifact_checksum: str):
     folder_name = generate_remote_folder_name(team_id, challenge_id)
     machine = get_deployed_machine(team_id, challenge_id)
-    tar_team_artifacts = f"{generate_team_artifact_path(team_id, challenge_id, artifact_checksum)}.tar"
     
     run_cmds = [
         f"sudo mkdir -p {os.path.dirname(folder_name)}",
