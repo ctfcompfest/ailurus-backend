@@ -131,6 +131,9 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
         "SECRET": templating_var["SECRET"],
         "SSH_PASSWORD": templating_var["SSH_PASSWORD"],
         "SSH_PORT": templating_var["SSH_PORT"],
+        "TEAM_ID": team_id,
+        "CHALLENGE_ID": challenge_id,
+        "CHALLENGE_SLUG": challenge.slug,
     }
     for idx, port in enumerate(templating_var["EXPOSE_PORT"]):
         mapping[f"EXPOSE_PORT_{idx}"] = port
