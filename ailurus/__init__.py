@@ -127,7 +127,8 @@ def create_webapp_daemon(env_file=".env"):
 
         CORS(app)
         cache.init_app(app)
-        limiter.init_app(app, storage_uri=app.config["CACHE_REDIS_URL"])
+        app.config["RATELIMIT_STORAGE_URI"] = app.config["CACHE_REDIS_URL"]
+        limiter.init_app(app)
         app.register_error_handler(429, rate_limit_response)
 
         # Socket
