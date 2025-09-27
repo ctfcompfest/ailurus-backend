@@ -77,6 +77,10 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
     ).scalar() or 0
     
     current_tick = get_config("CURRENT_TICK", 0)
+    current_round = get_config("CURRENT_ROUND", 0)
+    
+    if current_round != 1:
+        current_tick = get_config("NUMBER_TICK")
     defense_score = 0.0
     DEF = 10.0
     
