@@ -1,7 +1,21 @@
-from ailurus.models import db, Challenge, ChallengeRelease, Flag, ManageServiceUnlockMode, Solve, Submission, Team
-from ailurus.utils.config import is_contest_running, is_scoreboard_freeze, get_config, is_defense_phased
+from ailurus.models import (
+    db,
+    Challenge,
+    ChallengeRelease,
+    Flag,
+    ManageServiceUnlockMode,
+    Solve,
+    Submission,
+    Team,
+)
+from ailurus.utils.config import (
+    is_contest_running,
+    is_scoreboard_freeze,
+    get_config,
+    is_defense_phased,
+)
 from ailurus.utils.contest import calculate_submission_score
-from ailurus.utils.security import validteam_only, current_team
+from ailurus.utils.security import validteam_only, current_team, limiter
 from ailurus.utils.socket import send_attack_event
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
@@ -43,7 +57,9 @@ def submit_flag(team: Team, flag: str):
     if prev_correct_submission:
         return {"flag": flag, "verdict": "flag already submitted."}
 
-    prev_solve = Solve.query.filter_by(team_id=team.id, challenge_id=flag_found.challenge_id).first()
+    prev_solve = Solve.query.filter_by(
+        team_id=team.id, challenge_id=flag_found.challenge_id
+    ).first()
     if prev_solve == None:
         if get_config("UNLOCK_MODE") == ManageServiceUnlockMode.SOLVE_FIRST.value:
             if flag_found.team_id == team.id:
@@ -60,7 +76,9 @@ def submit_flag(team: Team, flag: str):
     new_submission.verdict = True
     new_submission.flag_id = flag_found.id
     new_submission.challenge_id = flag_found.challenge_id
-    new_submission.point = calculate_submission_score(attacker, defender, flag_found, challenge)
+    new_submission.point = calculate_submission_score(
+        attacker, defender, flag_found, challenge
+    )
     db.session.add(new_submission)
 
     db.session.commit()
@@ -76,6 +94,7 @@ def submit_flags(team: Team, flags: List[str]):
 
 
 @submit_blueprint.post("/")
+@limiter.limit("30 per second")
 def bulk_submit_flag():
     if not is_contest_running():
         return jsonify(status="failed", message="contest is not running."), 400

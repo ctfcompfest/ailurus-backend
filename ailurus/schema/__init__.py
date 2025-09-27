@@ -1,4 +1,5 @@
 from ailurus.models import (
+    CheckerAgentReport,
     Team,
     Service,
     Submission,
@@ -112,6 +113,21 @@ class CheckerResultSchema(SQLAlchemyAutoSchema):
     @post_dump
     def parse_detail(self, data, **kwargs):
         data['detail'] = json.loads(data['detail'])
+        return data
+    
+class CheckerAgentReportSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = CheckerAgentReport
+
+    @pre_load
+    def dumps_report(self, data, **kwargs):
+        if "report" in data and isinstance(data["report"], (dict, list)):
+            data["report"] = json.dumps(data["report"])
+        return data
+
+    @post_dump
+    def parse_report(self, data, **kwargs):
+        data["report"] = json.loads(data.get("report", "{}"))
         return data
 
 class ChallengeSchema(SQLAlchemyAutoSchema):

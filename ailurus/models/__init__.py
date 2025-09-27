@@ -175,6 +175,18 @@ class CheckerResult(db.Model):
     detail: Mapped[str] = mapped_column(Text, doc="JSON format checker result detail.")
     time_created: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
+class CheckerAgentReport(db.Model):
+    __tablename__ = "checker_agent_report"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
+    challenge_id: Mapped[int] = mapped_column(ForeignKey("challenge.id"))
+    source_ip: Mapped[str]
+    report: Mapped[str] = mapped_column(
+        Text, doc="JSON format agent checker result detail."
+    )
+    time_created: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+
 class TeamActivityLog(db.Model):
     __tablename__ = "team_activity_log"
     
