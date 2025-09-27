@@ -17,6 +17,7 @@ from ailurus.utils.config import (
 from ailurus.utils.contest import calculate_submission_score
 from ailurus.utils.security import validteam_only, current_team, limiter
 from ailurus.utils.socket import send_attack_event
+from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 from typing import List
 
@@ -67,7 +68,7 @@ def submit_flag(team: Team, flag: str):
         else:
             solve = Solve(team_id=team.id, challenge_id=flag_found.challenge_id)
             db.session.add(solve)
-
+    solved_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     attacker = Team.query.filter(Team.id == team.id).first()
     defender = Team.query.filter(Team.id == flag_found.team_id).first()
     challenge = Challenge.query.filter(Challenge.id == flag_found.challenge_id).first()
@@ -82,12 +83,8 @@ def submit_flag(team: Team, flag: str):
 
     db.session.commit()
     # Emit attack event only when attacker and defender is different
-    if (
-        (flag_found.team_id != team.id)
-        and is_contest_running()
-        and not is_scoreboard_freeze()
-    ):
-        send_attack_event(attacker, defender, challenge)
+    if (flag_found.team_id != team.id) and is_contest_running() and not is_scoreboard_freeze():
+        send_attack_event(attacker, defender, challenge, solved_at)
 
     return {"flag": flag, "verdict": "flag is correct."}
 
@@ -102,24 +99,13 @@ def bulk_submit_flag():
     if not is_contest_running():
         return jsonify(status="failed", message="contest is not running."), 400
     if is_defense_phased():
-        return (
-            jsonify(
-                status="failed",
-                message="flag submission are not allowed in defense phase.",
-            ),
-            400,
-        )
+        return jsonify(status="failed", message="flag submission are not allowed in defense phase."), 400
 
     if "flags" in request.json:
         flags = request.get_json().get("flags")
         max_submit = get_config("MAX_BULK_SUBMIT", 100)
         if len(flags) > max_submit:
-            return (
-                jsonify(
-                    status="failed", message=f"maximum {max_submit} flags at a time."
-                ),
-                400,
-            )
+            return jsonify(status="failed", message=f"maximum {max_submit} flags at a time."), 400
 
         response = submit_flags(current_team, flags)
         return jsonify(status="success", data=response)
@@ -129,9 +115,6 @@ def bulk_submit_flag():
         if response["verdict"] == "flag is correct.":
             return jsonify(status="success", message=response["verdict"], data=response)
         else:
-            return (
-                jsonify(status="failed", message=response["verdict"], data=response),
-                400,
-            )
+            return jsonify(status="failed", message=response["verdict"], data=response), 400
 
     return jsonify(status="failed", message="missing 'flags' field."), 400
