@@ -8,7 +8,16 @@ from typing import List, Optional
 
 import enum
 
-db = SQLAlchemy()
+db = SQLAlchemy(
+    engine_options={
+        "pool_size": 50,
+        "max_overflow": 100,
+        "pool_timeout": 30,
+        "pool_recycle": 1800,
+        "pool_pre_ping": True,
+        "echo": False,
+    },
+)
 migrate = Migrate()
 
 class ManageServiceUnlockMode(enum.Enum):
