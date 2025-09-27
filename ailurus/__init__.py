@@ -3,7 +3,7 @@ from ailurus.models import db, migrate, Team
 from ailurus.routes import app_routes
 from ailurus.utils.cache import cache
 from ailurus.utils.cors import CORS
-# from ailurus.utils.security import limiter
+from ailurus.utils.security import limiter, rate_limit_response
 from ailurus.utils.socket import socketio
 from ailurus.utils.svcmode import load_all_svcmode
 from ailurus.worker import create_keeper, create_worker
@@ -17,16 +17,18 @@ import sqlalchemy
 import time
 import logging
 
+
 def create_logger(logname):
     logging.basicConfig(
-        level=logging.INFO, # Set the logging level
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', # Log message format
-        datefmt='%Y-%m-%d %H:%M:%S', # Date format
+        level=logging.INFO,  # Set the logging level
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log message format
+        datefmt="%Y-%m-%d %H:%M:%S",  # Date format
         handlers=[
-            logging.FileHandler(logname), # Log to a file
-            logging.StreamHandler() # Log to the console
+            logging.FileHandler(logname),  # Log to a file
+            logging.StreamHandler(),  # Log to the console
         ],
     )
+
 
 def setup_jwt_app(app: Flask):
     app.config["JWT_SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
@@ -55,6 +57,7 @@ def init_data_dir(app):
         dirpath = os.path.join(app.config["DATA_DIR"], d)
         os.makedirs(dirpath, exist_ok=True)
 
+
 def create_app(env_file=".env"):
     env_var = dotenv.dotenv_values(env_file)
     app = Flask(
@@ -67,15 +70,16 @@ def create_app(env_file=".env"):
         app.config.from_prefixed_env()
         app.config.from_mapping(env_var)
         app.url_map.strict_slashes = False
-        
+
         # Data
         db.init_app(app)
         migrate.init_app(app, db)
         init_data_dir(app)
-                
+
         # Load all svcmode
         load_all_svcmode(app)
     return app
+
 
 def create_keeper_daemon(env_file=".env"):
     app = create_app(env_file)
@@ -88,12 +92,13 @@ def create_keeper_daemon(env_file=".env"):
         create_keeper(app)
 
     log = logging.getLogger(__name__)
-    log.info('Keeper is running. To exit press CTRL+C')
+    log.info("Keeper is running. To exit press CTRL+C")
     try:
         while True:
             time.sleep(30)
     except KeyboardInterrupt:
         return
+
 
 def create_worker_daemon(worker_type: str, env_file=".env"):
     configs = dotenv.dotenv_values(env_file)
@@ -110,7 +115,8 @@ def create_worker_daemon(worker_type: str, env_file=".env"):
             create_worker(worker_type, **configs)
         except KeyboardInterrupt:
             return
-    
+
+
 def create_webapp_daemon(env_file=".env"):
     app = create_app(env_file)
     with app.app_context():
@@ -121,29 +127,31 @@ def create_webapp_daemon(env_file=".env"):
 
         CORS(app)
         cache.init_app(app)
-        # limiter.init_app(app)
-        
+        app.config["RATELIMIT_STORAGE_URI"] = app.config["CACHE_REDIS_URL"]
+        limiter.init_app(app)
+        app.register_error_handler(429, rate_limit_response)
+
         # Socket
         socketio.init_app(app, message_queue=app.config["CACHE_REDIS_URL"])
 
         # API
         app.register_blueprint(app_routes)
-        
+
         @app.after_request
         def log_request(response):
-            if request.path == '/socket.io/':
+            if request.path == "/socket.io/":
                 return response
-            
+
             log_line = (
-                f'{request.remote_addr} - - '
+                f"{request.remote_addr} - - "
                 f'[{datetime.datetime.now().strftime("%d/%b/%Y:%H:%M:%S %z")}] '
                 f'""{request.method} {request.path} {request.environ.get("SERVER_PROTOCOL")}"" '
-                f'{response.status_code} {response.content_length} '
+                f"{response.status_code} {response.content_length} "
                 f'""{request.referrer or "-"}" " "{request.user_agent}""'
             )
             app.logger.info(log_line)
             return response
-        
+
         # Keeper
         create_keeper(app)
     return app
