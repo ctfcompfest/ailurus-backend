@@ -120,7 +120,7 @@ def create_worker_daemon(worker_type: str, env_file=".env"):
 def create_webapp_daemon(env_file=".env"):
     app = create_app(env_file)
     with app.app_context():
-        create_logger(os.path.join(app.config["DATA_DIR"], "logs", "webapp.log"))
+        # create_logger(os.path.join(app.config["DATA_DIR"], "logs", "webapp.log"))
 
         # Security
         setup_jwt_app(app)
@@ -136,21 +136,6 @@ def create_webapp_daemon(env_file=".env"):
 
         # API
         app.register_blueprint(app_routes)
-
-        @app.after_request
-        def log_request(response):
-            if request.path == "/socket.io/":
-                return response
-
-            log_line = (
-                f"{request.remote_addr} - - "
-                f'[{datetime.datetime.now().strftime("%d/%b/%Y:%H:%M:%S %z")}] '
-                f'""{request.method} {request.path} {request.environ.get("SERVER_PROTOCOL")}"" '
-                f"{response.status_code} {response.content_length} "
-                f'""{request.referrer or "-"}" " "{request.user_agent}""'
-            )
-            app.logger.info(log_line)
-            return response
 
         # Keeper
         create_keeper(app)
