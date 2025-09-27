@@ -108,6 +108,7 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
             CheckerResult.team_id == team_id,
             CheckerResult.status == CheckerStatus.VALID,
             CheckerResult.time_created <= freeze_time,
+            CheckerResult.tick > 0
         )
     ).scalar()
     checker_faulty = db.session.execute(
@@ -116,6 +117,7 @@ def calculate_team_chall_leaderboard_entry(team_id: int, chall_id: int, freeze_t
             CheckerResult.team_id == team_id,
             CheckerResult.status == CheckerStatus.FAULTY,
             CheckerResult.time_created <= freeze_time,
+            CheckerResult.tick > 0
         )
     ).scalar()
     
