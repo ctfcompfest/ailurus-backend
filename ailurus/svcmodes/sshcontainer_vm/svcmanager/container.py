@@ -140,10 +140,22 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
         f.write(compose_content)
     
     # Archive team artifact
+    machine_cred: MachineDetail = json.loads(machine.detail)
     with tarfile.open(team_artifact_path + ".tar", "w:gz") as tar:
         tar.add(team_artifact_path, arcname=os.path.basename(team_artifact_path))
     shutil.rmtree(team_artifact_path)
-    
+    exec_status = copy_file_to_remote(
+        host=machine.host,
+        port=machine.port,
+        username=machine_cred["username"],
+        private_key=machine_cred["private_key"],
+        source_path=tar_team_artifacts,
+        dest_path=f"{folder_name}.tar",
+    )
+    if not exec_status:
+        log.info(f"Failed to copy artifact for team_id={team_id}, chall_id={challenge_id}")
+        return
+
     # Create service object based on templating value
     service_detail: ServiceDetailType = {
         "machine_id": machine.id,
@@ -170,23 +182,11 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
 def run_container(team_id: int, challenge_id: int, artifact_checksum: str):
     folder_name = generate_remote_folder_name(team_id, challenge_id)
     machine = get_deployed_machine(team_id, challenge_id)
-    machine_cred: MachineDetail = json.loads(machine.detail)
     tar_team_artifacts = f"{generate_team_artifact_path(team_id, challenge_id, artifact_checksum)}.tar"
-    exec_status = copy_file_to_remote(
-        host=machine.host,
-        port=machine.port,
-        username=machine_cred["username"],
-        private_key=machine_cred["private_key"],
-        source_path=tar_team_artifacts,
-        dest_path=f"{folder_name}.tar",
-    )
-    if not exec_status:
-        log.info(f"Failed to copy artifact for team_id={team_id}, chall_id={challenge_id}")
-        return
-
+    
     run_cmds = [
         f"sudo mkdir -p {os.path.dirname(folder_name)}",
-        f"sudo tar -xz -C {os.path.dirname(folder_name)} -f {folder_name}.tar && sudo rm -f {folder_name}.tar",
+        f"sudo tar -xz -C {os.path.dirname(folder_name)} -f {folder_name}.tar",
         f"sudo docker compose -f {folder_name}/docker-compose.yml up --build -d",
     ]    
     exec_status = execute_remote_command(
@@ -209,7 +209,7 @@ def delete_container(team_id: int, challenge_id: int):
     machine_cred: MachineDetail = json.loads(machine.detail)
     delete_cmds = [
         f"docker compose -f {folder_name}/docker-compose.yml down --volumes",
-        f"sudo rm -rf {folder_name}",
+        f"sudo rm -rf {folder_name}*",
     ]
     exec_status = execute_remote_command(
         host=machine.host,
