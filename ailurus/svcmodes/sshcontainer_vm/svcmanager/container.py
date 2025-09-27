@@ -144,6 +144,16 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
     with tarfile.open(team_artifact_path + ".tar", "w:gz") as tar:
         tar.add(team_artifact_path, arcname=os.path.basename(team_artifact_path))
     shutil.rmtree(team_artifact_path)
+    delete_cmds = [
+        f"sudo rm -rf {folder_name}*",
+    ]
+    exec_status = execute_remote_command(
+        host=machine.host,
+        port=machine.port,
+        username=machine_cred["username"],
+        private_key=machine_cred["private_key"],
+        cmds=delete_cmds,
+    )
     exec_status = copy_file_to_remote(
         host=machine.host,
         port=machine.port,
@@ -209,7 +219,7 @@ def delete_container(team_id: int, challenge_id: int):
     machine_cred: MachineDetail = json.loads(machine.detail)
     delete_cmds = [
         f"docker compose -f {folder_name}/docker-compose.yml down --volumes",
-        f"sudo rm -rf {folder_name}*",
+        f"sudo rm -rf {folder_name}",
     ]
     exec_status = execute_remote_command(
         host=machine.host,
