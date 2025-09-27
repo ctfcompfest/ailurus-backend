@@ -196,7 +196,9 @@ def prepare_container(team_id: int, challenge_id: int, artifact_checksum: str):
 def run_container(team_id: int, challenge_id: int, artifact_checksum: str):
     folder_name = generate_remote_folder_name(team_id, challenge_id)
     machine = get_deployed_machine(team_id, challenge_id)
-    
+
+    machine_cred: MachineDetail = json.loads(machine.detail)
+
     run_cmds = [
         f"sudo mkdir -p {os.path.dirname(folder_name)}",
         f"sudo tar -xz -C {os.path.dirname(folder_name)} -f {folder_name}.tar",
