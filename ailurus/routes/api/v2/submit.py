@@ -51,7 +51,7 @@ def submit_flag(team: Team, flag: str):
     prev_correct_submission = Submission.query.filter(
         Submission.flag_id == flag_found.id,
         Submission.team_id == team.id,
-        Submission.verdict == True,
+        Submission.verdict.is_(True),
     ).first()
     # Repeated correct submission will not be logged
     if prev_correct_submission:
@@ -60,7 +60,7 @@ def submit_flag(team: Team, flag: str):
     prev_solve = Solve.query.filter_by(
         team_id=team.id, challenge_id=flag_found.challenge_id
     ).first()
-    if prev_solve == None:
+    if prev_solve is None:
         if get_config("UNLOCK_MODE") == ManageServiceUnlockMode.SOLVE_FIRST.value:
             if flag_found.team_id == team.id:
                 solve = Solve(team_id=team.id, challenge_id=flag_found.challenge_id)
@@ -83,7 +83,11 @@ def submit_flag(team: Team, flag: str):
 
     db.session.commit()
     # Emit attack event only when attacker and defender is different
-    if (flag_found.team_id != team.id) and is_contest_running() and not is_scoreboard_freeze():
+    if (
+        (flag_found.team_id != team.id)
+        and is_contest_running()
+        and not is_scoreboard_freeze()
+    ):
         send_attack_event(attacker, defender, challenge, solved_at)
 
     return {"flag": flag, "verdict": "flag is correct."}
@@ -94,18 +98,29 @@ def submit_flags(team: Team, flags: List[str]):
 
 
 @submit_blueprint.post("/")
-@limiter.limit("30 per second")
+@limiter.limit("1 per second")
 def bulk_submit_flag():
     if not is_contest_running():
         return jsonify(status="failed", message="contest is not running."), 400
     if is_defense_phased():
-        return jsonify(status="failed", message="flag submission are not allowed in defense phase."), 400
+        return (
+            jsonify(
+                status="failed",
+                message="flag submission are not allowed in defense phase.",
+            ),
+            400,
+        )
 
     if "flags" in request.json:
         flags = request.get_json().get("flags")
         max_submit = get_config("MAX_BULK_SUBMIT", 100)
         if len(flags) > max_submit:
-            return jsonify(status="failed", message=f"maximum {max_submit} flags at a time."), 400
+            return (
+                jsonify(
+                    status="failed", message=f"maximum {max_submit} flags at a time."
+                ),
+                400,
+            )
 
         response = submit_flags(current_team, flags)
         return jsonify(status="success", data=response)
@@ -115,6 +130,9 @@ def bulk_submit_flag():
         if response["verdict"] == "flag is correct.":
             return jsonify(status="success", message=response["verdict"], data=response)
         else:
-            return jsonify(status="failed", message=response["verdict"], data=response), 400
+            return (
+                jsonify(status="failed", message=response["verdict"], data=response),
+                400,
+            )
 
     return jsonify(status="failed", message="missing 'flags' field."), 400
